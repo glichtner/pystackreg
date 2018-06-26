@@ -243,9 +243,9 @@ void TurboRegImage::buildImageAndGradientPyramid (
         //std::vector<double> halfImage = 
         getBasicFromCardinal2D(
                 halfDual, halfWidth, halfHeight, 7, stackItem.halfImg);
-        std::vector<double> halfXGradient(halfWidth * halfHeight);
-        std::vector<double> halfYGradient(halfWidth * halfHeight);
-        coefficientToXYGradient2D(stackItem.halfImg, halfXGradient, halfYGradient,
+        //std::vector<double> halfXGradient(halfWidth * halfHeight);
+        //std::vector<double> halfYGradient(halfWidth * halfHeight);
+        coefficientToXYGradient2D(stackItem.halfImg, stackItem.xGradient, stackItem.yGradient,
                 halfWidth, halfHeight);
         basicToCardinal2D(stackItem.halfImg, stackItem.halfImg, halfWidth, halfHeight, 3);
         

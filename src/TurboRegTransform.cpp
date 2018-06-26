@@ -892,7 +892,7 @@ double TurboRegTransform::getAffineMeanSquares (
             yy += m(1, 2);
         }
     }
-    return(meanSquares / ((double)area * abs(det / targetJacobian)));
+    return(meanSquares / ((double)area * std::abs(det / targetJacobian)));
 } /* getAffineMeanSquares */
 
 /*------------------------------------------------------------------*/
@@ -1036,7 +1036,7 @@ double TurboRegTransform::getAffineMeanSquares (
             yy += m(1, 2);
         }
     }
-    return(meanSquares / ((double)area * abs(det / targetJacobian)));
+    return(meanSquares / ((double)area * std::abs(det / targetJacobian)));
 } /* getAffineMeanSquares */
 
 /*------------------------------------------------------------------*/
@@ -1231,7 +1231,7 @@ double TurboRegTransform::getAffineMeanSquares (
             hessian(i, j) = hessian(j, i);
         }
     }
-    return(meanSquares / ((double)area * abs(det / targetJacobian)));
+    return(meanSquares / ((double)area * std::abs(det / targetJacobian)));
 } /* getAffineMeanSquares */
 
 /*------------------------------------------------------------------*/
@@ -2902,7 +2902,7 @@ void TurboRegTransform::inverseMarquardtLevenbergRigidBodyOptimization () {
                 + (m(1, 0) + update[2]) * c;
         displacement = sqrt(update[1] * update[1] + update[2] * update[2])
                 + 0.25 * sqrt((double)(inNx * inNx) + (double)(inNy * inNy))
-                * abs(update[0]);
+                * std::abs(update[0]);
         if (accelerated) {
             meanSquares = getRigidBodyMeanSquares(attempt, gradient);
         }
@@ -2964,12 +2964,12 @@ void TurboRegTransform::invertGauss (
     matrix<double> inverse(n, n);
     for (int i = 0; (i < n); i++) {
         double max = m(i, 0);
-        double absMax = abs(max);
+        double absMax = std::abs(max);
         for (int j = 0; (j < n); j++) {
             inverse(i, j) = 0.0;
-            if (absMax < abs(m(i, j))) {
+            if (absMax < std::abs(m(i, j))) {
                 max = m(i, j);
-                absMax = abs(max);
+                absMax = std::abs(max);
             }
         }
         inverse(i, i) = 1.0 / max;
@@ -2979,12 +2979,12 @@ void TurboRegTransform::invertGauss (
     }
     for (int j = 0; (j < n); j++) {
         double max = m(j, j);
-        double absMax = abs(max);
+        double absMax = std::abs(max);
         int k = j;
         for (int i = j + 1; (i < n); i++) {
-            if (absMax < abs(m(i, j))) {
+            if (absMax < std::abs(m(i, j))) {
                 max = m(i, j);
-                absMax = abs(max);
+                absMax = std::abs(max);
                 k = i;
             }
         }

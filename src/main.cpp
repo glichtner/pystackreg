@@ -15,30 +15,6 @@ using namespace std;
 
 std::vector<uint16_t> readFile(const char* filename)
 {
-    /*// open the file:
-    std::ifstream file(filename, std::ios::binary);
-
-    // Stop eating new lines in binary mode!!!
-    file.unsetf(std::ios::skipws);
-
-    // get its size:
-    std::streampos fileSize;
-
-    file.seekg(0, std::ios::end);
-    fileSize = file.tellg();
-    file.seekg(0, std::ios::beg);
-
-    // reserve capacity
-    std::vector<uint16_t> vec;
-    vec.reserve(fileSize);
-
-    // read the data:
-    vec.insert(vec.begin(),
-               std::istream_iterator<uint16_t>(file),
-               std::istream_iterator<uint16_t>());
-
-    return vec;*/
-
    std::ifstream is;
    std::vector<uint16_t> rawfilebuffer;
 
@@ -55,6 +31,13 @@ std::vector<uint16_t> readFile(const char* filename)
 
 }
 
+void writeFile(const char* filename, std::vector<uint16_t> &data)
+{
+   ofstream fout(filename, ios::out | ios::binary);
+   fout.write((char*)&data[0], data.size() * sizeof(data[0]));
+   fout.close();
+}
+
 int main(int argc, char **argv)
 {
     //int width = 128;
@@ -63,8 +46,6 @@ int main(int argc, char **argv)
 	//swapped
 	int width = 256;
 	int height = 128;
-
-
 
     std::vector<uint16_t> int_imgdata_ref = readFile("/media/storage/eric/data/180614_Rut1_Papain/Use These Files/pygreg_test_ref.bin");
     std::vector<uint16_t> int_imgdata_mov = readFile("/media/storage/eric/data/180614_Rut1_Papain/Use These Files/pygreg_test_mov.bin");
@@ -105,10 +86,14 @@ int main(int argc, char **argv)
     TurboRegTransform tform(movImg, movMsk, movPH, refImg, refMsk, refPH, RIGID_BODY, false);
     
     tform.doRegistration();
-    //matrix<double> tmat = tform.get
+
     std::vector<double> imgout = tform.doFinalTransform(width, height);
 
     tform.printPoints();
+
+    std::vector<uint16_t> int_imgout(imgout.begin(), imgout.end());
+
+    writeFile("/media/storage/eric/data/180614_Rut1_Papain/Use These Files/pygreg_test_out.bin", int_imgout);
 
 	return 0;
 }
