@@ -5,7 +5,7 @@
 #include <vector>
 #include <cmath>
 
-#define COUNTOF(x) (sizeof(x) / sizeof(*x))
+//#define COUNTOF(x) (sizeof(x) / sizeof(*x))
 
 /*====================================================================
 |	turboRegImage
@@ -29,9 +29,7 @@ void TurboRegImage::init (
     coefficient = getBasicFromCardinal2D();
 
     switch (transformation) {
-        case GENERIC_TRANSFORMATION: {
-            break;
-        }
+
         case TRANSLATION:
         case RIGID_BODY:
         case SCALED_ROTATION:
@@ -70,21 +68,21 @@ constructors
 TurboRegImage::TurboRegImage (
     double *img, int width, int height, Transformation transformation, bool isTarget
 ) {
-    transformation = transformation;
-    isTarget = isTarget;
-    width = width;
-    height = height;
+	this->transformation = transformation;
+    this->isTarget = isTarget;
+    this->width = width;
+    this->height = height;
     int k = 0;
 
-    image = new double[width * height];
+    image.resize(width * height);
     for (int y = 0; (y < height); y++) {
         for (int x = 0; (x < width); x++, k++) {
             image[k] = (double)img[k];
         }
     }
 
-    init();
     
+
     /*if (imp.getType() == ImagePlus.GRAY8) {
         image = new float[width * height];
         byte[] pixels = (byte[])imp.getProcessor().getPixels();
@@ -118,19 +116,16 @@ TurboRegImage::TurboRegImage (
 
 
 void TurboRegImage::antiSymmetricFirMirrorOffBounds1D(
-        double* h,
-        int hlen,
-        double* c,
-        int clen,
-        double* s,
-        int slen
+        std::vector<double> &h,
+        std::vector<double> &c,
+        std::vector<double> &s
 ) {
-    if (2 <= hlen) {
+    if (2 <= h.size()) {
         s[0] = h[1] * (c[1] - c[0]);
-        for (int i = 1; (i < (slen - 1)); i++) {
+        for (unsigned int i = 1; (i < (s.size() - 1)); i++) {
             s[i] = h[1] * (c[i + 1] - c[i - 1]);
         }
-        s[slen - 1] = h[1] * (c[clen - 1] - c[clen - 2]);
+        s[s.size() - 1] = h[1] * (c[c.size() - 1] - c[c.size() - 2]);
     }
     else {
         s[0] = 0.0;
@@ -139,27 +134,30 @@ void TurboRegImage::antiSymmetricFirMirrorOffBounds1D(
 
 /*------------------------------------------------------------------*/
 void TurboRegImage::basicToCardinal2D (
-        double* basic,
-        double* cardinal,
+        const std::vector<double> &basic,
+        std::vector<double> &cardinal,
         int width,
         int height,
         int degree
 ) {
-    double* hLine = new double[width];
-    double* vLine = new double[height];
-    double* hData = new double[width];
-    double* vData = new double[height];
-    double* h = NULL;
+    std::vector<double> hLine(width);
+    std::vector<double> vLine(height);
+    std::vector<double> hData(width);
+    std::vector<double> vData(height);
+
+    std::vector<double> h;
 
     switch (degree) {
         case 3: {
-            h = new double[2];
+            //h = new double[2];
+            h.resize(2);
             h[0] = 2.0 / 3.0;
             h[1] = 1.0 / 6.0;
             break;
         }
         case 7: {
-            h = new double[4];
+            //h = new double[4];
+            h.resize(4);
             h[0] = 151.0 / 315.0;
             h[1] = 397.0 / 1680.0;
             h[2] = 1.0 / 42.0;
@@ -167,22 +165,22 @@ void TurboRegImage::basicToCardinal2D (
             break;
         }
         default: {
-            h = new double[1];
+            h.resize(1);
+            //h = new double[1];
             h[0] = 1.0;
         }
     }
     
     for (int y = 0; (y < height); y++) {
-        extractRow(basic, y, hLine, width);
-        symmetricFirMirrorOffBounds1D(h, COUNTOF(h), hLine, width, hData, width);
-        putRow(cardinal, y, hData, width);
+        extractRow(basic, y, hLine);
+        symmetricFirMirrorOffBounds1D(h, hLine, hData);
+        putRow(cardinal, y, hData);
     }
 
     for (int x = 0; (x < width); x++) {
-        extractColumn(cardinal, width, x, vLine, height);
-        symmetricFirMirrorOffBounds1D(h, COUNTOF(h), vLine, height, vData, height);
-        putColumn(cardinal, width, x, vData, height);
-
+        extractColumn(cardinal, width, x, vLine);
+        symmetricFirMirrorOffBounds1D(h, vLine, vData);
+        putColumn(cardinal, width, x, vData);
     }
 
 } /* end basicToCardinal2D */
@@ -192,23 +190,31 @@ void TurboRegImage::buildCoefficientPyramid (
 ) {
     int fullWidth;
     int fullHeight;
-    double* fullDual = new double[width * height];
+    std::vector<double> fullDual(width * height);
     int halfWidth = width;
     int halfHeight = height;
+
     if (1 < pyramidDepth) {
         basicToCardinal2D(coefficient, fullDual, width, height, 7);
     }
+
     for (int depth = 1; ((depth < pyramidDepth)); depth++) {
         fullWidth = halfWidth;
         fullHeight = halfHeight;
         halfWidth /= 2;
         halfHeight /= 2;
-        double* halfDual = getHalfDual2D(fullDual, fullWidth, fullHeight);
-        double* halfCoefficient = getBasicFromCardinal2D(
-                halfDual, halfWidth, halfHeight, 7);
-        pyramid.push(halfCoefficient);
+        std::vector<double> halfDual = getHalfDual2D(fullDual, fullWidth, fullHeight);
+        
+        ImageStackItem stackItem(halfWidth, halfHeight, false);
+        
+        //std::vector<double> halfCoefficient = 
+        getBasicFromCardinal2D(
+                halfDual, halfWidth, halfHeight, 7, stackItem.halfImg);
+        pyramid.push(stackItem);
+        /*pyramid.push(halfCoefficient);
         pyramid.push(new Integer(halfHeight));
-        pyramid.push(new Integer(halfWidth));
+        pyramid.push(new Integer(halfWidth));*/
+        
         fullDual = halfDual;
     }
 } /* end buildCoefficientPyramid */
@@ -218,7 +224,7 @@ void TurboRegImage::buildImageAndGradientPyramid (
 ) {
     int fullWidth;
     int fullHeight;
-    double* fullDual = new double[width * height];
+    std::vector<double> fullDual(width * height);
     int halfWidth = width;
     int halfHeight = height;
     if (1 < pyramidDepth) {
@@ -230,19 +236,26 @@ void TurboRegImage::buildImageAndGradientPyramid (
         fullHeight = halfHeight;
         halfWidth /= 2;
         halfHeight /= 2;
-        double* halfDual = getHalfDual2D(fullDual, fullWidth, fullHeight);
-        double* halfImage = getBasicFromCardinal2D(
-                halfDual, halfWidth, halfHeight, 7);
-        double* halfXGradient = new double[halfWidth * halfHeight];
-        double* halfYGradient = new double[halfWidth * halfHeight];
-        coefficientToXYGradient2D(halfImage, halfXGradient, halfYGradient,
+
+        ImageStackItem stackItem(halfWidth, halfHeight, true);
+        
+        std::vector<double> halfDual = getHalfDual2D(fullDual, fullWidth, fullHeight);
+        //std::vector<double> halfImage = 
+        getBasicFromCardinal2D(
+                halfDual, halfWidth, halfHeight, 7, stackItem.halfImg);
+        std::vector<double> halfXGradient(halfWidth * halfHeight);
+        std::vector<double> halfYGradient(halfWidth * halfHeight);
+        coefficientToXYGradient2D(stackItem.halfImg, halfXGradient, halfYGradient,
                 halfWidth, halfHeight);
-        basicToCardinal2D(halfImage, halfImage, halfWidth, halfHeight, 3);
-        pyramid.push(halfYGradient);
+        basicToCardinal2D(stackItem.halfImg, stackItem.halfImg, halfWidth, halfHeight, 3);
+        
+        pyramid.push(stackItem);
+
+        /*pyramid.push(halfYGradient);
         pyramid.push(halfXGradient);
         pyramid.push(halfImage);
         pyramid.push(new Integer(halfHeight));
-        pyramid.push(new Integer(halfWidth));
+        pyramid.push(new Integer(halfWidth));*/
         fullDual = halfDual;
     }
 } /* end buildImageAndGradientPyramid */
@@ -252,7 +265,7 @@ void TurboRegImage::buildImagePyramid (
 ) {
     int fullWidth;
     int fullHeight;
-    double* fullDual = new double[width * height];
+    std::vector<double> fullDual(width * height);
     int halfWidth = width;
     int halfHeight = height;
     if (1 < pyramidDepth) {
@@ -264,110 +277,115 @@ void TurboRegImage::buildImagePyramid (
         fullHeight = halfHeight;
         halfWidth /= 2;
         halfHeight /= 2;
-        double* halfDual = getHalfDual2D(fullDual, fullWidth, fullHeight);
-        double* halfImage = new double[halfWidth * halfHeight];
-        dualToCardinal2D(halfDual, halfImage, halfWidth, halfHeight, 3);
-        pyramid.push(halfImage);
+
+        ImageStackItem stackItem(halfWidth, halfHeight, true);
+               
+
+        std::vector<double> halfDual = getHalfDual2D(fullDual, fullWidth, fullHeight);
+        //std::vector<double> halfImage(halfWidth * halfHeight);
+        dualToCardinal2D(halfDual, stackItem.halfImg, halfWidth, halfHeight, 3);
+        /*pyramid.push(halfImage);
         pyramid.push(new Integer(halfHeight));
-        pyramid.push(new Integer(halfWidth));
+        pyramid.push(new Integer(halfWidth));*/
+
+        pyramid.push(stackItem);
+
         fullDual = halfDual;
     }
 } /* end buildImagePyramid */
 
 /*------------------------------------------------------------------*/
 void TurboRegImage::cardinalToDual2D (
-        double* cardinal,
-        double* dual,
+        std::vector<double> &cardinal,
+        std::vector<double> &dual,
         int width,
         int height,
         int degree
 ) {
-    basicToCardinal2D(getBasicFromCardinal2D(cardinal, width, height, degree),
+    std::vector<double> basic(width * height);
+    basicToCardinal2D(getBasicFromCardinal2D(cardinal, width, height, degree, basic),
             dual, width, height, 2 * degree + 1);
 } /* end cardinalToDual2D */
 
 /*------------------------------------------------------------------*/
 void TurboRegImage::coefficientToGradient1D (
-        double* c,
-        int clen
+        std::vector<double> &c
 ) {
-    double h[] = {0.0, 1.0 / 2.0};
-    double* s = new double[clen]; //OK
-    antiSymmetricFirMirrorOffBounds1D(h, sizeof(h), c, clen, s, clen);
-    //System.arraycopy(s, 0, c, 0, slen);
-    memcpy(c, s, slen * sizeof(double));
-    delete s;
+    std::vector<double> h = {0.0, 1.0 / 2.0};
+    std::vector<double> s(c.size()); //OK
+    antiSymmetricFirMirrorOffBounds1D(h, c, s);
+    //System.arraycopy(s, 0, c, 0, s.size());
+    c = s;
 } /* end coefficientToGradient1D */
 
 /*------------------------------------------------------------------*/
 void TurboRegImage::coefficientToSamples1D (
-        double* c,
-        int clen
+        std::vector<double> &c
 ) {
-    double h[] = {2.0 / 3.0, 1.0 / 6.0};
-    double* s = new double[clen]; //OK
-    symmetricFirMirrorOffBounds1D(h, COUNTOF(h), c, clen, s, clen);
-    //System.arraycopy(s, 0, c, 0, slen);
-    memcpy(c, s, slen * sizeof(double));
-    delete s;
+    std::vector<double> h = {2.0 / 3.0, 1.0 / 6.0};
+    std::vector<double> s(c.size()); //OK
+    symmetricFirMirrorOffBounds1D(h, c, s);
+    //System.arraycopy(s, 0, c, 0, s.size());
+    c = s;
 } /* end coefficientToSamples1D */
 
 /*------------------------------------------------------------------*/
 void TurboRegImage::coefficientToXYGradient2D (
-        double* basic,
-        double* xGradient,
-        double* yGradient,
+        std::vector<double> &basic,
+        std::vector<double> &xGradient,
+        std::vector<double> &yGradient,
         int width,
         int height
 ) {
-    double* hLine = new double[width];
-    double* hData = new double[width];
-    double* vLine = new double[height];
+    std::vector<double> hLine(width);
+    std::vector<double> hData(width);
+    std::vector<double> vLine(height);
     
     for (int y = 0; ((y < height)); y++) {
-        extractRow(basic, y, hLine, width);
+        extractRow(basic, y, hLine);
         //System.arraycopy(hLine, 0, hData, 0, width);
-        memcpy(hData, hLine, sizeof(double) * width);
-        coefficientToGradient1D(hLine, width);
+        //memcpy(hData, hLine, sizeof(double) * width);
+        hData = hLine;
+        coefficientToGradient1D(hLine);
         
-        coefficientToSamples1D(hData, width);
-        putRow(xGradient, y, hLine, width);
-        putRow(yGradient, y, hData, width);
+        coefficientToSamples1D(hData);
+        putRow(xGradient, y, hLine);
+        putRow(yGradient, y, hData);
     }
     
     for (int x = 0; ((x < width)); x++) {
-        extractColumn(xGradient, width, x, vLine, height);
-        coefficientToSamples1D(vLine, height);
-        putColumn(xGradient, width, x, vLine, height);
+        extractColumn(xGradient, width, x, vLine);
+        coefficientToSamples1D(vLine);
+        putColumn(xGradient, width, x, vLine);
         
-        extractColumn(yGradient, width, x, vLine, height);
-        coefficientToGradient1D(vLine, height);
-        putColumn(yGradient, width, x, vLine, height);
+        extractColumn(yGradient, width, x, vLine);
+        coefficientToGradient1D(vLine);
+        putColumn(yGradient, width, x, vLine);
     }
 } /* end coefficientToXYGradient2D */
 
 /*------------------------------------------------------------------*/
 void TurboRegImage::dualToCardinal2D (
-        double* dual,
-        double* cardinal,
+        std::vector<double> &dual,
+        std::vector<double> &cardinal,
         int width,
         int height,
         int degree
 ) {
+    std::vector<double> basic(width * height);
     basicToCardinal2D(
-        getBasicFromCardinal2D(dual, width, height, 2 * degree + 1), 
+        getBasicFromCardinal2D(dual, width, height, 2 * degree + 1, basic), 
             cardinal, width, height, degree);
 } /* end dualToCardinal2D */
 
 /*------------------------------------------------------------------*/
 void TurboRegImage::extractColumn (
-        double* array,
+        std::vector<double> &array,
         int width,
         int x,
-        double* column,
-        int height
+        std::vector<double> &column
 ) {
-    for (int i = 0; (i < height); i++) {
+    for (unsigned int i = 0; (i < column.size()); i++) {
         column[i] = (double)array[x];
         x += width;
     }
@@ -375,89 +393,89 @@ void TurboRegImage::extractColumn (
 
 /*------------------------------------------------------------------*/
 void TurboRegImage::extractRow (
-        double* array,
+        const std::vector<double> &array,
         int y,
-        double* row,
-        int width
+        std::vector<double> &row
 ) {
-    y *= width;
-    for (int i = 0; (i < width); i++) {
+    y *= row.size();
+    for (unsigned int i = 0; (i < row.size()); i++) {
         row[i] = (double)array[y++];
     }
 } /* end extractRow */
 
 /*------------------------------------------------------------------*/
-double* TurboRegImage::getBasicFromCardinal2D (
+std::vector<double> TurboRegImage::getBasicFromCardinal2D (
 ) {
-    double* basic = new double[width * height];
-    double* hLine = new double[width];
-    double* vLine = new double[height];
+    std::vector<double> basic(width * height);
+    std::vector<double> hLine(width);
+    std::vector<double> vLine(height);
     
     for (int y = 0; (y < height); y++) {
-        extractRow(image, y, hLine, width);
-        samplesToInterpolationCoefficient1D(hLine, height, 3, 0.0);
-        putRow(basic, y, hLine, width);
+        extractRow(image, y, hLine);
+        samplesToInterpolationCoefficient1D(hLine, 3, 0.0);
+        putRow(basic, y, hLine);
     }
     for (int x = 0; (x < width); x++) {
-        extractColumn(basic, width, x, vLine, height);
-        samplesToInterpolationCoefficient1D(vLine, height, 3, 0.0);
-        putColumn(basic, width, x, vLine, height);
+        extractColumn(basic, width, x, vLine);
+        samplesToInterpolationCoefficient1D(vLine, 3, 0.0);
+        putColumn(basic, width, x, vLine);
     }
-    turboRegProgressBar.workloadDone(width + height);
+    
     return(basic);
 } /* end getBasicFromCardinal2D */
 
 /*------------------------------------------------------------------*/
-double* TurboRegImage::getBasicFromCardinal2D (
-        double* cardinal,
+std::vector<double> TurboRegImage::getBasicFromCardinal2D (
+        std::vector<double> &cardinal,
         int width,
         int height,
-        int degree
+        int degree,
+        std::vector<double> &basic
 ) {
-    double* basic = new double[width * height];
-    double* hLine = new double[width];
-    double* vLine = new double[height];
+    //std::vector<double> basic(width * height);
+    std::vector<double> hLine(width);
+    std::vector<double> vLine(height);
     
     for (int y = 0; ((y < height)); y++) {
-        extractRow(cardinal, y, hLine, width);
-        samplesToInterpolationCoefficient1D(hLine, width, degree, 0.0);
-        putRow(basic, y, hLine, width);
+        extractRow(cardinal, y, hLine);
+        samplesToInterpolationCoefficient1D(hLine, degree, 0.0);
+        putRow(basic, y, hLine);
     }
 
     for (int x = 0; ((x < width)); x++) {
-        extractColumn(basic, width, x, vLine, height);
-        samplesToInterpolationCoefficient1D(vLine, height, degree, 0.0);
-        putColumn(basic, width, x, vLine, height);
+        extractColumn(basic, width, x, vLine);
+        samplesToInterpolationCoefficient1D(vLine, degree, 0.0);
+        putColumn(basic, width, x, vLine);
     }
 
     return(basic);
 } /* end getBasicFromCardinal2D */
 
 /*------------------------------------------------------------------*/
-double* TurboRegImage::getHalfDual2D (
-        double* fullDual,
+std::vector<double> TurboRegImage::getHalfDual2D (
+        std::vector<double> &fullDual,
         int fullWidth,
         int fullHeight
 ) {
     int halfWidth = fullWidth / 2;
     int halfHeight = fullHeight / 2;
-    double* hLine = new double[fullWidth];
-    double* hData = new double[halfWidth];
-    double* vLine = new double[fullHeight];
-    double* vData = new double[halfHeight];
-    double* demiDual = new double[halfWidth * fullHeight];
-    double* halfDual = new double[halfWidth * halfHeight];
+    std::vector<double> hLine(fullWidth);
+    std::vector<double> hData(halfWidth);
+    std::vector<double> vLine(fullHeight);
+    std::vector<double> vData(halfHeight);
+    std::vector<double> demiDual(halfWidth * fullHeight);
+    std::vector<double> halfDual(halfWidth * halfHeight);
     
     for (int y = 0; ((y < fullHeight)); y++) {
-        extractRow(fullDual, y, hLine, width);
-        reduceDual1D(hLine, width, hData, width);
-        putRow(demiDual, y, hData, width);
+        extractRow(fullDual, y, hLine);
+        reduceDual1D(hLine, hData);
+        putRow(demiDual, y, hData);
     }
 
     for (int x = 0; ((x < halfWidth)); x++) {
-        extractColumn(demiDual, halfWidth, x, vLine, height);
-        reduceDual1D(vLine, height, vData, height);
-        putColumn(halfDual, halfWidth, x, vData, height);
+        extractColumn(demiDual, halfWidth, x, vLine);
+        reduceDual1D(vLine, vData);
+        putColumn(halfDual, halfWidth, x, vData);
     }
 
     
@@ -466,28 +484,26 @@ double* TurboRegImage::getHalfDual2D (
 
 /*------------------------------------------------------------------*/
 double TurboRegImage::getInitialAntiCausalCoefficientMirrorOffBounds (
-        double* c,
-        int clen,
+        std::vector<double> &c,
         double z,
         double tolerance
 ) {
-    return(z * c[clen - 1] / (z - 1.0));
+    return(z * c[c.size() - 1] / (z - 1.0));
 } /* end getInitialAntiCausalCoefficientMirrorOffBounds */
 
 /*------------------------------------------------------------------*/
 double TurboRegImage::getInitialCausalCoefficientMirrorOffBounds (
-        double* c,
-        int clen,
+        std::vector<double> &c,
         double z,
         double tolerance
 ) {
     double z1 = z;
-    double zn = pow(z, clen);
-    double sum = (1.0 + z) * (c[0] + zn * c[clen - 1]);
-    int horizon = clen;
+    double zn = pow(z, c.size());
+    double sum = (1.0 + z) * (c[0] + zn * c[c.size() - 1]);
+    int horizon = c.size();
     if (0.0 < tolerance) {
         horizon = 2 + (int)(log(tolerance) / log((double)abs(z)));
-        horizon = (horizon < clen) ? (horizon) : (clen);
+        horizon = (horizon < (int)c.size()) ? (horizon) : (c.size());
     }
     zn = zn * zn;
     for (int n = 1; (n < (horizon - 1)); n++) {
@@ -495,47 +511,39 @@ double TurboRegImage::getInitialCausalCoefficientMirrorOffBounds (
         zn = zn / z;
         sum = sum + (z1 + zn) * c[n];
     }
-    return(sum / (1.0 - pow(z, 2 * clen)));
+    return(sum / (1.0 - pow(z, 2 * c.size())));
 } /* end getInitialCausalCoefficientMirrorOffBounds */
 
 /*------------------------------------------------------------------*/
 void TurboRegImage::imageToXYGradient2D (
 ) {
-    double* hLine = new double[width];
-    double* vLine = new double[height];
-    xGradient = new double[width * height];
-    yGradient = new double[width * height];
-    int workload = width + height;
-    turboRegProgressBar.addWorkload(workload);
+    std::vector<double> hLine(width);
+    std::vector<double> vLine(height);
+    xGradient.resize(width * height);
+    yGradient.resize(width * height);
+    
     for (int y = 0; ((y < height)); y++) {
-        extractRow(image, y, hLine, width);
-        samplesToInterpolationCoefficient1D(hLine, width, 3, 0.0);
-        coefficientToGradient1D(hLine, width);
-        putRow(xGradient, y, hLine, width);
-        turboRegProgressBar.stepProgressBar();
-        workload--;
+        extractRow(image, y, hLine);
+        samplesToInterpolationCoefficient1D(hLine, 3, 0.0);
+        coefficientToGradient1D(hLine);
+        putRow(xGradient, y, hLine);
     }
     for (int x = 0; ((x < width)); x++) {
-        extractColumn(image, width, x, vLine, height);
-        samplesToInterpolationCoefficient1D(vLine, height, 3, 0.0);
-        coefficientToGradient1D(vLine, height);
-        putColumn(yGradient, width, x, vLine, height);
-        turboRegProgressBar.stepProgressBar();
-        workload--;
+        extractColumn(image, width, x, vLine);
+        samplesToInterpolationCoefficient1D(vLine, 3, 0.0);
+        coefficientToGradient1D(vLine);
+        putColumn(yGradient, width, x, vLine);
     }
-    turboRegProgressBar.skipProgressBar(workload);
-    turboRegProgressBar.workloadDone(width + height);
 } /* end imageToXYGradient2D */
 
 /*------------------------------------------------------------------*/
 void TurboRegImage::putColumn (
-        double* array,
+        std::vector<double> &array,
         int width,
         int x,
-        double* column,
-        int columnlen
+        std::vector<double> &column
 ) {
-    for (int i = 0; (i < columnlen); i++) {
+    for (unsigned int i = 0; (i < column.size()); i++) {
         array[x] = (float)column[i];
         x += width;
     }
@@ -543,44 +551,41 @@ void TurboRegImage::putColumn (
 
 /*------------------------------------------------------------------*/
 void TurboRegImage::putRow (
-        double* array,
+        std::vector<double> &array,
         int y,
-        double* row,
-        int rowlen
+        std::vector<double> &row
 ) {
-    y *= rowlen;
-    for (int i = 0; (i < rowlen); i++) {
+    y *= row.size();
+    for (unsigned int i = 0; (i < row.size()); i++) {
         array[y++] = (float)row[i];
     }
 } /* end putRow */
 
 /*------------------------------------------------------------------*/
 void TurboRegImage::reduceDual1D (
-        double* c,
-        int clen,
-        double* s,
-        int slen
+        std::vector<double> &c,
+        std::vector<double> &s
 ) {
     double h[] = {6.0 / 16.0, 4.0 / 16.0, 1.0 / 16.0};
-    if (2 <= slen) {
+    if (2 <= s.size()) {
         s[0] = h[0] * c[0] + h[1] * (c[0] + c[1]) + h[2] * (c[1] + c[2]);
-        for (int i = 2, j = 1; (j < (slen - 1)); i += 2, j++) {
+        for (unsigned int i = 2, j = 1; (j < (s.size() - 1)); i += 2, j++) {
             s[j] = h[0] * c[i] + h[1] * (c[i - 1] + c[i + 1])
                     + h[2] * (c[i - 2] + c[i + 2]);
         }
-        if (clen == (2 * slen)) {
-            s[slen - 1] = h[0] * c[clen - 2]
-                    + h[1] * (c[clen - 3] + c[clen - 1])
-                    + h[2] * (c[clen - 4] + c[clen - 1]);
+        if (c.size() == (2 * s.size())) {
+            s[s.size() - 1] = h[0] * c[c.size() - 2]
+                    + h[1] * (c[c.size() - 3] + c[c.size() - 1])
+                    + h[2] * (c[c.size() - 4] + c[c.size() - 1]);
         }
         else {
-            s[slen - 1] = h[0] * c[clen - 3]
-                    + h[1] * (c[clen - 4] + c[clen - 2])
-                    + h[2] * (c[clen - 5] + c[clen - 1]);
+            s[s.size() - 1] = h[0] * c[c.size() - 3]
+                    + h[1] * (c[c.size() - 4] + c[c.size() - 2])
+                    + h[2] * (c[c.size() - 5] + c[c.size() - 1]);
         }
     }
     else {
-        switch (clen) {
+        switch (c.size()) {
             case 3: {
                 s[0] = h[0] * c[0]
                         + h[1] * (c[0] + c[1]) + h[2] * (c[1] + c[2]);
@@ -596,21 +601,23 @@ void TurboRegImage::reduceDual1D (
 
 /*------------------------------------------------------------------*/
 void TurboRegImage::samplesToInterpolationCoefficient1D (
-        double* c,
-        int clen,
+        std::vector<double> &c,
         int degree,
         double tolerance
 ) {
-    double* z = new double[0];
+    std::vector<double> z;
     double lambda = 1.0;
     switch (degree) {
         case 3: {
-            z = new double[1];
+            //z = new double[1];
+            z.resize(1);
+            
             z[0] = sqrt(3.0) - 2.0;
             break;
         }
         case 7: {
-            z = new double[3];
+            //z = new double[3];
+            z.resize(3);
             z[0] =
                     -0.5352804307964381655424037816816460718339231523426924148812;
             z[1] =
@@ -620,26 +627,26 @@ void TurboRegImage::samplesToInterpolationCoefficient1D (
             break;
         }
     }
-    if (clen == 1) {
+    if (c.size() == 1) {
         return;
     }
 
-    for (int k = 0; (k < COUNTOF(z)); k++) {
+    for (unsigned int k = 0; (k < z.size()); k++) {
         lambda *= (1.0 - z[k]) * (1.0 - 1.0 / z[k]);
     }
 
-    for (int n = 0; (n < clen); n++) {
+    for (unsigned int n = 0; (n < c.size()); n++) {
         c[n] = c[n] * lambda;
     }
 
-    for (int k = 0; (k < COUNTOF(z)); k++) {
-        c[0] = getInitialCausalCoefficientMirrorOffBounds(c, clen, z[k], tolerance);
-        for (int n = 1; (n < clen); n++) {
+    for (unsigned int k = 0; (k < z.size()); k++) {
+        c[0] = getInitialCausalCoefficientMirrorOffBounds(c, z[k], tolerance);
+        for (unsigned int n = 1; (n < c.size()); n++) {
             c[n] = c[n] + z[k] * c[n - 1];
         }
-        c[clen - 1] = getInitialAntiCausalCoefficientMirrorOffBounds(
-                c, clen, z[k], tolerance);
-        for (int n = clen - 2; (0 <= n); n--) {
+        c[c.size() - 1] = getInitialAntiCausalCoefficientMirrorOffBounds(
+                c, z[k], tolerance);
+        for (int n = c.size() - 2; (0 <= n); n--) {
             c[n] = z[k] * (c[n+1] - c[n]);
         }
     }
@@ -647,22 +654,19 @@ void TurboRegImage::samplesToInterpolationCoefficient1D (
 
 /*------------------------------------------------------------------*/
 void TurboRegImage::symmetricFirMirrorOffBounds1D (
-        double* h,
-        int hlen,
-        double* c,
-        int clen,
-        double* s,
-        int slen
+        std::vector<double> &h,
+        std::vector<double> &c,
+        std::vector<double> &s
 ) {
-    switch (hlen) {
+    switch (h.size()) {
         case 2: {
-            if (2 <= clen) {
+            if (2 <= c.size()) {
                 s[0] = h[0] * c[0] + h[1] * (c[0] + c[1]);
-                for (int i = 1; (i < (slen - 1)); i++) {
+                for (unsigned int i = 1; (i < (s.size() - 1)); i++) {
                     s[i] = h[0] * c[i] + h[1] * (c[i - 1] + c[i + 1]);
                 }
-                s[slen - 1] = h[0] * c[clen - 1]
-                        + h[1] * (c[clen - 2] + c[clen - 1]);
+                s[s.size() - 1] = h[0] * c[c.size() - 1]
+                        + h[1] * (c[c.size() - 2] + c[c.size() - 1]);
             }
             else {
                 s[0] = (h[0] + 2.0 * h[1]) * c[0];
@@ -670,33 +674,33 @@ void TurboRegImage::symmetricFirMirrorOffBounds1D (
             break;
         }
         case 4: {
-            if (6 <= clen) {
+            if (6 <= c.size()) {
                 s[0] = h[0] * c[0] + h[1] * (c[0] + c[1]) + h[2] * (c[1] + c[2])
                         + h[3] * (c[2] + c[3]);
                 s[1] = h[0] * c[1] + h[1] * (c[0] + c[2]) + h[2] * (c[0] + c[3])
                         + h[3] * (c[1] + c[4]);
                 s[2] = h[0] * c[2] + h[1] * (c[1] + c[3]) + h[2] * (c[0] + c[4])
                         + h[3] * (c[0] + c[5]);
-                for (int i = 3; (i < (slen - 3)); i++) {
+                for (unsigned int i = 3; (i < (s.size() - 3)); i++) {
                     s[i] = h[0] * c[i] + h[1] * (c[i - 1] + c[i + 1])
                             + h[2] * (c[i - 2] + c[i + 2])
                             + h[3] * (c[i - 3] + c[i + 3]);
                 }
-                s[slen - 3] = h[0] * c[clen - 3]
-                        + h[1] * (c[clen - 4] + c[clen - 2])
-                        + h[2] * (c[clen - 5] + c[clen - 1])
-                        + h[3] * (c[clen - 6] + c[clen - 1]);
-                s[slen - 2] = h[0] * c[clen - 2]
-                        + h[1] * (c[clen - 3] + c[clen - 1])
-                        + h[2] * (c[clen - 4] + c[clen - 1])
-                        + h[3] * (c[clen - 5] + c[clen - 2]);
-                s[slen - 1] = h[0] * c[clen - 1]
-                        + h[1] * (c[clen - 2] + c[clen - 1])
-                        + h[2] * (c[clen - 3] + c[clen - 2])
-                        + h[3] * (c[clen - 4] + c[clen - 3]);
+                s[s.size() - 3] = h[0] * c[c.size() - 3]
+                        + h[1] * (c[c.size() - 4] + c[c.size() - 2])
+                        + h[2] * (c[c.size() - 5] + c[c.size() - 1])
+                        + h[3] * (c[c.size() - 6] + c[c.size() - 1]);
+                s[s.size() - 2] = h[0] * c[c.size() - 2]
+                        + h[1] * (c[c.size() - 3] + c[c.size() - 1])
+                        + h[2] * (c[c.size() - 4] + c[c.size() - 1])
+                        + h[3] * (c[c.size() - 5] + c[c.size() - 2]);
+                s[s.size() - 1] = h[0] * c[c.size() - 1]
+                        + h[1] * (c[c.size() - 2] + c[c.size() - 1])
+                        + h[2] * (c[c.size() - 3] + c[c.size() - 2])
+                        + h[3] * (c[c.size() - 4] + c[c.size() - 3]);
             }
             else {
-                switch (clen) {
+                switch (c.size()) {
                     case 5: {
                         s[0] = h[0] * c[0] + h[1] * (c[0] + c[1])
                                 + h[2] * (c[1] + c[2]) + h[3] * (c[2] + c[3]);

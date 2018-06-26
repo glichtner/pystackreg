@@ -1,39 +1,54 @@
 #include <stack>
+#include "matrix.h"
 
-//using namespace std;
+#include "TurboRegImage.h"
+
+#ifndef TURBOREGMASK_H_
+#define TURBOREGMASK_H_
+
+class MaskStackItem {
+public:
+    std::vector<double> halfMask;
+
+    MaskStackItem(int size) {
+        halfMask.resize(size);
+    }
+};
 
 class TurboRegMask
 { 
 
 public:
-    TurboRegMask (double* imp, int width, int height);
+    TurboRegMask (TurboRegImage &img);
+    TurboRegMask (matrix<double> &imp, int width, int height);
     
     void clearMask ();
-    double* getMask ();
+    std::vector<double> &getMask();
 
-    std::stack <double*> getPyramid();
+    std::stack<MaskStackItem> getPyramid();
 
     void setPyramidDepth (int pyramidDepth);
-
-    virtual ~TurboRegMask();
+    void init();
 
 private:
 
-    std::stack<double*> pyramid;
+    std::stack<MaskStackItem> pyramid;
 
-    double* mask;
+    std::vector<double> mask;
     int width;
     int height;
     int pyramidDepth;
 
-    void init ();
     void buildPyramid ();
 
-    double* getHalfMask2D (
-            double* fullMask,
+    std::vector<double> getHalfMask2D (
+            std::vector<double> &fullMask,
             int fullWidth,
-            int fullHeight
+            int fullHeight,
+            std::vector<double> &halfMask
     );
         
 
-} /* end class turboRegMask */
+}; /* end class turboRegMask */
+
+#endif

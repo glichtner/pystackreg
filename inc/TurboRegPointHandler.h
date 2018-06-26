@@ -1,26 +1,26 @@
+#include "TurboReg.h"
 #include "TurboRegImage.h"
 #include <cmath>
+#include "matrix.h"
+
+#ifndef TURBOREGPOINTHANDLER_H_
+#define TURBOREGPOINTHANDLER_H_
 
 class TurboRegPointHandler
 { /* class TurboRegPointHandler */
-
 public:
     TurboRegPointHandler (
         TurboRegImage img
     );
 
-    double* getPoints ();
+    matrix<double> &getPoints();
 
     void setPoints (
-        double* precisionPoint
+        matrix<double> &precisionPoint
     );
 
 
 private:
-
-    /*....................................................................
-        variables
-    ....................................................................*/
     /*********************************************************************
      The magnifying tool is set in eleventh position to be coherent with
     ImageJ.
@@ -59,10 +59,8 @@ private:
     ********************************************************************/
     const double GOLDEN_RATIO = 0.5 * (sqrt(5.0) - 1.0);
 
+    matrix<double> precisionPoint; // = new double[NUM_POINTS * 2];
+};
 
 
-    double* precisionPoint = new double[NUM_POINTS * 2];
-    int transformation;
-    int currentPoint = 0;
-
-}
+#endif

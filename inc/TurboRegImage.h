@@ -1,5 +1,31 @@
 #include <stack>
+#include <vector>
 #include "TurboReg.h"
+
+#ifndef TURBOREGIMAGE_H_
+#define TURBOREGIMAGE_H_
+
+class ImageStackItem {
+public:
+    std::vector<double> halfImg;
+    std::vector<double> xGradient;
+    std::vector<double> yGradient;
+    int halfWidth;
+    int halfHeight;
+    
+    
+
+    ImageStackItem(int halfHeight, int halfWidth, bool gradient) 
+    : halfWidth{halfWidth}, halfHeight{halfHeight}
+     {
+        halfImg.resize(halfHeight * halfWidth);
+
+        if (gradient) {
+            xGradient.resize(halfHeight * halfWidth);
+            yGradient.resize(halfHeight * halfWidth);
+        }
+    }
+};
 
 /*====================================================================
 |	turboRegImage
@@ -16,7 +42,7 @@ class TurboRegImage { /* class turboRegImage */
 public:
     TurboRegImage (double *img, int width, int height, Transformation transformation, bool isTarget);
     
-    double* getCoefficient () {
+    std::vector<double> &getCoefficient () {
         return(this->coefficient);
     };
 
@@ -24,13 +50,13 @@ public:
         return(this->height);
     };
 
-    double* getImage () {
+    std::vector<double> &getImage () {
         return(this->image);
     };
 
-    Stack<Object> getPyramid (
+    std::stack<ImageStackItem> &getPyramid (
     ) {
-        return(this->pyramid);
+        return (this->pyramid);
     };
 
     int getPyramidDepth (
@@ -43,12 +69,12 @@ public:
         return(this->width);
     } ;
 
-    double* getXGradient (
+    std::vector<double> &getXGradient (
     ) {
         return(this->xGradient);
     };
 
-    double* getYGradient (
+    std::vector<double> &getYGradient (
     ) {
         return(this->yGradient);
     };
@@ -61,34 +87,33 @@ public:
         this->transformation = transformation;
     }
 
+    void init();
+
 
 private:
-    std::stack<int> pyramid;
+    std::stack<ImageStackItem> pyramid;
     
-    double* image;
-    double* coefficient;
-    double* xGradient;
-    double* yGradient;
+    std::vector<double> image;
+    std::vector<double> coefficient;
+    std::vector<double> xGradient;
+    std::vector<double> yGradient;
     int width;
     int height;
     int pyramidDepth;
     Transformation transformation;
     bool isTarget;
 
-    void init();
+
 
     void antiSymmetricFirMirrorOffBounds1D (
-        double* h,
-        int hlen,
-        double* c,
-        int clen,
-        double* s,
-        int slen
+        std::vector<double> &h,
+        std::vector<double> &c,
+        std::vector<double> &s
     );
 
     void basicToCardinal2D (
-            double* basic,
-            double* cardinal,
+            const std::vector<double> &basic,
+            std::vector<double> &cardinal,
             int width,
             int height,
             int degree
@@ -97,8 +122,8 @@ private:
     void buildImageAndGradientPyramid ();
     void buildImagePyramid ();
     void cardinalToDual2D (
-            double* cardinal,
-            double* dual,
+            std::vector<double> &cardinal,
+            std::vector<double> &dual,
             int width,
             int height,
             int degree
@@ -106,29 +131,27 @@ private:
 
     /*------------------------------------------------------------------*/
     void coefficientToGradient1D (
-            double* c,
-            int clen
+            std::vector<double> &c
     );
 
     /*------------------------------------------------------------------*/
     void coefficientToSamples1D (
-            double* c,
-            int clen
+            std::vector<double> &c
     ) ;
 
     /*------------------------------------------------------------------*/
     void coefficientToXYGradient2D (
-            double* basic,
-            double* xGradient,
-            double* yGradient,
+            std::vector<double> &basic,
+            std::vector<double> &xGradient,
+            std::vector<double> &yGradient,
             int width,
             int height
     );
 
     /*------------------------------------------------------------------*/
     void dualToCardinal2D (
-            double* dual,
-            double* cardinal,
+            std::vector<double> &dual,
+            std::vector<double> &cardinal,
             int width,
             int height,
             int degree
@@ -136,51 +159,48 @@ private:
 
     /*------------------------------------------------------------------*/
     void extractColumn (
-            double* array,
+            std::vector<double> &array,
             int width,
             int x,
-            double* column,
-            int height
+            std::vector<double> &column
     );
 
     /*------------------------------------------------------------------*/
     void extractRow (
-            double* array,
-            int y,
-            double* row,
-            int width
+        const std::vector<double> &array,
+        int y,
+        std::vector<double> &row
     );
 
     /*------------------------------------------------------------------*/
-    double* getBasicFromCardinal2D (
+    std::vector<double> getBasicFromCardinal2D (
     );
 
     /*------------------------------------------------------------------*/
-    double* getBasicFromCardinal2D (
-            double* cardinal,
+    std::vector<double> getBasicFromCardinal2D (
+            std::vector<double> &cardinal,
             int width,
             int height,
-            int degree
+            int degree,
+            std::vector<double> &img
     );
     /*------------------------------------------------------------------*/
-    double* getHalfDual2D (
-            double* fullDual,
+    std::vector<double> getHalfDual2D (
+            std::vector<double> &fullDual,
             int fullWidth,
             int fullHeight
     );
 
     /*------------------------------------------------------------------*/
     double getInitialAntiCausalCoefficientMirrorOffBounds (
-            double* c,
-            int clen,
+            std::vector<double> &c,
             double z,
             double tolerance
     );
 
     /*------------------------------------------------------------------*/
     double getInitialCausalCoefficientMirrorOffBounds (
-            double* c,
-            int clen,
+            std::vector<double> &c,
             double z,
             double tolerance
     );
@@ -190,41 +210,35 @@ private:
 
     /*------------------------------------------------------------------*/
     void putColumn (
-            double* array,
+            std::vector<double> &array,
             int width,
             int x,
-            double* column,
-            int columnlen
+            std::vector<double> &column
     );
     /*------------------------------------------------------------------*/
     void putRow (
-        double* array,
+        std::vector<double> &array,
         int y,
-        double* row,
-        int rowlen
+        std::vector<double> &row
     );
     /*------------------------------------------------------------------*/
     void reduceDual1D (
-        double* c,
-        int clen,
-        double* s,
-        int slen
+        std::vector<double> &c,
+        std::vector<double> &s
     );
     
-    void TurboRegImage::samplesToInterpolationCoefficient1D (
-            double* c,
-            int clen,
+    void samplesToInterpolationCoefficient1D (
+            std::vector<double> &c,
             int degree,
             double tolerance
     );
 
     void symmetricFirMirrorOffBounds1D (
-        double* h,
-        int hlen,
-        double* c,
-        int clen,
-        double* s,
-        int slen
+        std::vector<double> &h,
+        std::vector<double> &c,
+        std::vector<double> &s
     );
 
-}
+};
+
+#endif

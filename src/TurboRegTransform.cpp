@@ -1,4 +1,7 @@
+#include <cmath>
+#include <algorithm>
 #include "TurboRegTransform.h"
+#include "matrix.h"
 
 
 /*....................................................................
@@ -18,24 +21,29 @@ constructors
     @param interactive Shows or hides the resulting image.
     ********************************************************************/
 TurboRegTransform::TurboRegTransform(
-        TurboRegImage sourceImg,
-        TurboRegMask sourceMsk,
-        TurboRegPointHandler sourcePh,
-        TurboRegImage targetImg,
-        TurboRegMask targetMsk,
-        TurboRegPointHandler targetPh,
-        int transformation,
-        bool accelerated,
-        bool interactive
-) {
-    this->sourceImg = sourceImg;
-    this->sourceMsk = sourceMsk;
-    this->sourcePh = sourcePh;
-    this->targetImg = targetImg;
-    this->targetMsk = targetMsk;
-    this->transformation = transformation;
-    this->accelerated = accelerated;
-    this->interactive = interactive;
+        TurboRegImage &sourceImg,
+        TurboRegMask &sourceMsk,
+        TurboRegPointHandler &sourcePh,
+        TurboRegImage &targetImg,
+        TurboRegMask &targetMsk,
+        TurboRegPointHandler &targetPh,
+        Transformation transformation,
+        bool accelerated
+) :     
+    dxWeight(4),
+    dyWeight(4),
+    xWeight(4),
+    yWeight(4),
+    xIndex(4),
+    yIndex(4),
+    sourceImg{sourceImg},
+    sourceMsk{sourceMsk},
+    sourcePh{sourcePh},
+    targetImg{targetImg},
+    targetMsk{targetMsk},
+    accelerated{accelerated},
+    transformation{transformation}
+ {
     sourcePoint = sourcePh.getPoints();
     targetPoint = targetPh.getPoints();
 
@@ -58,36 +66,36 @@ public methods
     are being written.
     @see TurboRegDialog#loadLandmarks()
     ********************************************************************/
-TurboRegTransform::appendTransformation (
-        String pathAndFilename
+void TurboRegTransform::appendTransformation (
+        std::string pathAndFilename
 ) {
     outNx = targetImg.getWidth();
     outNy = targetImg.getHeight();
     inNx = sourceImg.getWidth();
     inNy = sourceImg.getHeight();
-    if (pathAndFilename == null) {
+    /*if (pathAndFilename == null) {
         return;
     }
-   /* FileWriter fw = new FileWriter(pathAndFilename, true);
+    FileWriter fw = new FileWriter(pathAndFilename, true);
     fw.write("\n");
     switch (transformation) {
-        case TurboRegDialog.TRANSLATION: {
+        case TRANSLATION: {
             fw.write("TRANSLATION\n");
             break;
         }
-        case TurboRegDialog.RIGID_BODY: {
+        case RIGID_BODY: {
             fw.write("RIGID_BODY\n");
             break;
         }
-        case TurboRegDialog.SCALED_ROTATION: {
+        case SCALED_ROTATION: {
             fw.write("SCALED_ROTATION\n");
             break;
         }
-        case TurboRegDialog.AFFINE: {
+        case AFFINE: {
             fw.write("AFFINE\n");
             break;
         }
-        case TurboRegDialog.BILINEAR: {
+        case BILINEAR: {
             fw.write("BILINEAR\n");
             break;
         }
@@ -100,26 +108,26 @@ TurboRegTransform::appendTransformation (
     fw.write(outNx + "\t" + outNy + "\n");
     fw.write("\n");
     fw.write("Refined source landmarks\n");
-    if (transformation == TurboRegDialog.RIGID_BODY) {
+    if (transformation == RIGID_BODY) {
         for (int i = 0; (i < transformation); i++) {
-            fw.write(sourcePoint[i][0] + "\t" + sourcePoint[i][1] + "\n");
+            fw.write(sourcePoint(i, 0) + "\t" + sourcePoint(i, 1) + "\n");
         }
     }
     else {
         for (int i = 0; (i < (transformation / 2)); i++) {
-            fw.write(sourcePoint[i][0] + "\t" + sourcePoint[i][1] + "\n");
+            fw.write(sourcePoint(i, 0) + "\t" + sourcePoint(i, 1) + "\n");
         }
     }
     fw.write("\n");
     fw.write("Target landmarks\n");
-    if (transformation == TurboRegDialog.RIGID_BODY) {
+    if (transformation == RIGID_BODY) {
         for (int i = 0; (i < transformation); i++) {
-            fw.write(targetPoint[i][0] + "\t" + targetPoint[i][1] + "\n");
+            fw.write(targetPoint(i, 0) + "\t" + targetPoint(i, 1) + "\n");
         }
     }
     else {
         for (int i = 0; (i < (transformation / 2)); i++) {
-            fw.write(targetPoint[i][0] + "\t" + targetPoint[i][1] + "\n");
+            fw.write(targetPoint(i, 0) + "\t" + targetPoint(i, 1) + "\n");
         }
     }
     fw.close();*/
@@ -129,8 +137,8 @@ TurboRegTransform::appendTransformation (
 /*********************************************************************
  Compute the image.
     ********************************************************************/
-TurboRegTransform::doBatchFinalTransform (
-        float[] pixels
+void TurboRegTransform::doBatchFinalTransform (
+        std::vector<double> &pixels
 ) {
     if (accelerated) {
         inImg = sourceImg.getImage();
@@ -145,20 +153,20 @@ TurboRegTransform::doBatchFinalTransform (
     outImg = pixels;
     outNx = targetImg.getWidth();
     outNy = targetImg.getHeight();
-    double[][] matrix = getTransformationMatrix(targetPoint, sourcePoint);
+    matrix<double> m = getTransformationMatrix(targetPoint, sourcePoint);
     switch (transformation) {
-        case TurboRegDialog.TRANSLATION: {
-            translationTransform(matrix);
+        case TRANSLATION: {
+            translationTransform(m);
             break;
         }
-        case TurboRegDialog.RIGID_BODY:
-        case TurboRegDialog.SCALED_ROTATION:
-        case TurboRegDialog.AFFINE: {
-            affineTransform(matrix);
+        case RIGID_BODY:
+        case SCALED_ROTATION:
+        case AFFINE: {
+            affineTransform(m);
             break;
         }
-        case TurboRegDialog.BILINEAR: {
-            bilinearTransform(matrix);
+        case BILINEAR: {
+            bilinearTransform(m);
             break;
         }
     }
@@ -167,7 +175,7 @@ TurboRegTransform::doBatchFinalTransform (
 /*********************************************************************
  Compute the image.
     ********************************************************************/
-ImagePlus TurboRegTransform::doFinalTransform (
+std::vector<double> TurboRegTransform::doFinalTransform (
         int width,
         int height
 ) {
@@ -182,53 +190,44 @@ ImagePlus TurboRegTransform::doFinalTransform (
     inNy = sourceImg.getHeight();
     twiceInNx = 2 * inNx;
     twiceInNy = 2 * inNy;
-    ImageStack is = new ImageStack(width, height);
-    FloatProcessor dataFp = new FloatProcessor(width, height);
-    is.addSlice("Data", dataFp);
-    FloatProcessor maskFp = new FloatProcessor(width, height);
-    is.addSlice("Mask", maskFp);
-    ImagePlus imp = new ImagePlus("Output", is);
-    imp.setSlice(1);
-    outImg = (float[])dataFp.getPixels();
-    imp.setSlice(2);
-    float[] outMsk = (float[])maskFp.getPixels();
-    outNx = imp.getWidth();
-    outNy = imp.getHeight();
-    double[][] matrix = getTransformationMatrix(targetPoint, sourcePoint);
+
+    outImg.resize(width * height, 0);
+    outMsk.resize(width * height, 1);
+
+    outNx = width;
+    outNy = height;
+
+    matrix<double> m = getTransformationMatrix(targetPoint, sourcePoint);
+
     switch (transformation) {
-        case TurboRegDialog.TRANSLATION: {
-            translationTransform(matrix, outMsk);
+        case TRANSLATION: {
+            translationTransform(m, outMsk);
             break;
         }
-        case TurboRegDialog.RIGID_BODY:
-        case TurboRegDialog.SCALED_ROTATION:
-        case TurboRegDialog.AFFINE: {
-            affineTransform(matrix, outMsk);
+        case RIGID_BODY:
+        case SCALED_ROTATION:
+        case AFFINE: {
+            affineTransform(m, outMsk);
             break;
         }
-        case TurboRegDialog.BILINEAR: {
-            bilinearTransform(matrix, outMsk);
+        case BILINEAR: {
+            bilinearTransform(m, outMsk);
             break;
         }
     }
-    imp.setSlice(1);
-    imp.getProcessor().resetMinAndMax();
-    if (interactive) {
-        imp.show();
-        imp.updateAndDraw();
-    }
-    return(imp);
+
+    return(outImg);
 } /* end doFinalTransform */
 
 /*********************************************************************
  Compute the image.
     ********************************************************************/
-public float[] doFinalTransform (
-        TurboRegImage sourceImg,
-        TurboRegPointHandler sourcePh,
-        TurboRegImage targetImg,
-        TurboRegPointHandler targetPh,
-        int transformation,
+/*std::vector<double> TurboRegTransform::doFinalTransform (
+        TurboRegImage &sourceImg,
+        TurboRegPointHandler &sourcePh,
+        TurboRegImage &targetImg,
+        TurboRegPointHandler &targetPh,
+        Transformation transformation,
         bool accelerated
 ) {
     this->sourceImg = sourceImg;
@@ -250,41 +249,43 @@ public float[] doFinalTransform (
     twiceInNy = 2 * inNy;
     outNx = targetImg.getWidth();
     outNy = targetImg.getHeight();
-    outImg = new float[outNx * outNy];
-    double[][] matrix = getTransformationMatrix(targetPoint, sourcePoint);
+    outImg.resize(outNx * outNy);
+
+    matrix<double> m = getTransformationMatrix(targetPoint, sourcePoint);
+
     switch (transformation) {
-        case TurboRegDialog.TRANSLATION: {
-            translationTransform(matrix);
+        case TRANSLATION: {
+            translationTransform(m);
             break;
         }
-        case TurboRegDialog.RIGID_BODY:
-        case TurboRegDialog.SCALED_ROTATION:
-        case TurboRegDialog.AFFINE: {
-            affineTransform(matrix);
+        case RIGID_BODY:
+        case SCALED_ROTATION:
+        case AFFINE: {
+            affineTransform(m);
             break;
         }
-        case TurboRegDialog.BILINEAR: {
-            bilinearTransform(matrix);
+        case BILINEAR: {
+            bilinearTransform(m);
             break;
         }
     }
     return(outImg);
-} /* end doFinalTransform */
+}*/ /* end doFinalTransform */
 
 /*********************************************************************
  Refine the landmarks.
     ********************************************************************/
-TurboRegTransform::doRegistration (
+void TurboRegTransform::doRegistration (
 ) {
-    Stack<?> sourceImgPyramid;
-    Stack<?> sourceMskPyramid;
-    Stack<?> targetImgPyramid;
-    Stack<?> targetMskPyramid;
-    if (sourceMsk == null) {
+    std::stack<ImageStackItem> sourceImgPyramid;
+    std::stack<MaskStackItem> sourceMskPyramid;
+    std::stack<ImageStackItem> targetImgPyramid;
+    std::stack<MaskStackItem> targetMskPyramid;
+    if (!hasSourceMask()) {
         sourceImgPyramid = sourceImg.getPyramid();
-        sourceMskPyramid = null;
-        targetImgPyramid = (Stack<?>)targetImg.getPyramid().clone();
-        targetMskPyramid = (Stack<?>)targetMsk.getPyramid().clone();
+        //sourceMskPyramid = null;
+        targetImgPyramid = targetImg.getPyramid();
+        targetMskPyramid = targetMsk.getPyramid();
     }
     else {
         sourceImgPyramid = sourceImg.getPyramid();
@@ -293,99 +294,111 @@ TurboRegTransform::doRegistration (
         targetMskPyramid = targetMsk.getPyramid();
     }
     pyramidDepth = targetImg.getPyramidDepth();
-    iterationPower = (int)Math.pow(
+    iterationPower = (int)pow(
             (double)ITERATION_PROGRESSION, (double)pyramidDepth);
-    TurboRegProgressBar.addWorkload(
-            pyramidDepth * maxIterations * iterationPower
-                    / ITERATION_PROGRESSION
-                    - (iterationPower - 1) / (ITERATION_PROGRESSION - 1));
+
     iterationCost = 1;
+    
     scaleBottomDownLandmarks();
-    while (!targetImgPyramid.isEmpty()) {
+    /* 1 *****************/ 
+    while (!targetImgPyramid.empty()) {
+
+        ImageStackItem srcImgItem = sourceImgPyramid.top();
+        sourceImgPyramid.pop();
+
+        MaskStackItem srcMskItem = sourceMskPyramid.top();
+        sourceMskPyramid.pop();
+
+        ImageStackItem tarImgItem = targetImgPyramid.top();
+        targetImgPyramid.pop();
+
+        MaskStackItem tarMskItem = targetMskPyramid.top();
+        targetMskPyramid.pop();
+
         iterationPower /= ITERATION_PROGRESSION;
-        if (transformation == TurboRegDialog.BILINEAR) {
-            inNx = ((Integer)sourceImgPyramid.pop()).intValue();
-            inNy = ((Integer)sourceImgPyramid.pop()).intValue();
-            inImg = (float[])sourceImgPyramid.pop();
-            if (sourceMskPyramid == null) {
-                inMsk = null;
+
+        if (transformation == BILINEAR) {
+            inNx = srcImgItem.halfWidth; //((Integer)sourceImgPyramid.pop()).intValue();
+            inNy = srcImgItem.halfHeight; //((Integer)sourceImgPyramid.pop()).intValue();
+            inImg = srcImgItem.halfImg; //(float[])sourceImgPyramid.pop();
+            if (!hasSourceMask()) {
+                inMsk.clear();
             }
             else {
-                inMsk = (float[])sourceMskPyramid.pop();
+                inMsk = srcMskItem.halfMask; //(float[])sourceMskPyramid.pop();
             }
-            outNx = ((Integer)targetImgPyramid.pop()).intValue();
-            outNy = ((Integer)targetImgPyramid.pop()).intValue();
-            outImg = (float[])targetImgPyramid.pop();
-            outMsk = (float[])targetMskPyramid.pop();
+            outNx = tarImgItem.halfWidth; //((Integer)targetImgPyramid.pop()).intValue();
+            outNy = tarImgItem.halfHeight; //((Integer)targetImgPyramid.pop()).intValue();
+            outImg = tarImgItem.halfImg; //(float[])targetImgPyramid.pop();
+            outMsk = tarMskItem.halfMask; //(float[])targetMskPyramid.pop();
         }
         else {
-            inNx = ((Integer)targetImgPyramid.pop()).intValue();
-            inNy = ((Integer)targetImgPyramid.pop()).intValue();
-            inImg = (float[])targetImgPyramid.pop();
-            inMsk = (float[])targetMskPyramid.pop();
-            outNx = ((Integer)sourceImgPyramid.pop()).intValue();
-            outNy = ((Integer)sourceImgPyramid.pop()).intValue();
-            outImg = (float[])sourceImgPyramid.pop();
-            xGradient = (float[])sourceImgPyramid.pop();
-            yGradient = (float[])sourceImgPyramid.pop();
-            if (sourceMskPyramid == null) {
-                outMsk = null;
+            inNx = tarImgItem.halfWidth; //((Integer)targetImgPyramid.pop()).intValue();
+            inNy = tarImgItem.halfHeight; //((Integer)targetImgPyramid.pop()).intValue();
+            inImg = tarImgItem.halfImg; //(float[])targetImgPyramid.pop();
+            inMsk = tarMskItem.halfMask; //(float[])targetMskPyramid.pop();
+            outNx = srcImgItem.halfWidth; //((Integer)sourceImgPyramid.pop()).intValue();
+            outNy = srcImgItem.halfHeight; //(((Integer)sourceImgPyramid.pop()).intValue();
+            outImg = srcImgItem.halfImg; //(float[])sourceImgPyramid.pop();
+            xGradient = srcImgItem.xGradient; //(float[])sourceImgPyramid.pop();
+            yGradient = srcImgItem.yGradient; //(float[])sourceImgPyramid.pop();
+            if (!hasSourceMask()) {
+                outMsk.clear();
             }
             else {
-                outMsk = (float[])sourceMskPyramid.pop();
+                outMsk = srcMskItem.halfMask; //(float[])sourceMskPyramid.pop();
             }
         }
+        /* 2 *****************/ 
         twiceInNx = 2 * inNx;
         twiceInNy = 2 * inNy;
         switch (transformation) {
-            case TurboRegDialog.TRANSLATION: {
+            case TRANSLATION: {
                 targetJacobian = 1.0;
-                inverseMarquardtLevenbergOptimization(
-                        iterationPower * maxIterations - 1);
+                inverseMarquardtLevenbergOptimization();
                 break;
             }
-            case TurboRegDialog.RIGID_BODY: {
-                inverseMarquardtLevenbergRigidBodyOptimization(
-                        iterationPower * maxIterations - 1);
+            case RIGID_BODY: {
+                inverseMarquardtLevenbergRigidBodyOptimization();
                 break;
             }
-            case TurboRegDialog.SCALED_ROTATION: {
-                targetJacobian = (targetPoint[0][0] - targetPoint[1][0])
-                        * (targetPoint[0][0] - targetPoint[1][0])
-                        + (targetPoint[0][1] - targetPoint[1][1])
-                        * (targetPoint[0][1] - targetPoint[1][1]);
-                inverseMarquardtLevenbergOptimization(
-                        iterationPower * maxIterations - 1);
+            case SCALED_ROTATION: {
+                targetJacobian = (targetPoint(0, 0) - targetPoint(1, 0))
+                        * (targetPoint(0, 0) - targetPoint(1, 0))
+                        + (targetPoint(0, 1) - targetPoint(1, 1))
+                        * (targetPoint(0, 1) - targetPoint(1, 1));
+                inverseMarquardtLevenbergOptimization();
                 break;
             }
-            case TurboRegDialog.AFFINE: {
-                targetJacobian = (targetPoint[1][0] - targetPoint[2][0])
-                        * targetPoint[0][1]
-                        + (targetPoint[2][0] - targetPoint[0][0])
-                        * targetPoint[1][1]
-                        + (targetPoint[0][0] - targetPoint[1][0])
-                        * targetPoint[2][1];
-                inverseMarquardtLevenbergOptimization(
-                        iterationPower * maxIterations - 1);
+            case AFFINE: {
+                targetJacobian = (targetPoint(1, 0) - targetPoint(2, 0))
+                        * targetPoint(0, 1)
+                        + (targetPoint(2, 0) - targetPoint(0, 0))
+                        * targetPoint(1, 1)
+                        + (targetPoint(0, 0) - targetPoint(1, 0))
+                        * targetPoint(2, 1);
+                inverseMarquardtLevenbergOptimization();
                 break;
             }
-            case TurboRegDialog.BILINEAR: {
-                marquardtLevenbergOptimization(
-                        iterationPower * maxIterations - 1);
+            case BILINEAR: {
+                marquardtLevenbergOptimization();
                 break;
             }
+            default:
+                break;
         }
         scaleUpLandmarks();
         sourcePh.setPoints(sourcePoint);
         iterationCost *= ITERATION_PROGRESSION;
     }
+    /* 3 *****************/ 
     iterationPower /= ITERATION_PROGRESSION;
-    if (transformation == TurboRegDialog.BILINEAR) {
+    if (transformation == BILINEAR) {
         inNx = sourceImg.getWidth();
         inNy = sourceImg.getHeight();
         inImg = sourceImg.getCoefficient();
-        if (sourceMsk == null) {
-            inMsk = null;
+        if (!hasSourceMask()) {
+            inMsk.clear();
         }
         else {
             inMsk = sourceMsk.getMask();
@@ -405,8 +418,8 @@ TurboRegTransform::doRegistration (
         outImg = sourceImg.getImage();
         xGradient = sourceImg.getXGradient();
         yGradient = sourceImg.getYGradient();
-        if (sourceMsk == null) {
-            outMsk = null;
+        if (!hasSourceMask()) {
+            outMsk.clear();
         }
         else {
             outMsk = sourceMsk.getMask();
@@ -414,35 +427,27 @@ TurboRegTransform::doRegistration (
     }
     twiceInNx = 2 * inNx;
     twiceInNy = 2 * inNy;
-    if (accelerated) {
-        TurboRegProgressBar.skipProgressBar(
-                iterationCost * (maxIterations - 1));
-    }
-    else {
-        switch (transformation) {
-            case TurboRegDialog.RIGID_BODY: {
-                inverseMarquardtLevenbergRigidBodyOptimization(
-                        maxIterations - 1);
-                break;
-            }
-            case TurboRegDialog.TRANSLATION:
-            case TurboRegDialog.SCALED_ROTATION:
-            case TurboRegDialog.AFFINE: {
-                inverseMarquardtLevenbergOptimization(maxIterations - 1);
-                break;
-            }
-            case TurboRegDialog.BILINEAR: {
-                marquardtLevenbergOptimization(maxIterations - 1);
-                break;
-            }
+
+    switch (transformation) {
+        case RIGID_BODY: {
+            inverseMarquardtLevenbergRigidBodyOptimization();
+            break;
+        }
+        case TRANSLATION:
+        case SCALED_ROTATION:
+        case AFFINE: {
+            inverseMarquardtLevenbergOptimization();
+            break;
+        }
+        case BILINEAR: {
+            marquardtLevenbergOptimization();
+            break;
         }
     }
     sourcePh.setPoints(sourcePoint);
-    iterationPower = (int)Math.pow(
+    iterationPower = (int)pow(
             (double)ITERATION_PROGRESSION, (double)pyramidDepth);
-    TurboRegProgressBar.workloadDone(
-            pyramidDepth * maxIterations * iterationPower / ITERATION_PROGRESSION
-                    - (iterationPower - 1) / (ITERATION_PROGRESSION - 1));
+
 } /* end doRegistration */
 
 /*********************************************************************
@@ -450,14 +455,14 @@ TurboRegTransform::doRegistration (
     and name of the file. Rigid format.
     @see TurboRegDialog#loadLandmarks()
     ********************************************************************/
-String TurboRegTransform::saveTransformation (
-        String filename
+/*std::string TurboRegTransform::saveTransformation (
+        std::string filename
 ) {
     inNx = sourceImg.getWidth();
     inNy = sourceImg.getHeight();
     outNx = targetImg.getWidth();
     outNy = targetImg.getHeight();
-    String path = "";
+    std::string path = "";
     if (filename == null) {
         Frame f = new Frame();
         FileDialog fd = new FileDialog(f, "Save landmarks",
@@ -475,23 +480,23 @@ String TurboRegTransform::saveTransformation (
         FileWriter fw = new FileWriter(path + filename);
         fw.write("Transformation\n");
         switch (transformation) {
-            case TurboRegDialog.TRANSLATION: {
+            case TRANSLATION: {
                 fw.write("TRANSLATION\n");
                 break;
             }
-            case TurboRegDialog.RIGID_BODY: {
+            case RIGID_BODY: {
                 fw.write("RIGID_BODY\n");
                 break;
             }
-            case TurboRegDialog.SCALED_ROTATION: {
+            case SCALED_ROTATION: {
                 fw.write("SCALED_ROTATION\n");
                 break;
             }
-            case TurboRegDialog.AFFINE: {
+            case AFFINE: {
                 fw.write("AFFINE\n");
                 break;
             }
-            case TurboRegDialog.BILINEAR: {
+            case BILINEAR: {
                 fw.write("BILINEAR\n");
                 break;
             }
@@ -504,26 +509,26 @@ String TurboRegTransform::saveTransformation (
         fw.write(outNx + "\t" + outNy + "\n");
         fw.write("\n");
         fw.write("Refined source landmarks\n");
-        if (transformation == TurboRegDialog.RIGID_BODY) {
+        if (transformation == RIGID_BODY) {
             for (int i = 0; (i < transformation); i++) {
-                fw.write(sourcePoint[i][0] + "\t" + sourcePoint[i][1] + "\n");
+                fw.write(sourcePoint(i, 0) + "\t" + sourcePoint(i, 1) + "\n");
             }
         }
         else {
             for (int i = 0; (i < (transformation / 2)); i++) {
-                fw.write(sourcePoint[i][0] + "\t" + sourcePoint[i][1] + "\n");
+                fw.write(sourcePoint(i, 0) + "\t" + sourcePoint(i, 1) + "\n");
             }
         }
         fw.write("\n");
         fw.write("Target landmarks\n");
-        if (transformation == TurboRegDialog.RIGID_BODY) {
+        if (transformation == RIGID_BODY) {
             for (int i = 0; (i < transformation); i++) {
-                fw.write(targetPoint[i][0] + "\t" + targetPoint[i][1] + "\n");
+                fw.write(targetPoint(i, 0) + "\t" + targetPoint(i, 1) + "\n");
             }
         }
         else {
             for (int i = 0; (i < (transformation / 2)); i++) {
-                fw.write(targetPoint[i][0] + "\t" + targetPoint[i][1] + "\n");
+                fw.write(targetPoint(i, 0) + "\t" + targetPoint(i, 1) + "\n");
             }
         }
         fw.close();
@@ -535,14 +540,14 @@ String TurboRegTransform::saveTransformation (
                 "Security exception " + e.getMessage());
     }
     return(path + filename);
-} /* end saveTransformation */
+}*/ /* end saveTransformation */
 
 /*....................................................................
-private methods
+methods
 ....................................................................*/
 /*------------------------------------------------------------------*/
-TurboRegTransform::affineTransform (
-        double[][] matrix
+void TurboRegTransform::affineTransform (
+        matrix<double> &m
 ) {
     double yx;
     double yy;
@@ -551,9 +556,9 @@ TurboRegTransform::affineTransform (
     int xMsk;
     int yMsk;
     int k = 0;
-    TurboRegProgressBar.addWorkload(outNy);
-    yx = matrix[0][0];
-    yy = matrix[1][0];
+
+    yx = m(0, 0);
+    yy = m(1, 0);
     for (int v = 0; (v < outNy); v++) {
         x0 = yx;
         y0 = yy;
@@ -580,20 +585,18 @@ TurboRegTransform::affineTransform (
             else {
                 outImg[k++] = 0.0F;
             }
-            x0 += matrix[0][1];
-            y0 += matrix[1][1];
+            x0 += m(0, 1);
+            y0 += m(1, 1);
         }
-        yx += matrix[0][2];
-        yy += matrix[1][2];
-        TurboRegProgressBar.stepProgressBar();
+        yx += m(0, 2);
+        yy += m(1, 2);
     }
-    TurboRegProgressBar.workloadDone(outNy);
 } /* affineTransform */
 
 /*------------------------------------------------------------------*/
-TurboRegTransform::affineTransform (
-        double[][] matrix,
-        float[] outMsk
+void TurboRegTransform::affineTransform (
+        matrix<double> &m,
+        std::vector<double> &outMsk
 ) {
     double yx;
     double yy;
@@ -602,9 +605,9 @@ TurboRegTransform::affineTransform (
     int xMsk;
     int yMsk;
     int k = 0;
-    TurboRegProgressBar.addWorkload(outNy);
-    yx = matrix[0][0];
-    yy = matrix[1][0];
+
+    yx = m(0, 0);
+    yy = m(1, 0);
     for (int v = 0; (v < outNy); v++) {
         x0 = yx;
         y0 = yy;
@@ -633,19 +636,18 @@ TurboRegTransform::affineTransform (
                 outImg[k] = 0.0F;
                 outMsk[k++] = 0.0F;
             }
-            x0 += matrix[0][1];
-            y0 += matrix[1][1];
+            x0 += m(0, 1);
+            y0 += m(1, 1);
         }
-        yx += matrix[0][2];
-        yy += matrix[1][2];
-        TurboRegProgressBar.stepProgressBar();
+        yx += m(0, 2);
+        yy += m(1, 2);
+
     }
-    TurboRegProgressBar.workloadDone(outNy);
 } /* affineTransform */
 
 /*------------------------------------------------------------------*/
-TurboRegTransform::bilinearTransform (
-        double[][] matrix
+void TurboRegTransform::bilinearTransform (
+        matrix<double> &m
 ) {
     double yx;
     double yy;
@@ -656,9 +658,9 @@ TurboRegTransform::bilinearTransform (
     int xMsk;
     int yMsk;
     int k = 0;
-    TurboRegProgressBar.addWorkload(outNy);
-    yx = matrix[0][0];
-    yy = matrix[1][0];
+    
+    yx = m(0, 0);
+    yy = m(1, 0);
     yxy = 0.0;
     yyy = 0.0;
     for (int v = 0; (v < outNy); v++) {
@@ -687,22 +689,22 @@ TurboRegTransform::bilinearTransform (
             else {
                 outImg[k++] = 0.0F;
             }
-            x0 += matrix[0][1] + yxy;
-            y0 += matrix[1][1] + yyy;
+            x0 += m(0, 1) + yxy;
+            y0 += m(1, 1) + yyy;
         }
-        yx += matrix[0][2];
-        yy += matrix[1][2];
-        yxy += matrix[0][3];
-        yyy += matrix[1][3];
-        TurboRegProgressBar.stepProgressBar();
+        yx += m(0, 2);
+        yy += m(1, 2);
+        yxy += m(0, 3);
+        yyy += m(1, 3);
+        
     }
-    TurboRegProgressBar.workloadDone(outNy);
+
 } /* bilinearTransform */
 
 /*------------------------------------------------------------------*/
-TurboRegTransform::bilinearTransform (
-        double[][] matrix,
-        float[] outMsk
+void TurboRegTransform::bilinearTransform (
+        matrix<double> &m,
+        std::vector<double> &outMsk
 ) {
     double yx;
     double yy;
@@ -713,9 +715,9 @@ TurboRegTransform::bilinearTransform (
     int xMsk;
     int yMsk;
     int k = 0;
-    TurboRegProgressBar.addWorkload(outNy);
-    yx = matrix[0][0];
-    yy = matrix[1][0];
+    
+    yx = m(0, 0);
+    yy = m(1, 0);
     yxy = 0.0;
     yyy = 0.0;
     for (int v = 0; (v < outNy); v++) {
@@ -746,29 +748,29 @@ TurboRegTransform::bilinearTransform (
                 outImg[k] = 0.0F;
                 outMsk[k++] = 0.0F;
             }
-            x0 += matrix[0][1] + yxy;
-            y0 += matrix[1][1] + yyy;
+            x0 += m(0, 1) + yxy;
+            y0 += m(1, 1) + yyy;
         }
-        yx += matrix[0][2];
-        yy += matrix[1][2];
-        yxy += matrix[0][3];
-        yyy += matrix[1][3];
-        TurboRegProgressBar.stepProgressBar();
+        yx += m(0, 2);
+        yy += m(1, 2);
+        yxy += m(0, 3);
+        yyy += m(1, 3);
+        
     }
-    TurboRegProgressBar.workloadDone(outNy);
+
 } /* bilinearTransform */
 
 /*------------------------------------------------------------------*/
-TurboRegTransform::computeBilinearGradientConstants (
+void TurboRegTransform::computeBilinearGradientConstants (
 ) {
-    double u1 = targetPoint[0][0];
-    double u2 = targetPoint[1][0];
-    double u3 = targetPoint[2][0];
-    double u4 = targetPoint[3][0];
-    double v1 = targetPoint[0][1];
-    double v2 = targetPoint[1][1];
-    double v3 = targetPoint[2][1];
-    double v4 = targetPoint[3][1];
+    double u1 = targetPoint(0, 0);
+    double u2 = targetPoint(1, 0);
+    double u3 = targetPoint(2, 0);
+    double u4 = targetPoint(3, 0);
+    double v1 = targetPoint(0, 1);
+    double v2 = targetPoint(1, 1);
+    double v3 = targetPoint(2, 1);
+    double v4 = targetPoint(3, 1);
     double v12 = v1 - v2;
     double v13 = v1 - v3;
     double v14 = v1 - v4;
@@ -803,15 +805,15 @@ TurboRegTransform::computeBilinearGradientConstants (
 
 /*------------------------------------------------------------------*/
 double TurboRegTransform::getAffineMeanSquares (
-        double[][] sourcePoint,
-        double[][] matrix
+        matrix<double> &sourcePoint,
+        matrix<double> &m
 ) {
-    double u1 = sourcePoint[0][0];
-    double u2 = sourcePoint[1][0];
-    double u3 = sourcePoint[2][0];
-    double v1 = sourcePoint[0][1];
-    double v2 = sourcePoint[1][1];
-    double v3 = sourcePoint[2][1];
+    double u1 = sourcePoint(0, 0);
+    double u2 = sourcePoint(1, 0);
+    double u3 = sourcePoint(2, 0);
+    double v1 = sourcePoint(0, 1);
+    double v2 = sourcePoint(1, 1);
+    double v3 = sourcePoint(2, 1);
     double uv32 = u3 * v2 - u2 * v3;
     double uv21 = u2 * v1 - u1 * v2;
     double uv13 = u1 * v3 - u3 * v1;
@@ -826,9 +828,9 @@ double TurboRegTransform::getAffineMeanSquares (
     int xMsk;
     int yMsk;
     int k = 0;
-    if (outMsk == null) {
-        yx = matrix[0][0];
-        yy = matrix[1][0];
+    if (outMsk.empty()) {
+        yx = m(0, 0);
+        yy = m(1, 0);
         for (int v = 0; (v < outNy); v++) {
             x0 = yx;
             y0 = yy;
@@ -851,16 +853,16 @@ double TurboRegTransform::getAffineMeanSquares (
                         meanSquares += difference * difference;
                     }
                 }
-                x0 += matrix[0][1];
-                y0 += matrix[1][1];
+                x0 += m(0, 1);
+                y0 += m(1, 1);
             }
-            yx += matrix[0][2];
-            yy += matrix[1][2];
+            yx += m(0, 2);
+            yy += m(1, 2);
         }
     }
     else {
-        yx = matrix[0][0];
-        yy = matrix[1][0];
+        yx = m(0, 0);
+        yy = m(1, 0);
         for (int v = 0; (v < outNy); v++) {
             x0 = yx;
             y0 = yy;
@@ -883,28 +885,28 @@ double TurboRegTransform::getAffineMeanSquares (
                         meanSquares += difference * difference;
                     }
                 }
-                x0 += matrix[0][1];
-                y0 += matrix[1][1];
+                x0 += m(0, 1);
+                y0 += m(1, 1);
             }
-            yx += matrix[0][2];
-            yy += matrix[1][2];
+            yx += m(0, 2);
+            yy += m(1, 2);
         }
     }
-    return(meanSquares / ((double)area * Math.abs(det / targetJacobian)));
+    return(meanSquares / ((double)area * abs(det / targetJacobian)));
 } /* getAffineMeanSquares */
 
 /*------------------------------------------------------------------*/
 double TurboRegTransform::getAffineMeanSquares (
-        double[][] sourcePoint,
-        double[][] matrix,
-        double[] gradient
+        matrix<double> &sourcePoint,
+        matrix<double> &m,
+        std::vector<double> &gradient
 ) {
-    double u1 = sourcePoint[0][0];
-    double u2 = sourcePoint[1][0];
-    double u3 = sourcePoint[2][0];
-    double v1 = sourcePoint[0][1];
-    double v2 = sourcePoint[1][1];
-    double v3 = sourcePoint[2][1];
+    double u1 = sourcePoint(0, 0);
+    double u2 = sourcePoint(1, 0);
+    double u3 = sourcePoint(2, 0);
+    double v1 = sourcePoint(0, 1);
+    double v2 = sourcePoint(1, 1);
+    double v3 = sourcePoint(2, 1);
     double uv32 = u3 * v2 - u2 * v3;
     double uv21 = u2 * v1 - u1 * v2;
     double uv13 = u1 * v3 - u3 * v1;
@@ -940,9 +942,9 @@ double TurboRegTransform::getAffineMeanSquares (
     for (int i = 0; (i < transformation); i++) {
         gradient[i] = 0.0;
     }
-    if (outMsk == null) {
-        yx = matrix[0][0];
-        yy = matrix[1][0];
+    if (outMsk.empty()) {
+        yx = m(0, 0);
+        yy = m(1, 0);
         for (int v = 0; (v < outNy); v++) {
             x0 = yx;
             y0 = yy;
@@ -980,16 +982,16 @@ double TurboRegTransform::getAffineMeanSquares (
                         gradient[5] += difference * dy2;
                     }
                 }
-                x0 += matrix[0][1];
-                y0 += matrix[1][1];
+                x0 += m(0, 1);
+                y0 += m(1, 1);
             }
-            yx += matrix[0][2];
-            yy += matrix[1][2];
+            yx += m(0, 2);
+            yy += m(1, 2);
         }
     }
     else {
-        yx = matrix[0][0];
-        yy = matrix[1][0];
+        yx = m(0, 0);
+        yy = m(1, 0);
         for (int v = 0; (v < outNy); v++) {
             x0 = yx;
             y0 = yy;
@@ -1027,29 +1029,29 @@ double TurboRegTransform::getAffineMeanSquares (
                         gradient[5] += difference * dy2;
                     }
                 }
-                x0 += matrix[0][1];
-                y0 += matrix[1][1];
+                x0 += m(0, 1);
+                y0 += m(1, 1);
             }
-            yx += matrix[0][2];
-            yy += matrix[1][2];
+            yx += m(0, 2);
+            yy += m(1, 2);
         }
     }
-    return(meanSquares / ((double)area * Math.abs(det / targetJacobian)));
+    return(meanSquares / ((double)area * abs(det / targetJacobian)));
 } /* getAffineMeanSquares */
 
 /*------------------------------------------------------------------*/
 double TurboRegTransform::getAffineMeanSquares (
-        double[][] sourcePoint,
-        double[][] matrix,
-        double[][] hessian,
-        double[] gradient
+        matrix<double> &sourcePoint,
+        matrix<double> &m,
+        matrix<double> &hessian,
+        std::vector<double> &gradient
 ) {
-    double u1 = sourcePoint[0][0];
-    double u2 = sourcePoint[1][0];
-    double u3 = sourcePoint[2][0];
-    double v1 = sourcePoint[0][1];
-    double v2 = sourcePoint[1][1];
-    double v3 = sourcePoint[2][1];
+    double u1 = sourcePoint(0, 0);
+    double u2 = sourcePoint(1, 0);
+    double u3 = sourcePoint(2, 0);
+    double v1 = sourcePoint(0, 1);
+    double v2 = sourcePoint(1, 1);
+    double v3 = sourcePoint(2, 1);
     double uv32 = u3 * v2 - u2 * v3;
     double uv21 = u2 * v1 - u1 * v2;
     double uv13 = u1 * v3 - u3 * v1;
@@ -1085,12 +1087,12 @@ double TurboRegTransform::getAffineMeanSquares (
     for (int i = 0; (i < transformation); i++) {
         gradient[i] = 0.0;
         for (int j = 0; (j < transformation); j++) {
-            hessian[i][j] = 0.0;
+            hessian(i, j) = 0.0;
         }
     }
-    if (outMsk == null) {
-        yx = matrix[0][0];
-        yy = matrix[1][0];
+    if (outMsk.empty()) {
+        yx = m(0, 0);
+        yy = m(1, 0);
         for (int v = 0; (v < outNy); v++) {
             x0 = yx;
             y0 = yy;
@@ -1126,39 +1128,39 @@ double TurboRegTransform::getAffineMeanSquares (
                         gradient[3] += difference * dy1;
                         gradient[4] += difference * dx2;
                         gradient[5] += difference * dy2;
-                        hessian[0][0] += dx0 * dx0;
-                        hessian[0][1] += dx0 * dy0;
-                        hessian[0][2] += dx0 * dx1;
-                        hessian[0][3] += dx0 * dy1;
-                        hessian[0][4] += dx0 * dx2;
-                        hessian[0][5] += dx0 * dy2;
-                        hessian[1][1] += dy0 * dy0;
-                        hessian[1][2] += dy0 * dx1;
-                        hessian[1][3] += dy0 * dy1;
-                        hessian[1][4] += dy0 * dx2;
-                        hessian[1][5] += dy0 * dy2;
-                        hessian[2][2] += dx1 * dx1;
-                        hessian[2][3] += dx1 * dy1;
-                        hessian[2][4] += dx1 * dx2;
-                        hessian[2][5] += dx1 * dy2;
-                        hessian[3][3] += dy1 * dy1;
-                        hessian[3][4] += dy1 * dx2;
-                        hessian[3][5] += dy1 * dy2;
-                        hessian[4][4] += dx2 * dx2;
-                        hessian[4][5] += dx2 * dy2;
-                        hessian[5][5] += dy2 * dy2;
+                        hessian(0, 0) += dx0 * dx0;
+                        hessian(0, 1) += dx0 * dy0;
+                        hessian(0, 2) += dx0 * dx1;
+                        hessian(0, 3) += dx0 * dy1;
+                        hessian(0, 4) += dx0 * dx2;
+                        hessian(0, 5) += dx0 * dy2;
+                        hessian(1, 1) += dy0 * dy0;
+                        hessian(1, 2) += dy0 * dx1;
+                        hessian(1, 3) += dy0 * dy1;
+                        hessian(1, 4) += dy0 * dx2;
+                        hessian(1, 5) += dy0 * dy2;
+                        hessian(2, 2) += dx1 * dx1;
+                        hessian(2, 3) += dx1 * dy1;
+                        hessian(2, 4) += dx1 * dx2;
+                        hessian(2, 5) += dx1 * dy2;
+                        hessian(3, 3) += dy1 * dy1;
+                        hessian(3, 4) += dy1 * dx2;
+                        hessian(3, 5) += dy1 * dy2;
+                        hessian(4, 4) += dx2 * dx2;
+                        hessian(4, 5) += dx2 * dy2;
+                        hessian(5, 5) += dy2 * dy2;
                     }
                 }
-                x0 += matrix[0][1];
-                y0 += matrix[1][1];
+                x0 += m(0, 1);
+                y0 += m(1, 1);
             }
-            yx += matrix[0][2];
-            yy += matrix[1][2];
+            yx += m(0, 2);
+            yy += m(1, 2);
         }
     }
     else {
-        yx = matrix[0][0];
-        yy = matrix[1][0];
+        yx = m(0, 0);
+        yy = m(1, 0);
         for (int v = 0; (v < outNy); v++) {
             x0 = yx;
             y0 = yy;
@@ -1194,47 +1196,47 @@ double TurboRegTransform::getAffineMeanSquares (
                         gradient[3] += difference * dy1;
                         gradient[4] += difference * dx2;
                         gradient[5] += difference * dy2;
-                        hessian[0][0] += dx0 * dx0;
-                        hessian[0][1] += dx0 * dy0;
-                        hessian[0][2] += dx0 * dx1;
-                        hessian[0][3] += dx0 * dy1;
-                        hessian[0][4] += dx0 * dx2;
-                        hessian[0][5] += dx0 * dy2;
-                        hessian[1][1] += dy0 * dy0;
-                        hessian[1][2] += dy0 * dx1;
-                        hessian[1][3] += dy0 * dy1;
-                        hessian[1][4] += dy0 * dx2;
-                        hessian[1][5] += dy0 * dy2;
-                        hessian[2][2] += dx1 * dx1;
-                        hessian[2][3] += dx1 * dy1;
-                        hessian[2][4] += dx1 * dx2;
-                        hessian[2][5] += dx1 * dy2;
-                        hessian[3][3] += dy1 * dy1;
-                        hessian[3][4] += dy1 * dx2;
-                        hessian[3][5] += dy1 * dy2;
-                        hessian[4][4] += dx2 * dx2;
-                        hessian[4][5] += dx2 * dy2;
-                        hessian[5][5] += dy2 * dy2;
+                        hessian(0, 0) += dx0 * dx0;
+                        hessian(0, 1) += dx0 * dy0;
+                        hessian(0, 2) += dx0 * dx1;
+                        hessian(0, 3) += dx0 * dy1;
+                        hessian(0, 4) += dx0 * dx2;
+                        hessian(0, 5) += dx0 * dy2;
+                        hessian(1, 1) += dy0 * dy0;
+                        hessian(1, 2) += dy0 * dx1;
+                        hessian(1, 3) += dy0 * dy1;
+                        hessian(1, 4) += dy0 * dx2;
+                        hessian(1, 5) += dy0 * dy2;
+                        hessian(2, 2) += dx1 * dx1;
+                        hessian(2, 3) += dx1 * dy1;
+                        hessian(2, 4) += dx1 * dx2;
+                        hessian(2, 5) += dx1 * dy2;
+                        hessian(3, 3) += dy1 * dy1;
+                        hessian(3, 4) += dy1 * dx2;
+                        hessian(3, 5) += dy1 * dy2;
+                        hessian(4, 4) += dx2 * dx2;
+                        hessian(4, 5) += dx2 * dy2;
+                        hessian(5, 5) += dy2 * dy2;
                     }
                 }
-                x0 += matrix[0][1];
-                y0 += matrix[1][1];
+                x0 += m(0, 1);
+                y0 += m(1, 1);
             }
-            yx += matrix[0][2];
-            yy += matrix[1][2];
+            yx += m(0, 2);
+            yy += m(1, 2);
         }
     }
     for (int i = 1; (i < transformation); i++) {
         for (int j = 0; (j < i); j++) {
-            hessian[i][j] = hessian[j][i];
+            hessian(i, j) = hessian(j, i);
         }
     }
-    return(meanSquares / ((double)area * Math.abs(det / targetJacobian)));
+    return(meanSquares / ((double)area * abs(det / targetJacobian)));
 } /* getAffineMeanSquares */
 
 /*------------------------------------------------------------------*/
 double TurboRegTransform::getBilinearMeanSquares (
-        double[][] matrix
+        matrix<double> &m
 ) {
     double yx;
     double yy;
@@ -1248,9 +1250,9 @@ double TurboRegTransform::getBilinearMeanSquares (
     int xMsk;
     int yMsk;
     int k = 0;
-    if (inMsk == null) {
-        yx = matrix[0][0];
-        yy = matrix[1][0];
+    if (inMsk.empty()) {
+        yx = m(0, 0);
+        yy = m(1, 0);
         yxy = 0.0;
         yyy = 0.0;
         for (int v = 0; (v < outNy); v++) {
@@ -1275,18 +1277,18 @@ double TurboRegTransform::getBilinearMeanSquares (
                         meanSquares += difference * difference;
                     }
                 }
-                x0 += matrix[0][1] + yxy;
-                y0 += matrix[1][1] + yyy;
+                x0 += m(0, 1) + yxy;
+                y0 += m(1, 1) + yyy;
             }
-            yx += matrix[0][2];
-            yy += matrix[1][2];
-            yxy += matrix[0][3];
-            yyy += matrix[1][3];
+            yx += m(0, 2);
+            yy += m(1, 2);
+            yxy += m(0, 3);
+            yyy += m(1, 3);
         }
     }
     else {
-        yx = matrix[0][0];
-        yy = matrix[1][0];
+        yx = m(0, 0);
+        yy = m(1, 0);
         yxy = 0.0;
         yyy = 0.0;
         for (int v = 0; (v < outNy); v++) {
@@ -1312,13 +1314,13 @@ double TurboRegTransform::getBilinearMeanSquares (
                         meanSquares += difference * difference;
                     }
                 }
-                x0 += matrix[0][1] + yxy;
-                y0 += matrix[1][1] + yyy;
+                x0 += m(0, 1) + yxy;
+                y0 += m(1, 1) + yyy;
             }
-            yx += matrix[0][2];
-            yy += matrix[1][2];
-            yxy += matrix[0][3];
-            yyy += matrix[1][3];
+            yx += m(0, 2);
+            yy += m(1, 2);
+            yxy += m(0, 3);
+            yyy += m(1, 3);
         }
     }
     return(meanSquares / (double)area);
@@ -1326,9 +1328,9 @@ double TurboRegTransform::getBilinearMeanSquares (
 
 /*------------------------------------------------------------------*/
 double TurboRegTransform::getBilinearMeanSquares (
-        double[][] matrix,
-        double[][] hessian,
-        double[] gradient
+        matrix<double> &m,
+        matrix<double> &hessian,
+        std::vector<double> &gradient
 ) {
     double yx;
     double yy;
@@ -1361,12 +1363,12 @@ double TurboRegTransform::getBilinearMeanSquares (
     for (int i = 0; (i < transformation); i++) {
         gradient[i] = 0.0;
         for (int j = 0; (j < transformation); j++) {
-            hessian[i][j] = 0.0;
+            hessian(i, j) = 0.0;
         }
     }
-    if (inMsk == null) {
-        yx = matrix[0][0];
-        yy = matrix[1][0];
+    if (inMsk.empty()) {
+        yx = m(0, 0);
+        yy = m(1, 0);
         yxy = 0.0;
         yyy = 0.0;
         for (int v = 0; (v < outNy); v++) {
@@ -1412,56 +1414,56 @@ double TurboRegTransform::getBilinearMeanSquares (
                         gradient[5] += difference * dy2;
                         gradient[6] += difference * dx3;
                         gradient[7] += difference * dy3;
-                        hessian[0][0] += dx0 * dx0;
-                        hessian[0][1] += dx0 * dy0;
-                        hessian[0][2] += dx0 * dx1;
-                        hessian[0][3] += dx0 * dy1;
-                        hessian[0][4] += dx0 * dx2;
-                        hessian[0][5] += dx0 * dy2;
-                        hessian[0][6] += dx0 * dx3;
-                        hessian[0][7] += dx0 * dy3;
-                        hessian[1][1] += dy0 * dy0;
-                        hessian[1][2] += dy0 * dx1;
-                        hessian[1][3] += dy0 * dy1;
-                        hessian[1][4] += dy0 * dx2;
-                        hessian[1][5] += dy0 * dy2;
-                        hessian[1][6] += dy0 * dx3;
-                        hessian[1][7] += dy0 * dy3;
-                        hessian[2][2] += dx1 * dx1;
-                        hessian[2][3] += dx1 * dy1;
-                        hessian[2][4] += dx1 * dx2;
-                        hessian[2][5] += dx1 * dy2;
-                        hessian[2][6] += dx1 * dx3;
-                        hessian[2][7] += dx1 * dy3;
-                        hessian[3][3] += dy1 * dy1;
-                        hessian[3][4] += dy1 * dx2;
-                        hessian[3][5] += dy1 * dy2;
-                        hessian[3][6] += dy1 * dx3;
-                        hessian[3][7] += dy1 * dy3;
-                        hessian[4][4] += dx2 * dx2;
-                        hessian[4][5] += dx2 * dy2;
-                        hessian[4][6] += dx2 * dx3;
-                        hessian[4][7] += dx2 * dy3;
-                        hessian[5][5] += dy2 * dy2;
-                        hessian[5][6] += dy2 * dx3;
-                        hessian[5][7] += dy2 * dy3;
-                        hessian[6][6] += dx3 * dx3;
-                        hessian[6][7] += dx3 * dy3;
-                        hessian[7][7] += dy3 * dy3;
+                        hessian(0, 0) += dx0 * dx0;
+                        hessian(0, 1) += dx0 * dy0;
+                        hessian(0, 2) += dx0 * dx1;
+                        hessian(0, 3) += dx0 * dy1;
+                        hessian(0, 4) += dx0 * dx2;
+                        hessian(0, 5) += dx0 * dy2;
+                        hessian(0, 6) += dx0 * dx3;
+                        hessian(0, 7) += dx0 * dy3;
+                        hessian(1, 1) += dy0 * dy0;
+                        hessian(1, 2) += dy0 * dx1;
+                        hessian(1, 3) += dy0 * dy1;
+                        hessian(1, 4) += dy0 * dx2;
+                        hessian(1, 5) += dy0 * dy2;
+                        hessian(1, 6) += dy0 * dx3;
+                        hessian(1, 7) += dy0 * dy3;
+                        hessian(2, 2) += dx1 * dx1;
+                        hessian(2, 3) += dx1 * dy1;
+                        hessian(2, 4) += dx1 * dx2;
+                        hessian(2, 5) += dx1 * dy2;
+                        hessian(2, 6) += dx1 * dx3;
+                        hessian(2, 7) += dx1 * dy3;
+                        hessian(3, 3) += dy1 * dy1;
+                        hessian(3, 4) += dy1 * dx2;
+                        hessian(3, 5) += dy1 * dy2;
+                        hessian(3, 6) += dy1 * dx3;
+                        hessian(3, 7) += dy1 * dy3;
+                        hessian(4, 4) += dx2 * dx2;
+                        hessian(4, 5) += dx2 * dy2;
+                        hessian(4, 6) += dx2 * dx3;
+                        hessian(4, 7) += dx2 * dy3;
+                        hessian(5, 5) += dy2 * dy2;
+                        hessian(5, 6) += dy2 * dx3;
+                        hessian(5, 7) += dy2 * dy3;
+                        hessian(6, 6) += dx3 * dx3;
+                        hessian(6, 7) += dx3 * dy3;
+                        hessian(7, 7) += dy3 * dy3;
                     }
                 }
-                x0 += matrix[0][1] + yxy;
-                y0 += matrix[1][1] + yyy;
+                x0 += m(0, 1) + yxy;
+                y0 += m(1, 1) + yyy;
             }
-            yx += matrix[0][2];
-            yy += matrix[1][2];
-            yxy += matrix[0][3];
-            yyy += matrix[1][3];
+            yx += m(0, 2);
+            yy += m(1, 2);
+            yxy += m(0, 3);
+            yyy += m(1, 3);
         }
     }
     else {
-        yx = matrix[0][0];
-        yy = matrix[1][0];
+        yx = m(0, 0);
+        yy = m(1, 0);
         yxy = 0.0;
         yyy = 0.0;
         for (int v = 0; (v < outNy); v++) {
@@ -1508,56 +1510,56 @@ double TurboRegTransform::getBilinearMeanSquares (
                         gradient[5] += difference * dy2;
                         gradient[6] += difference * dx3;
                         gradient[7] += difference * dy3;
-                        hessian[0][0] += dx0 * dx0;
-                        hessian[0][1] += dx0 * dy0;
-                        hessian[0][2] += dx0 * dx1;
-                        hessian[0][3] += dx0 * dy1;
-                        hessian[0][4] += dx0 * dx2;
-                        hessian[0][5] += dx0 * dy2;
-                        hessian[0][6] += dx0 * dx3;
-                        hessian[0][7] += dx0 * dy3;
-                        hessian[1][1] += dy0 * dy0;
-                        hessian[1][2] += dy0 * dx1;
-                        hessian[1][3] += dy0 * dy1;
-                        hessian[1][4] += dy0 * dx2;
-                        hessian[1][5] += dy0 * dy2;
-                        hessian[1][6] += dy0 * dx3;
-                        hessian[1][7] += dy0 * dy3;
-                        hessian[2][2] += dx1 * dx1;
-                        hessian[2][3] += dx1 * dy1;
-                        hessian[2][4] += dx1 * dx2;
-                        hessian[2][5] += dx1 * dy2;
-                        hessian[2][6] += dx1 * dx3;
-                        hessian[2][7] += dx1 * dy3;
-                        hessian[3][3] += dy1 * dy1;
-                        hessian[3][4] += dy1 * dx2;
-                        hessian[3][5] += dy1 * dy2;
-                        hessian[3][6] += dy1 * dx3;
-                        hessian[3][7] += dy1 * dy3;
-                        hessian[4][4] += dx2 * dx2;
-                        hessian[4][5] += dx2 * dy2;
-                        hessian[4][6] += dx2 * dx3;
-                        hessian[4][7] += dx2 * dy3;
-                        hessian[5][5] += dy2 * dy2;
-                        hessian[5][6] += dy2 * dx3;
-                        hessian[5][7] += dy2 * dy3;
-                        hessian[6][6] += dx3 * dx3;
-                        hessian[6][7] += dx3 * dy3;
-                        hessian[7][7] += dy3 * dy3;
+                        hessian(0, 0) += dx0 * dx0;
+                        hessian(0, 1) += dx0 * dy0;
+                        hessian(0, 2) += dx0 * dx1;
+                        hessian(0, 3) += dx0 * dy1;
+                        hessian(0, 4) += dx0 * dx2;
+                        hessian(0, 5) += dx0 * dy2;
+                        hessian(0, 6) += dx0 * dx3;
+                        hessian(0, 7) += dx0 * dy3;
+                        hessian(1, 1) += dy0 * dy0;
+                        hessian(1, 2) += dy0 * dx1;
+                        hessian(1, 3) += dy0 * dy1;
+                        hessian(1, 4) += dy0 * dx2;
+                        hessian(1, 5) += dy0 * dy2;
+                        hessian(1, 6) += dy0 * dx3;
+                        hessian(1, 7) += dy0 * dy3;
+                        hessian(2, 2) += dx1 * dx1;
+                        hessian(2, 3) += dx1 * dy1;
+                        hessian(2, 4) += dx1 * dx2;
+                        hessian(2, 5) += dx1 * dy2;
+                        hessian(2, 6) += dx1 * dx3;
+                        hessian(2, 7) += dx1 * dy3;
+                        hessian(3, 3) += dy1 * dy1;
+                        hessian(3, 4) += dy1 * dx2;
+                        hessian(3, 5) += dy1 * dy2;
+                        hessian(3, 6) += dy1 * dx3;
+                        hessian(3, 7) += dy1 * dy3;
+                        hessian(4, 4) += dx2 * dx2;
+                        hessian(4, 5) += dx2 * dy2;
+                        hessian(4, 6) += dx2 * dx3;
+                        hessian(4, 7) += dx2 * dy3;
+                        hessian(5, 5) += dy2 * dy2;
+                        hessian(5, 6) += dy2 * dx3;
+                        hessian(5, 7) += dy2 * dy3;
+                        hessian(6, 6) += dx3 * dx3;
+                        hessian(6, 7) += dx3 * dy3;
+                        hessian(7, 7) += dy3 * dy3;
                     }
                 }
-                x0 += matrix[0][1] + yxy;
-                y0 += matrix[1][1] + yyy;
+                x0 += m(0, 1) + yxy;
+                y0 += m(1, 1) + yyy;
             }
-            yx += matrix[0][2];
-            yy += matrix[1][2];
-            yxy += matrix[0][3];
-            yyy += matrix[1][3];
+            yx += m(0, 2);
+            yy += m(1, 2);
+            yxy += m(0, 3);
+            yyy += m(1, 3);
         }
     }
     for (int i = 1; (i < transformation); i++) {
         for (int j = 0; (j < i); j++) {
-            hessian[i][j] = hessian[j][i];
+            hessian(i, j) = hessian(j, i);
         }
     }
     return(meanSquares / (double)area);
@@ -1565,7 +1567,7 @@ double TurboRegTransform::getBilinearMeanSquares (
 
 /*------------------------------------------------------------------*/
 double TurboRegTransform::getRigidBodyMeanSquares (
-        double[][] matrix
+        matrix<double> &m
 ) {
     double yx;
     double yy;
@@ -1577,9 +1579,9 @@ double TurboRegTransform::getRigidBodyMeanSquares (
     int xMsk;
     int yMsk;
     int k = 0;
-    if (outMsk == null) {
-        yx = matrix[0][0];
-        yy = matrix[1][0];
+    if (outMsk.empty()) {
+        yx = m(0, 0);
+        yy = m(1, 0);
         for (int v = 0; (v < outNy); v++) {
             x0 = yx;
             y0 = yy;
@@ -1602,16 +1604,16 @@ double TurboRegTransform::getRigidBodyMeanSquares (
                         meanSquares += difference * difference;
                     }
                 }
-                x0 += matrix[0][1];
-                y0 += matrix[1][1];
+                x0 += m(0, 1);
+                y0 += m(1, 1);
             }
-            yx += matrix[0][2];
-            yy += matrix[1][2];
+            yx += m(0, 2);
+            yy += m(1, 2);
         }
     }
     else {
-        yx = matrix[0][0];
-        yy = matrix[1][0];
+        yx = m(0, 0);
+        yy = m(1, 0);
         for (int v = 0; (v < outNy); v++) {
             x0 = yx;
             y0 = yy;
@@ -1634,11 +1636,11 @@ double TurboRegTransform::getRigidBodyMeanSquares (
                         meanSquares += difference * difference;
                     }
                 }
-                x0 += matrix[0][1];
-                y0 += matrix[1][1];
+                x0 += m(0, 1);
+                y0 += m(1, 1);
             }
-            yx += matrix[0][2];
-            yy += matrix[1][2];
+            yx += m(0, 2);
+            yy += m(1, 2);
         }
     }
     return(meanSquares / (double)area);
@@ -1646,8 +1648,8 @@ double TurboRegTransform::getRigidBodyMeanSquares (
 
 /*------------------------------------------------------------------*/
 double TurboRegTransform::getRigidBodyMeanSquares (
-        double[][] matrix,
-        double[] gradient
+        matrix<double> &m,
+        std::vector<double> &gradient
 
 ) {
     double yx;
@@ -1663,9 +1665,9 @@ double TurboRegTransform::getRigidBodyMeanSquares (
     for (int i = 0; (i < transformation); i++) {
         gradient[i] = 0.0;
     }
-    if (outMsk == null) {
-        yx = matrix[0][0];
-        yy = matrix[1][0];
+    if (outMsk.empty()) {
+        yx = m(0, 0);
+        yy = m(1, 0);
         for (int v = 0; (v < outNy); v++) {
             x0 = yx;
             y0 = yy;
@@ -1692,16 +1694,16 @@ double TurboRegTransform::getRigidBodyMeanSquares (
                         gradient[2] += difference * yGradient[k];
                     }
                 }
-                x0 += matrix[0][1];
-                y0 += matrix[1][1];
+                x0 += m(0, 1);
+                y0 += m(1, 1);
             }
-            yx += matrix[0][2];
-            yy += matrix[1][2];
+            yx += m(0, 2);
+            yy += m(1, 2);
         }
     }
     else {
-        yx = matrix[0][0];
-        yy = matrix[1][0];
+        yx = m(0, 0);
+        yy = m(1, 0);
         for (int v = 0; (v < outNy); v++) {
             x0 = yx;
             y0 = yy;
@@ -1728,11 +1730,11 @@ double TurboRegTransform::getRigidBodyMeanSquares (
                         gradient[2] += difference * yGradient[k];
                     }
                 }
-                x0 += matrix[0][1];
-                y0 += matrix[1][1];
+                x0 += m(0, 1);
+                y0 += m(1, 1);
             }
-            yx += matrix[0][2];
-            yy += matrix[1][2];
+            yx += m(0, 2);
+            yy += m(1, 2);
         }
     }
     return(meanSquares / (double)area);
@@ -1740,9 +1742,9 @@ double TurboRegTransform::getRigidBodyMeanSquares (
 
 /*------------------------------------------------------------------*/
 double TurboRegTransform::getRigidBodyMeanSquares (
-        double[][] matrix,
-        double[][] hessian,
-        double[] gradient
+        matrix<double> &m,
+        matrix<double> &hessian,
+        std::vector<double> &gradient
 ) {
     double yx;
     double yy;
@@ -1758,12 +1760,12 @@ double TurboRegTransform::getRigidBodyMeanSquares (
     for (int i = 0; (i < transformation); i++) {
         gradient[i] = 0.0;
         for (int j = 0; (j < transformation); j++) {
-            hessian[i][j] = 0.0;
+            hessian(i, j) = 0.0;
         }
     }
-    if (outMsk == null) {
-        yx = matrix[0][0];
-        yy = matrix[1][0];
+    if (outMsk.empty()) {
+        yx = m(0, 0);
+        yy = m(1, 0);
         for (int v = 0; (v < outNy); v++) {
             x0 = yx;
             y0 = yy;
@@ -1789,24 +1791,24 @@ double TurboRegTransform::getRigidBodyMeanSquares (
                         gradient[0] += difference * dTheta;
                         gradient[1] += difference * xGradient[k];
                         gradient[2] += difference * yGradient[k];
-                        hessian[0][0] += dTheta * dTheta;
-                        hessian[0][1] += dTheta * xGradient[k];
-                        hessian[0][2] += dTheta * yGradient[k];
-                        hessian[1][1] += xGradient[k] * xGradient[k];
-                        hessian[1][2] += xGradient[k] * yGradient[k];
-                        hessian[2][2] += yGradient[k] * yGradient[k];
+                        hessian(0, 0) += dTheta * dTheta;
+                        hessian(0, 1) += dTheta * xGradient[k];
+                        hessian(0, 2) += dTheta * yGradient[k];
+                        hessian(1, 1) += xGradient[k] * xGradient[k];
+                        hessian(1, 2) += xGradient[k] * yGradient[k];
+                        hessian(2, 2) += yGradient[k] * yGradient[k];
                     }
                 }
-                x0 += matrix[0][1];
-                y0 += matrix[1][1];
+                x0 += m(0, 1);
+                y0 += m(1, 1);
             }
-            yx += matrix[0][2];
-            yy += matrix[1][2];
+            yx += m(0, 2);
+            yy += m(1, 2);
         }
     }
     else {
-        yx = matrix[0][0];
-        yy = matrix[1][0];
+        yx = m(0, 0);
+        yy = m(1, 0);
         for (int v = 0; (v < outNy); v++) {
             x0 = yx;
             y0 = yy;
@@ -1832,24 +1834,24 @@ double TurboRegTransform::getRigidBodyMeanSquares (
                         gradient[0] += difference * dTheta;
                         gradient[1] += difference * xGradient[k];
                         gradient[2] += difference * yGradient[k];
-                        hessian[0][0] += dTheta * dTheta;
-                        hessian[0][1] += dTheta * xGradient[k];
-                        hessian[0][2] += dTheta * yGradient[k];
-                        hessian[1][1] += xGradient[k] * xGradient[k];
-                        hessian[1][2] += xGradient[k] * yGradient[k];
-                        hessian[2][2] += yGradient[k] * yGradient[k];
+                        hessian(0, 0) += dTheta * dTheta;
+                        hessian(0, 1) += dTheta * xGradient[k];
+                        hessian(0, 2) += dTheta * yGradient[k];
+                        hessian(1, 1) += xGradient[k] * xGradient[k];
+                        hessian(1, 2) += xGradient[k] * yGradient[k];
+                        hessian(2, 2) += yGradient[k] * yGradient[k];
                     }
                 }
-                x0 += matrix[0][1];
-                y0 += matrix[1][1];
+                x0 += m(0, 1);
+                y0 += m(1, 1);
             }
-            yx += matrix[0][2];
-            yy += matrix[1][2];
+            yx += m(0, 2);
+            yy += m(1, 2);
         }
     }
     for (int i = 1; (i < transformation); i++) {
         for (int j = 0; (j < i); j++) {
-            hessian[i][j] = hessian[j][i];
+            hessian(i, j) = hessian(j, i);
         }
     }
     return(meanSquares / (double)area);
@@ -1857,13 +1859,13 @@ double TurboRegTransform::getRigidBodyMeanSquares (
 
 /*------------------------------------------------------------------*/
 double TurboRegTransform::getScaledRotationMeanSquares (
-        double[][] sourcePoint,
-        double[][] matrix
+        matrix<double> &sourcePoint,
+        matrix<double> &m
 ) {
-    double u1 = sourcePoint[0][0];
-    double u2 = sourcePoint[1][0];
-    double v1 = sourcePoint[0][1];
-    double v2 = sourcePoint[1][1];
+    double u1 = sourcePoint(0, 0);
+    double u2 = sourcePoint(1, 0);
+    double v1 = sourcePoint(0, 1);
+    double v2 = sourcePoint(1, 1);
     double u12 = u1 - u2;
     double v12 = v1 - v2;
     double uv2 = u12 * u12 + v12 * v12;
@@ -1877,9 +1879,9 @@ double TurboRegTransform::getScaledRotationMeanSquares (
     int xMsk;
     int yMsk;
     int k = 0;
-    if (outMsk == null) {
-        yx = matrix[0][0];
-        yy = matrix[1][0];
+    if (outMsk.empty()) {
+        yx = m(0, 0);
+        yy = m(1, 0);
         for (int v = 0; (v < outNy); v++) {
             x0 = yx;
             y0 = yy;
@@ -1902,16 +1904,16 @@ double TurboRegTransform::getScaledRotationMeanSquares (
                         meanSquares += difference * difference;
                     }
                 }
-                x0 += matrix[0][1];
-                y0 += matrix[1][1];
+                x0 += m(0, 1);
+                y0 += m(1, 1);
             }
-            yx += matrix[0][2];
-            yy += matrix[1][2];
+            yx += m(0, 2);
+            yy += m(1, 2);
         }
     }
     else {
-        yx = matrix[0][0];
-        yy = matrix[1][0];
+        yx = m(0, 0);
+        yy = m(1, 0);
         for (int v = 0; (v < outNy); v++) {
             x0 = yx;
             y0 = yy;
@@ -1934,11 +1936,11 @@ double TurboRegTransform::getScaledRotationMeanSquares (
                         meanSquares += difference * difference;
                     }
                 }
-                x0 += matrix[0][1];
-                y0 += matrix[1][1];
+                x0 += m(0, 1);
+                y0 += m(1, 1);
             }
-            yx += matrix[0][2];
-            yy += matrix[1][2];
+            yx += m(0, 2);
+            yy += m(1, 2);
         }
     }
     return(meanSquares / ((double)area * uv2 / targetJacobian));
@@ -1946,14 +1948,14 @@ double TurboRegTransform::getScaledRotationMeanSquares (
 
 /*------------------------------------------------------------------*/
 double TurboRegTransform::getScaledRotationMeanSquares (
-        double[][] sourcePoint,
-        double[][] matrix,
-        double[] gradient
+        matrix<double> &sourcePoint,
+        matrix<double> &m,
+        std::vector<double> &gradient
 ) {
-    double u1 = sourcePoint[0][0];
-    double u2 = sourcePoint[1][0];
-    double v1 = sourcePoint[0][1];
-    double v2 = sourcePoint[1][1];
+    double u1 = sourcePoint(0, 0);
+    double u2 = sourcePoint(1, 0);
+    double v1 = sourcePoint(0, 1);
+    double v2 = sourcePoint(1, 1);
     double u12 = u1 - u2;
     double v12 = v1 - v2;
     double uv2 = u12 * u12 + v12 * v12;
@@ -1997,9 +1999,9 @@ double TurboRegTransform::getScaledRotationMeanSquares (
     for (int i = 0; (i < transformation); i++) {
         gradient[i] = 0.0;
     }
-    if (outMsk == null) {
-        yx = matrix[0][0];
-        yy = matrix[1][0];
+    if (outMsk.empty()) {
+        yx = m(0, 0);
+        yy = m(1, 0);
         for (int v = 0; (v < outNy); v++) {
             x0 = yx;
             y0 = yy;
@@ -2038,16 +2040,16 @@ double TurboRegTransform::getScaledRotationMeanSquares (
                         gradient[3] += difference * dy1;
                     }
                 }
-                x0 += matrix[0][1];
-                y0 += matrix[1][1];
+                x0 += m(0, 1);
+                y0 += m(1, 1);
             }
-            yx += matrix[0][2];
-            yy += matrix[1][2];
+            yx += m(0, 2);
+            yy += m(1, 2);
         }
     }
     else {
-        yx = matrix[0][0];
-        yy = matrix[1][0];
+        yx = m(0, 0);
+        yy = m(1, 0);
         for (int v = 0; (v < outNy); v++) {
             x0 = yx;
             y0 = yy;
@@ -2086,11 +2088,11 @@ double TurboRegTransform::getScaledRotationMeanSquares (
                         gradient[3] += difference * dy1;
                     }
                 }
-                x0 += matrix[0][1];
-                y0 += matrix[1][1];
+                x0 += m(0, 1);
+                y0 += m(1, 1);
             }
-            yx += matrix[0][2];
-            yy += matrix[1][2];
+            yx += m(0, 2);
+            yy += m(1, 2);
         }
     }
     return(meanSquares / ((double)area * uv2 / targetJacobian));
@@ -2098,15 +2100,15 @@ double TurboRegTransform::getScaledRotationMeanSquares (
 
 /*------------------------------------------------------------------*/
 double TurboRegTransform::getScaledRotationMeanSquares (
-        double[][] sourcePoint,
-        double[][] matrix,
-        double[][] hessian,
-        double[] gradient
+        matrix<double> &sourcePoint,
+        matrix<double> &m,
+        matrix<double> &hessian,
+        std::vector<double> &gradient
 ) {
-    double u1 = sourcePoint[0][0];
-    double u2 = sourcePoint[1][0];
-    double v1 = sourcePoint[0][1];
-    double v2 = sourcePoint[1][1];
+    double u1 = sourcePoint(0, 0);
+    double u2 = sourcePoint(1, 0);
+    double v1 = sourcePoint(0, 1);
+    double v2 = sourcePoint(1, 1);
     double u12 = u1 - u2;
     double v12 = v1 - v2;
     double uv2 = u12 * u12 + v12 * v12;
@@ -2150,12 +2152,12 @@ double TurboRegTransform::getScaledRotationMeanSquares (
     for (int i = 0; (i < transformation); i++) {
         gradient[i] = 0.0;
         for (int j = 0; (j < transformation); j++) {
-            hessian[i][j] = 0.0;
+            hessian(i, j) = 0.0;
         }
     }
-    if (outMsk == null) {
-        yx = matrix[0][0];
-        yy = matrix[1][0];
+    if (outMsk.empty()) {
+        yx = m(0, 0);
+        yy = m(1, 0);
         for (int v = 0; (v < outNy); v++) {
             x0 = yx;
             y0 = yy;
@@ -2192,28 +2194,28 @@ double TurboRegTransform::getScaledRotationMeanSquares (
                         gradient[1] += difference * dy0;
                         gradient[2] += difference * dx1;
                         gradient[3] += difference * dy1;
-                        hessian[0][0] += dx0 * dx0;
-                        hessian[0][1] += dx0 * dy0;
-                        hessian[0][2] += dx0 * dx1;
-                        hessian[0][3] += dx0 * dy1;
-                        hessian[1][1] += dy0 * dy0;
-                        hessian[1][2] += dy0 * dx1;
-                        hessian[1][3] += dy0 * dy1;
-                        hessian[2][2] += dx1 * dx1;
-                        hessian[2][3] += dx1 * dy1;
-                        hessian[3][3] += dy1 * dy1;
+                        hessian(0, 0) += dx0 * dx0;
+                        hessian(0, 1) += dx0 * dy0;
+                        hessian(0, 2) += dx0 * dx1;
+                        hessian(0, 3) += dx0 * dy1;
+                        hessian(1, 1) += dy0 * dy0;
+                        hessian(1, 2) += dy0 * dx1;
+                        hessian(1, 3) += dy0 * dy1;
+                        hessian(2, 2) += dx1 * dx1;
+                        hessian(2, 3) += dx1 * dy1;
+                        hessian(3, 3) += dy1 * dy1;
                     }
                 }
-                x0 += matrix[0][1];
-                y0 += matrix[1][1];
+                x0 += m(0, 1);
+                y0 += m(1, 1);
             }
-            yx += matrix[0][2];
-            yy += matrix[1][2];
+            yx += m(0, 2);
+            yy += m(1, 2);
         }
     }
     else {
-        yx = matrix[0][0];
-        yy = matrix[1][0];
+        yx = m(0, 0);
+        yy = m(1, 0);
         for (int v = 0; (v < outNy); v++) {
             x0 = yx;
             y0 = yy;
@@ -2250,187 +2252,192 @@ double TurboRegTransform::getScaledRotationMeanSquares (
                         gradient[1] += difference * dy0;
                         gradient[2] += difference * dx1;
                         gradient[3] += difference * dy1;
-                        hessian[0][0] += dx0 * dx0;
-                        hessian[0][1] += dx0 * dy0;
-                        hessian[0][2] += dx0 * dx1;
-                        hessian[0][3] += dx0 * dy1;
-                        hessian[1][1] += dy0 * dy0;
-                        hessian[1][2] += dy0 * dx1;
-                        hessian[1][3] += dy0 * dy1;
-                        hessian[2][2] += dx1 * dx1;
-                        hessian[2][3] += dx1 * dy1;
-                        hessian[3][3] += dy1 * dy1;
+                        hessian(0, 0) += dx0 * dx0;
+                        hessian(0, 1) += dx0 * dy0;
+                        hessian(0, 2) += dx0 * dx1;
+                        hessian(0, 3) += dx0 * dy1;
+                        hessian(1, 1) += dy0 * dy0;
+                        hessian(1, 2) += dy0 * dx1;
+                        hessian(1, 3) += dy0 * dy1;
+                        hessian(2, 2) += dx1 * dx1;
+                        hessian(2, 3) += dx1 * dy1;
+                        hessian(3, 3) += dy1 * dy1;
                     }
                 }
-                x0 += matrix[0][1];
-                y0 += matrix[1][1];
+                x0 += m(0, 1);
+                y0 += m(1, 1);
             }
-            yx += matrix[0][2];
-            yy += matrix[1][2];
+            yx += m(0, 2);
+            yy += m(1, 2);
         }
     }
     for (int i = 1; (i < transformation); i++) {
         for (int j = 0; (j < i); j++) {
-            hessian[i][j] = hessian[j][i];
+            hessian(i, j) = hessian(j, i);
         }
     }
     return(meanSquares / ((double)area * uv2 / targetJacobian));
 } /* getScaledRotationMeanSquares */
 
 /*------------------------------------------------------------------*/
-private double[][] getTransformationMatrix (
-        double[][] fromCoord,
-        double[][] toCoord
+matrix<double> TurboRegTransform::getTransformationMatrix (
+        matrix<double> &fromCoord,
+        matrix<double> &toCoord
 ) {
-    double[][] matrix = null;
-    double[][] a = null;
-    double[] v = null;
+    matrix<double> m;
+    matrix<double> a;
+    std::vector<double> v;
     switch (transformation) {
-        case TurboRegDialog.TRANSLATION: {
-            matrix = new double[2][1];
-            matrix[0][0] = toCoord[0][0] - fromCoord[0][0];
-            matrix[1][0] = toCoord[0][1] - fromCoord[0][1];
+        case TRANSLATION: {
+            //matrix = new double[2][1];
+            m.resize(2,1);
+            m(0, 0) = toCoord(0, 0) - fromCoord(0, 0);
+            m(1, 0) = toCoord(0, 1) - fromCoord(0, 1);
             break;
         }
-        case TurboRegDialog.RIGID_BODY: {
-            double angle = Math.atan2(fromCoord[2][0] - fromCoord[1][0],
-                    fromCoord[2][1] - fromCoord[1][1])
-                    - Math.atan2(toCoord[2][0] - toCoord[1][0],
-                    toCoord[2][1] - toCoord[1][1]);
-            double c = Math.cos(angle);
-            double s = Math.sin(angle);
-            matrix = new double[2][3];
-            matrix[0][0] = toCoord[0][0]
-                    - c * fromCoord[0][0] + s * fromCoord[0][1];
-            matrix[0][1] = c;
-            matrix[0][2] = -s;
-            matrix[1][0] = toCoord[0][1]
-                    - s * fromCoord[0][0] - c * fromCoord[0][1];
-            matrix[1][1] = s;
-            matrix[1][2] = c;
+        case RIGID_BODY: {
+            double angle = atan2(fromCoord(2, 0) - fromCoord(1, 0),
+                    fromCoord(2, 1) - fromCoord(1, 1))
+                    - atan2(toCoord(2, 0) - toCoord(1, 0),
+                    toCoord(2, 1) - toCoord(1, 1));
+            double c = cos(angle);
+            double s = sin(angle);
+            //matrix = new double[2][3];
+            m.resize(2,3);
+            m(0, 0) = toCoord(0, 0)
+                    - c * fromCoord(0, 0) + s * fromCoord(0, 1);
+            m(0, 1) = c;
+            m(0, 2) = -s;
+            m(1, 0) = toCoord(0, 1)
+                    - s * fromCoord(0, 0) - c * fromCoord(0, 1);
+            m(1, 1) = s;
+            m(1, 2) = c;
             break;
         }
-        case TurboRegDialog.SCALED_ROTATION: {
-            matrix = new double[2][3];
-            a = new double[3][3];
-            v = new double[3];
-            a[0][0] = 1.0;
-            a[0][1] = fromCoord[0][0];
-            a[0][2] = fromCoord[0][1];
-            a[1][0] = 1.0;
-            a[1][1] = fromCoord[1][0];
-            a[1][2] = fromCoord[1][1];
-            a[2][0] = 1.0;
-            a[2][1] = fromCoord[0][1] - fromCoord[1][1] + fromCoord[1][0];
-            a[2][2] = fromCoord[1][0] + fromCoord[1][1] - fromCoord[0][0];
+        case SCALED_ROTATION: {
+            //matrix = new double[2][3];
+            m.resize(2,3);
+            a.resize(3,3);
+            v.resize(3);
+            a(0, 0) = 1.0;
+            a(0, 1) = fromCoord(0, 0);
+            a(0, 2) = fromCoord(0, 1);
+            a(1, 0) = 1.0;
+            a(1, 1) = fromCoord(1, 0);
+            a(1, 2) = fromCoord(1, 1);
+            a(2, 0) = 1.0;
+            a(2, 1) = fromCoord(0, 1) - fromCoord(1, 1) + fromCoord(1, 0);
+            a(2, 2) = fromCoord(1, 0) + fromCoord(1, 1) - fromCoord(0, 0);
             invertGauss(a);
-            v[0] = toCoord[0][0];
-            v[1] = toCoord[1][0];
-            v[2] = toCoord[0][1] - toCoord[1][1] + toCoord[1][0];
+            v[0] = toCoord(0, 0);
+            v[1] = toCoord(1, 0);
+            v[2] = toCoord(0, 1) - toCoord(1, 1) + toCoord(1, 0);
             for (int i = 0; (i < 3); i++) {
-                matrix[0][i] = 0.0;
+                m(0, i) = 0.0;
                 for (int j = 0; (j < 3); j++) {
-                    matrix[0][i] += a[i][j] * v[j];
+                    m(0, i) += a(i, j) * v[j];
                 }
             }
-            v[0] = toCoord[0][1];
-            v[1] = toCoord[1][1];
-            v[2] = toCoord[1][0] + toCoord[1][1] - toCoord[0][0];
+            v[0] = toCoord(0, 1);
+            v[1] = toCoord(1, 1);
+            v[2] = toCoord(1, 0) + toCoord(1, 1) - toCoord(0, 0);
             for (int i = 0; (i < 3); i++) {
-                matrix[1][i] = 0.0;
+                m(1, i) = 0.0;
                 for (int j = 0; (j < 3); j++) {
-                    matrix[1][i] += a[i][j] * v[j];
-                }
-            }
-            break;
-        }
-        case TurboRegDialog.AFFINE: {
-            matrix = new double[2][3];
-            a = new double[3][3];
-            v = new double[3];
-            a[0][0] = 1.0;
-            a[0][1] = fromCoord[0][0];
-            a[0][2] = fromCoord[0][1];
-            a[1][0] = 1.0;
-            a[1][1] = fromCoord[1][0];
-            a[1][2] = fromCoord[1][1];
-            a[2][0] = 1.0;
-            a[2][1] = fromCoord[2][0];
-            a[2][2] = fromCoord[2][1];
-            invertGauss(a);
-            v[0] = toCoord[0][0];
-            v[1] = toCoord[1][0];
-            v[2] = toCoord[2][0];
-            for (int i = 0; (i < 3); i++) {
-                matrix[0][i] = 0.0;
-                for (int j = 0; (j < 3); j++) {
-                    matrix[0][i] += a[i][j] * v[j];
-                }
-            }
-            v[0] = toCoord[0][1];
-            v[1] = toCoord[1][1];
-            v[2] = toCoord[2][1];
-            for (int i = 0; (i < 3); i++) {
-                matrix[1][i] = 0.0;
-                for (int j = 0; (j < 3); j++) {
-                    matrix[1][i] += a[i][j] * v[j];
+                    m(1, i) += a(i, j) * v[j];
                 }
             }
             break;
         }
-        case TurboRegDialog.BILINEAR: {
-            matrix = new double[2][4];
-            a = new double[4][4];
-            v = new double[4];
-            a[0][0] = 1.0;
-            a[0][1] = fromCoord[0][0];
-            a[0][2] = fromCoord[0][1];
-            a[0][3] = fromCoord[0][0] * fromCoord[0][1];
-            a[1][0] = 1.0;
-            a[1][1] = fromCoord[1][0];
-            a[1][2] = fromCoord[1][1];
-            a[1][3] = fromCoord[1][0] * fromCoord[1][1];
-            a[2][0] = 1.0;
-            a[2][1] = fromCoord[2][0];
-            a[2][2] = fromCoord[2][1];
-            a[2][3] = fromCoord[2][0] * fromCoord[2][1];
-            a[3][0] = 1.0;
-            a[3][1] = fromCoord[3][0];
-            a[3][2] = fromCoord[3][1];
-            a[3][3] = fromCoord[3][0] * fromCoord[3][1];
+        case AFFINE: {
+            //matrix = new double[2][3];
+            m.resize(2,3);
+            a.resize(3,3);// = new double[3][3];
+            v.resize(3);// = new double[3];
+            a(0, 0) = 1.0;
+            a(0, 1) = fromCoord(0, 0);
+            a(0, 2) = fromCoord(0, 1);
+            a(1, 0) = 1.0;
+            a(1, 1) = fromCoord(1, 0);
+            a(1, 2) = fromCoord(1, 1);
+            a(2, 0) = 1.0;
+            a(2, 1) = fromCoord(2, 0);
+            a(2, 2) = fromCoord(2, 1);
             invertGauss(a);
-            v[0] = toCoord[0][0];
-            v[1] = toCoord[1][0];
-            v[2] = toCoord[2][0];
-            v[3] = toCoord[3][0];
+            v[0] = toCoord(0, 0);
+            v[1] = toCoord(1, 0);
+            v[2] = toCoord(2, 0);
+            for (int i = 0; (i < 3); i++) {
+                m(0, i) = 0.0;
+                for (int j = 0; (j < 3); j++) {
+                    m(0, i) += a(i, j) * v[j];
+                }
+            }
+            v[0] = toCoord(0, 1);
+            v[1] = toCoord(1, 1);
+            v[2] = toCoord(2, 1);
+            for (int i = 0; (i < 3); i++) {
+                m(1, i) = 0.0;
+                for (int j = 0; (j < 3); j++) {
+                    m(1, i) += a(i, j) * v[j];
+                }
+            }
+            break;
+        }
+        case BILINEAR: {
+            //matrix = new double[2][4];
+            m.resize(2,4);
+            a.resize(4,4); // = new double[4][4];
+            v.resize(4); // = new double[4];
+            a(0, 0) = 1.0;
+            a(0, 1) = fromCoord(0, 0);
+            a(0, 2) = fromCoord(0, 1);
+            a(0, 3) = fromCoord(0, 0) * fromCoord(0, 1);
+            a(1, 0) = 1.0;
+            a(1, 1) = fromCoord(1, 0);
+            a(1, 2) = fromCoord(1, 1);
+            a(1, 3) = fromCoord(1, 0) * fromCoord(1, 1);
+            a(2, 0) = 1.0;
+            a(2, 1) = fromCoord(2, 0);
+            a(2, 2) = fromCoord(2, 1);
+            a(2, 3) = fromCoord(2, 0) * fromCoord(2, 1);
+            a(3, 0) = 1.0;
+            a(3, 1) = fromCoord(3, 0);
+            a(3, 2) = fromCoord(3, 1);
+            a(3, 3) = fromCoord(3, 0) * fromCoord(3, 1);
+            invertGauss(a);
+            v[0] = toCoord(0, 0);
+            v[1] = toCoord(1, 0);
+            v[2] = toCoord(2, 0);
+            v[3] = toCoord(3, 0);
             for (int i = 0; (i < 4); i++) {
-                matrix[0][i] = 0.0;
+                m(0, i) = 0.0;
                 for (int j = 0; (j < 4); j++) {
-                    matrix[0][i] += a[i][j] * v[j];
+                    m(0, i) += a(i, j) * v[j];
                 }
             }
-            v[0] = toCoord[0][1];
-            v[1] = toCoord[1][1];
-            v[2] = toCoord[2][1];
-            v[3] = toCoord[3][1];
+            v[0] = toCoord(0, 1);
+            v[1] = toCoord(1, 1);
+            v[2] = toCoord(2, 1);
+            v[3] = toCoord(3, 1);
             for (int i = 0; (i < 4); i++) {
-                matrix[1][i] = 0.0;
+                m(1, i) = 0.0;
                 for (int j = 0; (j < 4); j++) {
-                    matrix[1][i] += a[i][j] * v[j];
+                    m(1, i) += a(i, j) * v[j];
                 }
             }
             break;
         }
     }
-    return(matrix);
+    return(m);
 } /* end getTransformationMatrix */
 
 /*------------------------------------------------------------------*/
 double TurboRegTransform::getTranslationMeanSquares (
-        double[][] matrix
+        matrix<double> &m
 ) {
-    double dx = matrix[0][0];
-    double dy = matrix[1][0];
+    double dx = m(0, 0);
+    double dy = m(1, 0);
     double dx0 = dx;
     double difference;
     double meanSquares = 0.0;
@@ -2438,11 +2445,11 @@ double TurboRegTransform::getTranslationMeanSquares (
     int xMsk;
     int yMsk;
     int k = 0;
-    x = dx - Math.floor(dx);
-    y = dy - Math.floor(dy);
+    x = dx - floor(dx);
+    y = dy - floor(dy);
     xWeights();
     yWeights();
-    if (outMsk == null) {
+    if (outMsk.empty()) {
         for (int v = 0; (v < outNy); v++) {
             y = dy++;
             yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
@@ -2499,11 +2506,11 @@ double TurboRegTransform::getTranslationMeanSquares (
 
 /*------------------------------------------------------------------*/
 double TurboRegTransform::getTranslationMeanSquares (
-        double[][] matrix,
-        double[] gradient
+        matrix<double> &m,
+        std::vector<double> &gradient
 ) {
-    double dx = matrix[0][0];
-    double dy = matrix[1][0];
+    double dx = m(0, 0);
+    double dy = m(1, 0);
     double dx0 = dx;
     double difference;
     double meanSquares = 0.0;
@@ -2514,11 +2521,11 @@ double TurboRegTransform::getTranslationMeanSquares (
     for (int i = 0; (i < transformation); i++) {
         gradient[i] = 0.0;
     }
-    x = dx - Math.floor(dx);
-    y = dy - Math.floor(dy);
+    x = dx - floor(dx);
+    y = dy - floor(dy);
     xWeights();
     yWeights();
-    if (outMsk == null) {
+    if (outMsk.empty()) {
         for (int v = 0; (v < outNy); v++) {
             y = dy++;
             yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
@@ -2579,12 +2586,12 @@ double TurboRegTransform::getTranslationMeanSquares (
 
 /*------------------------------------------------------------------*/
 double TurboRegTransform::getTranslationMeanSquares (
-        double[][] matrix,
-        double[][] hessian,
-        double[] gradient
+        matrix<double> &m,
+        matrix<double> &hessian,
+        std::vector<double> &gradient
 ) {
-    double dx = matrix[0][0];
-    double dy = matrix[1][0];
+    double dx = m(0, 0);
+    double dy = m(1, 0);
     double dx0 = dx;
     double difference;
     double meanSquares = 0.0;
@@ -2595,14 +2602,14 @@ double TurboRegTransform::getTranslationMeanSquares (
     for (int i = 0; (i < transformation); i++) {
         gradient[i] = 0.0;
         for (int j = 0; (j < transformation); j++) {
-            hessian[i][j] = 0.0;
+            hessian(i, j) = 0.0;
         }
     }
-    x = dx - Math.floor(dx);
-    y = dy - Math.floor(dy);
+    x = dx - floor(dx);
+    y = dy - floor(dy);
     xWeights();
     yWeights();
-    if (outMsk == null) {
+    if (outMsk.empty()) {
         for (int v = 0; (v < outNy); v++) {
             y = dy++;
             yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
@@ -2621,9 +2628,9 @@ double TurboRegTransform::getTranslationMeanSquares (
                             meanSquares += difference * difference;
                             gradient[0] += difference * xGradient[k];
                             gradient[1] += difference * yGradient[k];
-                            hessian[0][0] += xGradient[k] * xGradient[k];
-                            hessian[0][1] += xGradient[k] * yGradient[k];
-                            hessian[1][1] += yGradient[k] * yGradient[k];
+                            hessian(0, 0) += xGradient[k] * xGradient[k];
+                            hessian(0, 1) += xGradient[k] * yGradient[k];
+                            hessian(1, 1) += yGradient[k] * yGradient[k];
                         }
                     }
                 }
@@ -2652,9 +2659,9 @@ double TurboRegTransform::getTranslationMeanSquares (
                             meanSquares += difference * difference;
                             gradient[0] += difference * xGradient[k];
                             gradient[1] += difference * yGradient[k];
-                            hessian[0][0] += xGradient[k] * xGradient[k];
-                            hessian[0][1] += xGradient[k] * yGradient[k];
-                            hessian[1][1] += yGradient[k] * yGradient[k];
+                            hessian(0, 0) += xGradient[k] * xGradient[k];
+                            hessian(0, 1) += xGradient[k] * yGradient[k];
+                            hessian(1, 1) += yGradient[k] * yGradient[k];
                         }
                     }
                 }
@@ -2666,7 +2673,7 @@ double TurboRegTransform::getTranslationMeanSquares (
     }
     for (int i = 1; (i < transformation); i++) {
         for (int j = 0; (j < i); j++) {
-            hessian[i][j] = hessian[j][i];
+            hessian(i, j) = hessian(j, i);
         }
     }
     return(meanSquares / (double)area);
@@ -2718,145 +2725,147 @@ double TurboRegTransform::interpolateDy (
 } /* end interpolateDy */
 
 /*------------------------------------------------------------------*/
-TurboRegTransform::inverseMarquardtLevenbergOptimization (
-        int workload
+void TurboRegTransform::inverseMarquardtLevenbergOptimization (
 ) {
-    double[][] attempt = new double[transformation / 2][2];
-    double[][] hessian = new double[transformation][transformation];
-    double[][] pseudoHessian = new double[transformation][transformation];
-    double[] gradient = new double[transformation];
-    double[][] matrix = getTransformationMatrix(sourcePoint, targetPoint);
-    double[] update = new double[transformation];
+    matrix<double> attempt(transformation / 2, 2); // = new double[transformation / 2][2];
+    matrix<double> hessian(transformation, transformation); // = new double[transformation][transformation];
+    matrix<double> pseudoHessian(transformation, transformation); // = new double[transformation][transformation];
+    std::vector<double> gradient(transformation);
+    matrix<double> m = getTransformationMatrix(sourcePoint, targetPoint);
+    std::vector<double> update(transformation);
     double bestMeanSquares = 0.0;
     double meanSquares = 0.0;
     double lambda = FIRST_LAMBDA;
     double displacement;
     int iteration = 0;
     switch (transformation) {
-        case TurboRegDialog.TRANSLATION: {
+        case TRANSLATION: {
             bestMeanSquares = getTranslationMeanSquares(
-                    matrix, hessian, gradient);
+                    m, hessian, gradient);
             break;
         }
-        case TurboRegDialog.SCALED_ROTATION: {
+        case SCALED_ROTATION: {
             bestMeanSquares = getScaledRotationMeanSquares(
-                    sourcePoint, matrix, hessian, gradient);
+                    sourcePoint, m, hessian, gradient);
             break;
         }
-        case TurboRegDialog.AFFINE: {
+        case AFFINE: {
             bestMeanSquares = getAffineMeanSquares(
-                    sourcePoint, matrix, hessian, gradient);
+                    sourcePoint, m, hessian, gradient);
             break;
         }
+        default:
+        	break;
     }
     iteration++;
     do {
         for (int k = 0; (k < transformation); k++) {
-            pseudoHessian[k][k] = (1.0 + lambda) * hessian[k][k];
+            pseudoHessian(k, k) = (1.0 + lambda) * hessian(k, k);
         }
         invertGauss(pseudoHessian);
         update = matrixMultiply(pseudoHessian, gradient);
         displacement = 0.0;
         for (int k = 0; (k < (transformation / 2)); k++) {
-            attempt[k][0] = sourcePoint[k][0] - update[2 * k];
-            attempt[k][1] = sourcePoint[k][1] - update[2 * k + 1];
-            displacement += Math.sqrt(update[2 * k] * update[2 * k]
+            attempt(k, 0) = sourcePoint(k, 0) - update[2 * k];
+            attempt(k, 1) = sourcePoint(k, 1) - update[2 * k + 1];
+            displacement += sqrt(update[2 * k] * update[2 * k]
                     + update[2 * k + 1] * update[2 * k + 1]);
         }
         displacement /= 0.5 * (double)transformation;
-        matrix = getTransformationMatrix(attempt, targetPoint);
+        m = getTransformationMatrix(attempt, targetPoint);
         switch (transformation) {
-            case TurboRegDialog.TRANSLATION: {
+            case TRANSLATION: {
                 if (accelerated) {
                     meanSquares = getTranslationMeanSquares(
-                            matrix, gradient);
+                            m, gradient);
                 }
                 else {
                     meanSquares = getTranslationMeanSquares(
-                            matrix, hessian, gradient);
+                            m, hessian, gradient);
                 }
                 break;
             }
-            case TurboRegDialog.SCALED_ROTATION: {
+            case SCALED_ROTATION: {
                 if (accelerated) {
                     meanSquares = getScaledRotationMeanSquares(
-                            attempt, matrix, gradient);
+                            attempt, m, gradient);
                 }
                 else {
                     meanSquares = getScaledRotationMeanSquares(
-                            attempt, matrix, hessian, gradient);
+                            attempt, m, hessian, gradient);
                 }
                 break;
             }
-            case TurboRegDialog.AFFINE: {
+            case AFFINE: {
                 if (accelerated) {
                     meanSquares = getAffineMeanSquares(
-                            attempt, matrix, gradient);
+                            attempt, m, gradient);
                 }
                 else {
                     meanSquares = getAffineMeanSquares(
-                            attempt, matrix, hessian, gradient);
+                            attempt, m, hessian, gradient);
                 }
                 break;
             }
+            default:
+                break;
         }
         iteration++;
         if (meanSquares < bestMeanSquares) {
             bestMeanSquares = meanSquares;
             for (int k = 0; (k < (transformation / 2)); k++) {
-                sourcePoint[k][0] = attempt[k][0];
-                sourcePoint[k][1] = attempt[k][1];
+                sourcePoint(k, 0) = attempt(k, 0);
+                sourcePoint(k, 1) = attempt(k, 1);
             }
             lambda /= LAMBDA_MAGSTEP;
         }
         else {
             lambda *= LAMBDA_MAGSTEP;
         }
-        TurboRegProgressBar.skipProgressBar(iterationCost);
-        workload--;
+
     } while ((iteration < (maxIterations * iterationPower - 1))
             && (pixelPrecision <= displacement));
     invertGauss(hessian);
     update = matrixMultiply(hessian, gradient);
     for (int k = 0; (k < (transformation / 2)); k++) {
-        attempt[k][0] = sourcePoint[k][0] - update[2 * k];
-        attempt[k][1] = sourcePoint[k][1] - update[2 * k + 1];
+        attempt(k, 0) = sourcePoint(k, 0) - update[2 * k];
+        attempt(k, 1) = sourcePoint(k, 1) - update[2 * k + 1];
     }
-    matrix = getTransformationMatrix(attempt, targetPoint);
+    m = getTransformationMatrix(attempt, targetPoint);
     switch (transformation) {
-        case TurboRegDialog.TRANSLATION: {
-            meanSquares = getTranslationMeanSquares(matrix);
+        case TRANSLATION: {
+            meanSquares = getTranslationMeanSquares(m);
             break;
         }
-        case TurboRegDialog.SCALED_ROTATION: {
-            meanSquares = getScaledRotationMeanSquares(attempt, matrix);
+        case SCALED_ROTATION: {
+            meanSquares = getScaledRotationMeanSquares(attempt, m);
             break;
         }
-        case TurboRegDialog.AFFINE: {
-            meanSquares = getAffineMeanSquares(attempt, matrix);
+        case AFFINE: {
+            meanSquares = getAffineMeanSquares(attempt, m);
             break;
         }
+        default:
+            break;
     }
     iteration++;
     if (meanSquares < bestMeanSquares) {
         for (int k = 0; (k < (transformation / 2)); k++) {
-            sourcePoint[k][0] = attempt[k][0];
-            sourcePoint[k][1] = attempt[k][1];
+            sourcePoint(k, 0) = attempt(k, 0);
+            sourcePoint(k, 1) = attempt(k, 1);
         }
     }
-    TurboRegProgressBar.skipProgressBar(workload * iterationCost);
+
 } /* end inverseMarquardtLevenbergOptimization */
 
 /*------------------------------------------------------------------*/
-TurboRegTransform::inverseMarquardtLevenbergRigidBodyOptimization (
-        int workload
-) {
-    double[][] attempt = new double[2][3];
-    double[][] hessian = new double[transformation][transformation];
-    double[][] pseudoHessian = new double[transformation][transformation];
-    double[] gradient = new double[transformation];
-    double[][] matrix = getTransformationMatrix(targetPoint, sourcePoint);
-    double[] update = new double[transformation];
+void TurboRegTransform::inverseMarquardtLevenbergRigidBodyOptimization () {
+    matrix<double> attempt(2, 3); //  = new double[2][3];
+    matrix<double> hessian(transformation, transformation); //  = new double[transformation][transformation];
+    matrix<double> pseudoHessian(transformation, transformation); //  = new double[transformation][transformation];
+    std::vector<double> gradient(transformation);
+    matrix<double> m = getTransformationMatrix(targetPoint, sourcePoint);
+    std::vector<double> update(transformation);
     double bestMeanSquares = 0.0;
     double meanSquares = 0.0;
     double lambda = FIRST_LAMBDA;
@@ -2866,34 +2875,34 @@ TurboRegTransform::inverseMarquardtLevenbergRigidBodyOptimization (
     double displacement;
     int iteration = 0;
     for (int k = 0; (k < transformation); k++) {
-        sourcePoint[k][0] = matrix[0][0] + targetPoint[k][0] * matrix[0][1]
-                + targetPoint[k][1] * matrix[0][2];
-        sourcePoint[k][1] = matrix[1][0] + targetPoint[k][0] * matrix[1][1]
-                + targetPoint[k][1] * matrix[1][2];
+        sourcePoint(k, 0) = m(0, 0) + targetPoint(k, 0) * m(0, 1)
+                + targetPoint(k, 1) * m(0, 2);
+        sourcePoint(k, 1) = m(1, 0) + targetPoint(k, 0) * m(1, 1)
+                + targetPoint(k, 1) * m(1, 2);
     }
-    matrix = getTransformationMatrix(sourcePoint, targetPoint);
-    bestMeanSquares = getRigidBodyMeanSquares(matrix, hessian, gradient);
+    m = getTransformationMatrix(sourcePoint, targetPoint);
+    bestMeanSquares = getRigidBodyMeanSquares(m, hessian, gradient);
     iteration++;
     do {
         for (int k = 0; (k < transformation); k++) {
-            pseudoHessian[k][k] = (1.0 + lambda) * hessian[k][k];
+            pseudoHessian(k, k) = (1.0 + lambda) * hessian(k, k);
         }
         invertGauss(pseudoHessian);
         update = matrixMultiply(pseudoHessian, gradient);
-        angle = Math.atan2(matrix[0][2], matrix[0][1]) - update[0];
-        attempt[0][1] = Math.cos(angle);
-        attempt[0][2] = Math.sin(angle);
-        attempt[1][1] = -attempt[0][2];
-        attempt[1][2] = attempt[0][1];
-        c = Math.cos(update[0]);
-        s = Math.sin(update[0]);
-        attempt[0][0] = (matrix[0][0] + update[1]) * c
-                - (matrix[1][0] + update[2]) * s;
-        attempt[1][0] = (matrix[0][0] + update[1]) * s
-                + (matrix[1][0] + update[2]) * c;
-        displacement = Math.sqrt(update[1] * update[1] + update[2] * update[2])
-                + 0.25 * Math.sqrt((double)(inNx * inNx) + (double)(inNy * inNy))
-                * Math.abs(update[0]);
+        angle = atan2(m(0, 2), m(0, 1)) - update[0];
+        attempt(0, 1) = cos(angle);
+        attempt(0, 2) = sin(angle);
+        attempt(1, 1) = -attempt(0, 2);
+        attempt(1, 2) = attempt(0, 1);
+        c = cos(update[0]);
+        s = sin(update[0]);
+        attempt(0, 0) = (m(0, 0) + update[1]) * c
+                - (m(1, 0) + update[2]) * s;
+        attempt(1, 0) = (m(0, 0) + update[1]) * s
+                + (m(1, 0) + update[2]) * c;
+        displacement = sqrt(update[1] * update[1] + update[2] * update[2])
+                + 0.25 * sqrt((double)(inNx * inNx) + (double)(inNy * inNy))
+                * abs(update[0]);
         if (accelerated) {
             meanSquares = getRigidBodyMeanSquares(attempt, gradient);
         }
@@ -2905,7 +2914,7 @@ TurboRegTransform::inverseMarquardtLevenbergRigidBodyOptimization (
             bestMeanSquares = meanSquares;
             for (int i = 0; (i < 2); i++) {
                 for (int j = 0; (j < 3); j++) {
-                    matrix[i][j] = attempt[i][j];
+                    m(i, j) = attempt(i, j);
                 }
             }
             lambda /= LAMBDA_MAGSTEP;
@@ -2913,259 +2922,276 @@ TurboRegTransform::inverseMarquardtLevenbergRigidBodyOptimization (
         else {
             lambda *= LAMBDA_MAGSTEP;
         }
-        TurboRegProgressBar.skipProgressBar(iterationCost);
-        workload--;
+
     } while ((iteration < (maxIterations * iterationPower - 1))
             && (pixelPrecision <= displacement));
     invertGauss(hessian);
     update = matrixMultiply(hessian, gradient);
-    angle = Math.atan2(matrix[0][2], matrix[0][1]) - update[0];
-    attempt[0][1] = Math.cos(angle);
-    attempt[0][2] = Math.sin(angle);
-    attempt[1][1] = -attempt[0][2];
-    attempt[1][2] = attempt[0][1];
-    c = Math.cos(update[0]);
-    s = Math.sin(update[0]);
-    attempt[0][0] = (matrix[0][0] + update[1]) * c
-            - (matrix[1][0] + update[2]) * s;
-    attempt[1][0] = (matrix[0][0] + update[1]) * s
-            + (matrix[1][0] + update[2]) * c;
+    angle = atan2(m(0, 2), m(0, 1)) - update[0];
+    attempt(0, 1) = cos(angle);
+    attempt(0, 2) = sin(angle);
+    attempt(1, 1) = -attempt(0, 2);
+    attempt(1, 2) = attempt(0, 1);
+    c = cos(update[0]);
+    s = sin(update[0]);
+    attempt(0, 0) = (m(0, 0) + update[1]) * c
+            - (m(1, 0) + update[2]) * s;
+    attempt(1, 0) = (m(0, 0) + update[1]) * s
+            + (m(1, 0) + update[2]) * c;
     meanSquares = getRigidBodyMeanSquares(attempt);
     iteration++;
     if (meanSquares < bestMeanSquares) {
         for (int i = 0; (i < 2); i++) {
             for (int j = 0; (j < 3); j++) {
-                matrix[i][j] = attempt[i][j];
+                m(i, j) = attempt(i, j);
             }
         }
     }
     for (int k = 0; (k < transformation); k++) {
-        sourcePoint[k][0] = (targetPoint[k][0] - matrix[0][0]) * matrix[0][1]
-                + (targetPoint[k][1] - matrix[1][0]) * matrix[1][1];
-        sourcePoint[k][1] = (targetPoint[k][0] - matrix[0][0]) * matrix[0][2]
-                + (targetPoint[k][1] - matrix[1][0]) * matrix[1][2];
+        sourcePoint(k, 0) = (targetPoint(k, 0) - m(0, 0)) * m(0, 1)
+                + (targetPoint(k, 1) - m(1, 0)) * m(1, 1);
+        sourcePoint(k, 1) = (targetPoint(k, 0) - m(0, 0)) * m(0, 2)
+                + (targetPoint(k, 1) - m(1, 0)) * m(1, 2);
     }
-    TurboRegProgressBar.skipProgressBar(workload * iterationCost);
+    
 } /* end inverseMarquardtLevenbergRigidBodyOptimization */
 
 /*------------------------------------------------------------------*/
-TurboRegTransform::invertGauss (
-        double[][] matrix
+void TurboRegTransform::invertGauss (
+        matrix<double> &m
 ) {
-    int n = matrix.length;
-    double[][] inverse = new double[n][n];
+    int n = m.nrows();
+    matrix<double> inverse(n, n);
     for (int i = 0; (i < n); i++) {
-        double max = matrix[i][0];
-        double absMax = Math.abs(max);
+        double max = m(i, 0);
+        double absMax = abs(max);
         for (int j = 0; (j < n); j++) {
-            inverse[i][j] = 0.0;
-            if (absMax < Math.abs(matrix[i][j])) {
-                max = matrix[i][j];
-                absMax = Math.abs(max);
+            inverse(i, j) = 0.0;
+            if (absMax < abs(m(i, j))) {
+                max = m(i, j);
+                absMax = abs(max);
             }
         }
-        inverse[i][i] = 1.0 / max;
+        inverse(i, i) = 1.0 / max;
         for (int j = 0; (j < n); j++) {
-            matrix[i][j] /= max;
+            m(i, j) /= max;
         }
     }
     for (int j = 0; (j < n); j++) {
-        double max = matrix[j][j];
-        double absMax = Math.abs(max);
+        double max = m(j, j);
+        double absMax = abs(max);
         int k = j;
         for (int i = j + 1; (i < n); i++) {
-            if (absMax < Math.abs(matrix[i][j])) {
-                max = matrix[i][j];
-                absMax = Math.abs(max);
+            if (absMax < abs(m(i, j))) {
+                max = m(i, j);
+                absMax = abs(max);
                 k = i;
             }
         }
         if (k != j) {
-            double[] partialLine = new double[n - j];
-            double[] fullLine = new double[n];
-            System.arraycopy(matrix[j], j, partialLine, 0, n - j);
-            System.arraycopy(matrix[k], j, matrix[j], j, n - j);
-            System.arraycopy(partialLine, 0, matrix[k], j, n - j);
-            System.arraycopy(inverse[j], 0, fullLine, 0, n);
-            System.arraycopy(inverse[k], 0, inverse[j], 0, n);
-            System.arraycopy(fullLine, 0, inverse[k], 0, n);
+            //std::vector<double> partialLine(n - j);
+            //std::vector<double> fullLine(n);
+            
+            //System.arraycopy(m[j], j, partialLine, 0, n - j);
+            std::vector<int> partialLine(m.getPtr(j, j), m.getPtr(j, n-j));
+
+            //System.arraycopy(m[k], j, m[j], j, n - j);
+            // copy m[k][j->n-j] to m[j][j->n-j]
+            std::copy(m.getPtr(k,j), m.getPtr(k,n-j), m.getPtr(j,j));
+            
+            //System.arraycopy(partialLine, 0, m[k], j, n - j);
+            // copy partialLine[0->n-j] to m[k][j->n-j]
+            std::copy(std::begin(partialLine), std::end(partialLine), m.getPtr(k,j));
+            
+            //System.arraycopy(inverse[j], 0, fullLine, 0, n);
+            // copy inverse[j][0->n] to fullLine
+            std::vector<double> fullLine(inverse.getRowPtr(j), inverse.getRowPtr(j+1));
+
+            //System.arraycopy(inverse[k], 0, inverse[j], 0, n);
+            // copy inverse[k][0->n] to inverse[j][0->n]
+            std::copy(inverse.getRowPtr(k), inverse.getRowPtr(k+1), inverse.getRowPtr(j));
+
+            //System.arraycopy(fullLine, 0, inverse[k], 0, n);
+            // copy fullLine to inverse[k][0->n]
+            std::copy(std::begin(fullLine), std::end(fullLine), inverse.getRowPtr(k));
+
         }
         for (k = 0; (k <= j); k++) {
-            inverse[j][k] /= max;
+            inverse(j, k) /= max;
         }
         for (k = j + 1; (k < n); k++) {
-            matrix[j][k] /= max;
-            inverse[j][k] /= max;
+            m(j, k) /= max;
+            inverse(j, k) /= max;
         }
         for (int i = j + 1; (i < n); i++) {
             for (k = 0; (k <= j); k++) {
-                inverse[i][k] -= matrix[i][j] * inverse[j][k];
+                inverse(i, k) -= m(i, j) * inverse(j, k);
             }
             for (k = j + 1; (k < n); k++) {
-                matrix[i][k] -= matrix[i][j] * matrix[j][k];
-                inverse[i][k] -= matrix[i][j] * inverse[j][k];
+                m(i, k) -= m(i, j) * m(j, k);
+                inverse(i, k) -= m(i, j) * inverse(j, k);
             }
         }
     }
     for (int j = n - 1; (1 <= j); j--) {
         for (int i = j - 1; (0 <= i); i--) {
             for (int k = 0; (k <= j); k++) {
-                inverse[i][k] -= matrix[i][j] * inverse[j][k];
+                inverse(i, k) -= m(i, j) * inverse(j, k);
             }
             for (int k = j + 1; (k < n); k++) {
-                matrix[i][k] -= matrix[i][j] * matrix[j][k];
-                inverse[i][k] -= matrix[i][j] * inverse[j][k];
+                m(i, k) -= m(i, j) * m(j, k);
+                inverse(i, k) -= m(i, j) * inverse(j, k);
             }
         }
     }
     for (int i = 0; (i < n); i++) {
-        System.arraycopy(inverse[i], 0, matrix[i], 0, n);
+        //System.arraycopy(inverse[i], 0, m[i], 0, n);
+        // copy inverse[i][0->n] to m[i][0->n]
+        std::copy(inverse.getRowPtr(i), inverse.getRowPtr(i+1), m.getRowPtr(i));
     }
 } /* end invertGauss */
 
 /*------------------------------------------------------------------*/
-TurboRegTransform::marquardtLevenbergOptimization (
-        int workload
+void TurboRegTransform::marquardtLevenbergOptimization (
 ) {
-    double[][] attempt = new double[transformation / 2][2];
-    double[][] hessian = new double[transformation][transformation];
-    double[][] pseudoHessian = new double[transformation][transformation];
-    double[] gradient = new double[transformation];
-    double[][] matrix = getTransformationMatrix(targetPoint, sourcePoint);
-    double[] update = new double[transformation];
+    matrix<double> attempt(transformation / 2, 2); // = new double[transformation / 2][2];
+    matrix<double> hessian(transformation, transformation); // = new double[transformation][transformation];
+    matrix<double> pseudoHessian(transformation, transformation); // = new double[transformation][transformation];
+    std::vector<double> gradient(transformation);
+    matrix<double> m = getTransformationMatrix(targetPoint, sourcePoint);
+    std::vector<double> update(transformation);
     double bestMeanSquares = 0.0;
     double meanSquares = 0.0;
     double lambda = FIRST_LAMBDA;
     double displacement;
     int iteration = 0;
-    bestMeanSquares = getBilinearMeanSquares(matrix, hessian, gradient);
+    bestMeanSquares = getBilinearMeanSquares(m, hessian, gradient);
     iteration++;
     do {
         for (int k = 0; (k < transformation); k++) {
-            pseudoHessian[k][k] = (1.0 + lambda) * hessian[k][k];
+            pseudoHessian(k, k) = (1.0 + lambda) * hessian(k, k);
         }
         invertGauss(pseudoHessian);
         update = matrixMultiply(pseudoHessian, gradient);
         displacement = 0.0;
         for (int k = 0; (k < (transformation / 2)); k++) {
-            attempt[k][0] = sourcePoint[k][0] - update[2 * k];
-            attempt[k][1] = sourcePoint[k][1] - update[2 * k + 1];
-            displacement += Math.sqrt(update[2 * k] * update[2 * k]
+            attempt(k, 0) = sourcePoint(k, 0) - update[2 * k];
+            attempt(k, 1) = sourcePoint(k, 1) - update[2 * k + 1];
+            displacement += sqrt(update[2 * k] * update[2 * k]
                     + update[2 * k + 1] * update[2 * k + 1]);
         }
         displacement /= 0.5 * (double)transformation;
-        matrix = getTransformationMatrix(targetPoint, attempt);
-        meanSquares = getBilinearMeanSquares(matrix, hessian, gradient);
+        m = getTransformationMatrix(targetPoint, attempt);
+        meanSquares = getBilinearMeanSquares(m, hessian, gradient);
         iteration++;
         if (meanSquares < bestMeanSquares) {
             bestMeanSquares = meanSquares;
             for (int k = 0; (k < (transformation / 2)); k++) {
-                sourcePoint[k][0] = attempt[k][0];
-                sourcePoint[k][1] = attempt[k][1];
+                sourcePoint(k, 0) = attempt(k, 0);
+                sourcePoint(k, 1) = attempt(k, 1);
             }
             lambda /= LAMBDA_MAGSTEP;
         }
         else {
             lambda *= LAMBDA_MAGSTEP;
         }
-        TurboRegProgressBar.skipProgressBar(iterationCost);
-        workload--;
+        
     } while ((iteration < (maxIterations * iterationPower - 1))
             && (pixelPrecision <= displacement));
     invertGauss(hessian);
     update = matrixMultiply(hessian, gradient);
     for (int k = 0; (k < (transformation / 2)); k++) {
-        attempt[k][0] = sourcePoint[k][0] - update[2 * k];
-        attempt[k][1] = sourcePoint[k][1] - update[2 * k + 1];
+        attempt(k, 0) = sourcePoint(k, 0) - update[2 * k];
+        attempt(k, 1) = sourcePoint(k, 1) - update[2 * k + 1];
     }
-    matrix = getTransformationMatrix(targetPoint, attempt);
-    meanSquares = getBilinearMeanSquares(matrix);
+    m = getTransformationMatrix(targetPoint, attempt);
+    meanSquares = getBilinearMeanSquares(m);
     iteration++;
     if (meanSquares < bestMeanSquares) {
         for (int k = 0; (k < (transformation / 2)); k++) {
-            sourcePoint[k][0] = attempt[k][0];
-            sourcePoint[k][1] = attempt[k][1];
+            sourcePoint(k, 0) = attempt(k, 0);
+            sourcePoint(k, 1) = attempt(k, 1);
         }
     }
-    TurboRegProgressBar.skipProgressBar(workload * iterationCost);
+    
 } /* end marquardtLevenbergOptimization */
 
 /*------------------------------------------------------------------*/
-private double[] matrixMultiply (
-        double[][] matrix,
-        double[] vector
+std::vector<double> TurboRegTransform::matrixMultiply (
+        matrix<double> &m,
+        std::vector<double> &vector
 ) {
-    double[] result = new double[matrix.length];
-    for (int i = 0; (i < matrix.length); i++) {
+    std::vector<double> result(m.nrows());
+    for (unsigned int i = 0; (i < m.nrows()); i++) {
         result[i] = 0.0;
-        for (int j = 0; (j < vector.length); j++) {
-            result[i] += matrix[i][j] * vector[j];
+        for (unsigned int j = 0; (j < vector.size()); j++) {
+            result[i] += m(i, j) * vector[j];
         }
     }
     return(result);
 } /* end matrixMultiply */
 
 /*------------------------------------------------------------------*/
-TurboRegTransform::scaleBottomDownLandmarks (
+void TurboRegTransform::scaleBottomDownLandmarks (
 ) {
     for (int depth = 1; (depth < pyramidDepth); depth++) {
-        if (transformation == TurboRegDialog.RIGID_BODY) {
+        if (transformation == RIGID_BODY) {
             for (int n = 0; (n < transformation); n++) {
-                sourcePoint[n][0] *= 0.5;
-                sourcePoint[n][1] *= 0.5;
-                targetPoint[n][0] *= 0.5;
-                targetPoint[n][1] *= 0.5;
+                sourcePoint(n, 0) *= 0.5;
+                sourcePoint(n, 1) *= 0.5;
+                targetPoint(n, 0) *= 0.5;
+                targetPoint(n, 1) *= 0.5;
             }
         }
         else {
             for (int n = 0; (n < (transformation / 2)); n++) {
-                sourcePoint[n][0] *= 0.5;
-                sourcePoint[n][1] *= 0.5;
-                targetPoint[n][0] *= 0.5;
-                targetPoint[n][1] *= 0.5;
+                sourcePoint(n, 0) *= 0.5;
+                sourcePoint(n, 1) *= 0.5;
+                targetPoint(n, 0) *= 0.5;
+                targetPoint(n, 1) *= 0.5;
             }
         }
     }
 } /* end scaleBottomDownLandmarks */
 
 /*------------------------------------------------------------------*/
-TurboRegTransform::scaleUpLandmarks (
+void TurboRegTransform::scaleUpLandmarks (
 ) {
-    if (transformation == TurboRegDialog.RIGID_BODY) {
+    if (transformation == RIGID_BODY) {
         for (int n = 0; (n < transformation); n++) {
-            sourcePoint[n][0] *= 2.0;
-            sourcePoint[n][1] *= 2.0;
-            targetPoint[n][0] *= 2.0;
-            targetPoint[n][1] *= 2.0;
+            sourcePoint(n, 0) *= 2.0;
+            sourcePoint(n, 1) *= 2.0;
+            targetPoint(n, 0) *= 2.0;
+            targetPoint(n, 1) *= 2.0;
         }
     }
     else {
         for (int n = 0; (n < (transformation / 2)); n++) {
-            sourcePoint[n][0] *= 2.0;
-            sourcePoint[n][1] *= 2.0;
-            targetPoint[n][0] *= 2.0;
-            targetPoint[n][1] *= 2.0;
+            sourcePoint(n, 0) *= 2.0;
+            sourcePoint(n, 1) *= 2.0;
+            targetPoint(n, 0) *= 2.0;
+            targetPoint(n, 1) *= 2.0;
         }
     }
 } /* end scaleUpLandmarks */
 
 /*------------------------------------------------------------------*/
-TurboRegTransform::translationTransform (
-        double[][] matrix
+void TurboRegTransform::translationTransform (
+        matrix<double> &m
 ) {
-    double dx = matrix[0][0];
-    double dy = matrix[1][0];
+    double dx = m(0, 0);
+    double dy = m(1, 0);
     double dx0 = dx;
     int xMsk;
     int yMsk;
-    x = dx - Math.floor(dx);
-    y = dy - Math.floor(dy);
+    x = dx - floor(dx);
+    y = dy - floor(dy);
     if (!accelerated) {
         xWeights();
         yWeights();
     }
     int k = 0;
-    TurboRegProgressBar.addWorkload(outNy);
+    
     for (int v = 0; (v < outNy); v++) {
         y = dy++;
         yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
@@ -3198,29 +3224,29 @@ TurboRegTransform::translationTransform (
                 outImg[k++] = 0.0F;
             }
         }
-        TurboRegProgressBar.stepProgressBar();
+        
     }
-    TurboRegProgressBar.workloadDone(outNy);
+
 } /* translationTransform */
 
 /*------------------------------------------------------------------*/
-TurboRegTransform::translationTransform (
-        double[][] matrix,
-        float[] outMsk
+void TurboRegTransform::translationTransform (
+        matrix<double> &m,
+        std::vector<double> &outMsk
 ) {
-    double dx = matrix[0][0];
-    double dy = matrix[1][0];
+    double dx = m(0, 0);
+    double dy = m(1, 0);
     double dx0 = dx;
     int xMsk;
     int yMsk;
-    x = dx - Math.floor(dx);
-    y = dy - Math.floor(dy);
+    x = dx - floor(dx);
+    y = dy - floor(dy);
     if (!accelerated) {
         xWeights();
         yWeights();
     }
     int k = 0;
-    TurboRegProgressBar.addWorkload(outNy);
+    
     for (int v = 0; (v < outNy); v++) {
         y = dy++;
         yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
@@ -3256,13 +3282,13 @@ TurboRegTransform::translationTransform (
                 outMsk[k] = 0.0F;
             }
         }
-        TurboRegProgressBar.stepProgressBar();
+        
     }
-    TurboRegProgressBar.workloadDone(outNy);
+
 } /* translationTransform */
 
 /*------------------------------------------------------------------*/
-TurboRegTransform::xDxWeights (
+void TurboRegTransform::xDxWeights (
 ) {
     s = 1.0 - x;
     dxWeight[0] = 0.5 * x * x;
@@ -3276,7 +3302,7 @@ TurboRegTransform::xDxWeights (
 } /* xDxWeights */
 
 /*------------------------------------------------------------------*/
-TurboRegTransform::xIndexes (
+void TurboRegTransform::xIndexes (
 ) {
     p = (0.0 <= x) ? ((int)x + 2) : ((int)x + 1);
     for (int k = 0; (k < 4); p--, k++) {
@@ -3289,7 +3315,7 @@ TurboRegTransform::xIndexes (
 } /* xIndexes */
 
 /*------------------------------------------------------------------*/
-TurboRegTransform::xWeights (
+void TurboRegTransform::xWeights (
 ) {
     s = 1.0 - x;
     xWeight[3] = s * s * s / 6.0;
@@ -3300,7 +3326,7 @@ TurboRegTransform::xWeights (
 } /* xWeights */
 
 /*------------------------------------------------------------------*/
-TurboRegTransform::yDyWeights (
+void TurboRegTransform::yDyWeights (
 ) {
     t = 1.0 - y;
     dyWeight[0] = 0.5 * y * y;
@@ -3314,7 +3340,7 @@ TurboRegTransform::yDyWeights (
 } /* yDyWeights */
 
 /*------------------------------------------------------------------*/
-TurboRegTransform::yIndexes (
+void TurboRegTransform::yIndexes (
 ) {
     p = (0.0 <= y) ? ((int)y + 2) : ((int)y + 1);
     for (int k = 0; (k < 4); p--, k++) {
@@ -3327,7 +3353,7 @@ TurboRegTransform::yIndexes (
 } /* yIndexes */
 
 /*------------------------------------------------------------------*/
-TurboRegTransform::yWeights (
+void TurboRegTransform::yWeights (
 ) {
     t = 1.0 - y;
     yWeight[3] = t * t * t / 6.0;
@@ -3337,3 +3363,18 @@ TurboRegTransform::yWeights (
     yWeight[1] = 1.0 - yWeight[0] - yWeight[2] - yWeight[3];
 } /* yWeights */
 
+void TurboRegTransform::printMatrix(matrix<double> &m) {
+    for (int i = 0; i < m.nrows(); i++) {
+        for (int j = 0; j < m.ncols(); j++) {
+            printf("%.2f\t", m(i,j));
+        }
+        printf("\n");
+    }
+}
+
+void TurboRegTransform::printPoints() {
+    printf("target:\n");
+    printMatrix(targetPoint);
+    printf("source:\n");
+    printMatrix(sourcePoint);
+}

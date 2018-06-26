@@ -1,6 +1,10 @@
+#include "TurboReg.h"
 #include "TurboRegImage.h"
 #include "TurboRegMask.h"
 #include "TurboRegPointHandler.h"
+#include "matrix.h"
+#include <string>
+
 
 
 class TurboRegTransform
@@ -21,39 +25,41 @@ public:
      @param interactive Shows or hides the resulting image.
      ********************************************************************/
     TurboRegTransform (
-            TurboRegImage sourceImg,
-            TurboRegMask sourceMsk,
-            TurboRegPointHandler sourcePh,
-            TurboRegImage targetImg,
-            TurboRegMask targetMsk,
-            TurboRegPointHandler targetPh,
-            int transformation,
-            bool accelerated,
-            bool interactive
+            TurboRegImage &sourceImg,
+            TurboRegMask &sourceMsk,
+            TurboRegPointHandler &sourcePh,
+            TurboRegImage &targetImg,
+            TurboRegMask &targetMsk,
+            TurboRegPointHandler &targetPh,
+            Transformation transformation,
+            bool accelerated
     );
 
-    appendTransformation (
-        final String pathAndFilename
+    void appendTransformation (
+        std::string pathAndFilename
     );
 
     void doBatchFinalTransform (
-            double[] pixels
+            std::vector<double> &pixels
     );
-    ImagePlus doFinalTransform (
+    std::vector<double> doFinalTransform (
             int width,
             int height
     );
-    double[] doFinalTransform (
-            TurboRegImage sourceImg,
-            TurboRegPointHandler sourcePh,
-            TurboRegImage targetImg,
-            TurboRegPointHandler targetPh,
-            int transformation,
-            bool accelerated
-    );
+        std::vector<double> doFinalTransform (
+                TurboRegImage &sourceImg,
+                TurboRegPointHandler &sourcePh,
+                TurboRegImage &targetImg,
+                TurboRegPointHandler &targetPh,
+                Transformation transformation,
+                bool accelerated
+        );
+
     void doRegistration (
     );
 
+    void printMatrix(matrix<double> &m);
+    void printPoints();
  
 
 private:
@@ -109,43 +115,42 @@ private:
     const int ITERATION_PROGRESSION = 2;
 
     bool accelerated;
-    bool interactive;
-    double c0;
-    double c0u;
-    double c0v;
-    double c0uv;
-    double c1;
-    double c1u;
-    double c1v;
-    double c1uv;
-    double c2;
-    double c2u;
-    double c2v;
-    double c2uv;
-    double c3;
-    double c3u;
-    double c3v;
-    double c3uv;
-    double pixelPrecision;
-    double s;
-    double t;
-    double targetJacobian;
-    double x;
-    double y;
-    double[][] sourcePoint;
-    double[][] targetPoint;
-    double* dxWeight = new double[4];
-    double* dyWeight = new double[4];
-    double* xWeight = new double[4];
-    double* yWeight = new double[4];
-    int* xIndex = new int[4];
-    int* yIndex = new int[4];
-    double* inImg;
-    double* inMsk;
-    double* outImg;
-    double* outMsk;
-    double* xGradient;
-    double* yGradient;
+    double c0 = 0;
+    double c0u = 0;
+    double c0v = 0;
+    double c0uv = 0;
+    double c1 = 0;
+    double c1u = 0;
+    double c1v = 0;
+    double c1uv = 0;
+    double c2 = 0;
+    double c2u = 0;
+    double c2v = 0;
+    double c2uv = 0;
+    double c3 = 0;
+    double c3u = 0;
+    double c3v = 0;
+    double c3uv = 0;
+    double pixelPrecision = 0;
+    double s = 0;
+    double t = 0;
+    double targetJacobian = 0;
+    double x = 0;
+    double y = 0;
+    matrix<double> sourcePoint;
+    matrix<double> targetPoint;
+    std::vector<double> dxWeight;
+    std::vector<double> dyWeight;
+    std::vector<double> xWeight;
+    std::vector<double> yWeight;
+    std::vector<int> xIndex;
+    std::vector<int> yIndex;
+    std::vector<double> inImg;
+    std::vector<double> inMsk;
+    std::vector<double> outImg;
+    std::vector<double> outMsk;
+    std::vector<double> xGradient;
+    std::vector<double> yGradient;
     int inNx;
     int inNy;
     int iterationCost;
@@ -156,167 +161,148 @@ private:
     int p;
     int pyramidDepth;
     int q;
-    int transformation;
+    Transformation transformation;
     int twiceInNx;
     int twiceInNy;
-    TurboRegImage sourceImg;
-    TurboRegImage targetImg;
-    TurboRegMask sourceMsk;
-    TurboRegMask targetMsk;
-    TurboRegPointHandler sourcePh;
+    TurboRegImage &sourceImg;
+    TurboRegImage &targetImg;
+    TurboRegMask &sourceMsk;
+    TurboRegMask &targetMsk;
+    TurboRegPointHandler &sourcePh;
+    bool bHasSourceMask = true;
 
 
+
+    bool hasSourceMask() {
+            return bHasSourceMask;
+    }
+
     void affineTransform (
-            double[][] matrix
+            matrix<double> &m
     );
     void affineTransform (
-            double[][] matrix,
-            double[] outMsk
+            matrix<double> &m,
+            std::vector<double> &outMsk
     );
     void bilinearTransform (
-            double[][] matrix
+            matrix<double> &m
     );
     void bilinearTransform (
-            double[][] matrix,
-            double[] outMsk
+            matrix<double> &m,
+            std::vector<double> &outMsk
     );
     void computeBilinearGradientConstants (
     );
     double getAffineMeanSquares (
-            double[][] sourcePoint,
-            double[][] matrix
+            matrix<double> &sourcePoint,
+            matrix<double> &m
     );
     double getAffineMeanSquares (
-            double[][] sourcePoint,
-            double[][] matrix,
-            double[] gradient
+            matrix<double> &sourcePoint,
+            matrix<double> &m,
+            std::vector<double> &gradient
     );
     double getAffineMeanSquares (
-            double[][] sourcePoint,
-            double[][] matrix,
-            double[][] hessian,
-            double[] gradient
+            matrix<double> &sourcePoint,
+            matrix<double> &m,
+            matrix<double> &hessian,
+            std::vector<double> &gradient
     );
     double getBilinearMeanSquares (
-            double[][] matrix
+            matrix<double> &m
     );
     double getBilinearMeanSquares (
-            double[][] matrix,
-            double[][] hessian,
-            double[] gradient
+            matrix<double> &m,
+            matrix<double> &hessian,
+            std::vector<double> &gradient
     );
     double getRigidBodyMeanSquares (
-            double[][] matrix
+            matrix<double> &m
     );
     double getRigidBodyMeanSquares (
-            double[][] matrix,
-            double[] gradient
+            matrix<double> &m,
+            std::vector<double> &gradient
 
     );
 
     double getRigidBodyMeanSquares (
-            double[][] matrix,
-            double[][] hessian,
-            double[] gradient
+            matrix<double> &m,
+            matrix<double> &hessian,
+            std::vector<double> &gradient
     );
     double getScaledRotationMeanSquares (
-            double[][] sourcePoint,
-            double[][] matrix
-    );
-
-    double getScaledRotationMeanSquares (
-            double[][] sourcePoint,
-            double[][] matrix,
-            double[] gradient
+            matrix<double> &sourcePoint,
+            matrix<double> &m
     );
 
     double getScaledRotationMeanSquares (
-            double[][] sourcePoint,
-            double[][] matrix,
-            double[][] hessian,
-            double[] gradient
+            matrix<double> &sourcePoint,
+            matrix<double> &m,
+            std::vector<double> &gradient
     );
 
-    double[][] getTransformationMatrix (
-            double[][] fromCoord,
-            double[][] toCoord
+    double getScaledRotationMeanSquares (
+            matrix<double> &sourcePoint,
+            matrix<double> &m,
+            matrix<double> &hessian,
+            std::vector<double> &gradient
     );
 
-    double getTranslationMeanSquares (
-            double[][] matrix
-    );
-
-    double getTranslationMeanSquares (
-            double[][] matrix,
-            double[] gradient
+    matrix<double> getTransformationMatrix (
+            matrix<double> &fromCoord,
+            matrix<double> &toCoord
     );
 
     double getTranslationMeanSquares (
-            double[][] matrix,
-            double[][] hessian,
-            double[] gradient
+            matrix<double> &m
     );
 
-    double interpolate (
+    double getTranslationMeanSquares (
+            matrix<double> &m,
+            std::vector<double> &gradient
     );
 
-    double interpolateDx (
+    double getTranslationMeanSquares (
+            matrix<double> &m,
+            matrix<double> &hessian,
+            std::vector<double> &gradient
     );
 
-    double interpolateDy (
-    );
+    double interpolate ();
+    double interpolateDx ();
+    double interpolateDy ();
 
-    void inverseMarquardtLevenbergOptimization (
-            int workload
-    );
-
-    void inverseMarquardtLevenbergRigidBodyOptimization (
-            int workload
-    );
+    void inverseMarquardtLevenbergOptimization ();
+    void inverseMarquardtLevenbergRigidBodyOptimization ();
 
     void invertGauss (
-            double[][] matrix
+            matrix<double> &m
     );
 
-    void marquardtLevenbergOptimization (
-            int workload
-    );
-    double[] matrixMultiply (
-            double[][] matrix,
-            double[] vector
+    void marquardtLevenbergOptimization ();
+
+    std::vector<double> matrixMultiply (
+            matrix<double> &m,
+            std::vector<double> &vector
     );
 
-    void scaleBottomDownLandmarks (
-    );
+    void scaleBottomDownLandmarks ();
+    void scaleUpLandmarks ();
 
-    void scaleUpLandmarks (
+    void translationTransform (
+            matrix<double> &m
     );
 
     void translationTransform (
-            double[][] matrix
+            matrix<double> &m,
+            std::vector<double> &outMsk
     );
 
-    void translationTransform (
-            double[][] matrix,
-            double[] outMsk
-    );
+    void xDxWeights ();
+    void xIndexes ();
+    void xWeights ();
+    void yDyWeights ();
+    void yIndexes ();
+    void yWeights ();
 
-    void xDxWeights (
-    );
-
-    void xIndexes (
-    );
-
-    void xWeights (
-    );
-
-    void yDyWeights (
-    );
-
-    void yIndexes (
-    );
-
-    void yWeights (
-    );
-
-} /* end class TurboRegTransform */
+}; /* end class TurboRegTransform */

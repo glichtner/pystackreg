@@ -1,8 +1,11 @@
+#ifndef TURBOREG_H_
+#define TURBOREG_H_
+
 typedef enum Transformation {
 /*********************************************************************
  Generic geometric transformation.
  ********************************************************************/
-GENERIC_TRANSFORMATION = -1,
+//GENERIC_TRANSFORMATION = -1,
 
 /*********************************************************************
  A translation is described by a single point. It keeps area, angle,
@@ -42,12 +45,14 @@ AFFINE = 6,
  transformation is determined by 8 parameters.
  ********************************************************************/
 BILINEAR = 8,
+} Transformation;
 
 /*********************************************************************
  Minimal linear dimension of an image in the multiresolution pyramid.
  ********************************************************************/
-MIN_SIZE = 12,
+const static int PYRAMID_MIN_SIZE = 12;
 
 
+int getPyramidDepth(int sourceWidth, int sourceHeight, int targetWidth, int targetHeight);
 
-} Transformation;
+#endif

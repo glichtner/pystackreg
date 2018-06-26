@@ -3,3 +3,4 @@
 *.code-workspace
 .project
 .cproject
+/Debug/

@@ -24,6 +24,7 @@ void TurboRegMask::init (
     this->buildPyramid();
 } /* end run */
 
+
 /*....................................................................
 constructors
 ....................................................................*/
@@ -33,21 +34,35 @@ constructors
     @param imp <code>ImagePlus</code> object to preprocess.
     ********************************************************************/
 TurboRegMask::TurboRegMask (
-        double* imp, int width, int height
+        TurboRegImage &img
+) {
+    this->width = img.getWidth();
+    this->height = img.getHeight();
+    int k = 0;
+    
+    this->mask.resize(width * height);
+
+    for (int y = 0; (y < height); y++) {
+        for (int x = 0; (x < width); x++, k++) {
+            mask[k] = img.getImage()[k];
+        }
+    }
+}
+
+TurboRegMask::TurboRegMask (
+        matrix<double> &imp, int width, int height
 ) {
     this->width = width;   //imp.getWidth();
     this->height = height; //imp.getHeight();
     int k = 0;
     
-    this->mask = new double[width * height];
+    this->mask.resize(width * height);
 
     for (int y = 0; (y < height); y++) {
         for (int x = 0; (x < width); x++, k++) {
-            mask[k] = (double)imp[k];
+            mask[k] = (double)imp(x,y); //imp[k];
         }
     }
-
-    this->init();
 
     /*if (imp.getType() == ImagePlus.GRAY8) {
         byte[] pixels = (byte[])imp.getProcessor().getPixels();
@@ -78,10 +93,6 @@ TurboRegMask::TurboRegMask (
 
 } /* end turboRegMask */
 
-
-TurboRegMask::~TurboRegMask  () {
-    delete this->mask;
-}
 /*....................................................................
 methods
 ....................................................................*/
@@ -101,7 +112,7 @@ void TurboRegMask::clearMask (
 /*********************************************************************
  Return the full-size mask array.
     ********************************************************************/
-double* TurboRegMask::getMask (
+std::vector<double> &TurboRegMask::getMask (
 ) {
     return(this->mask);
 } /* end getMask */
@@ -123,7 +134,7 @@ double* TurboRegMask::getMask (
     </table>
     @see turboRegImage#getPyramid()
     ********************************************************************/
-std::stack<double*> TurboRegMask::getPyramid (
+std::stack<MaskStackItem> TurboRegMask::getPyramid (
 ) {
     return(this->pyramid);
 } /* end getPyramid */
@@ -147,7 +158,7 @@ void TurboRegMask::buildPyramid (
 ) {
     int fullWidth;
     int fullHeight;
-    double* fullMask = mask;
+    std::vector<double> &fullMask = mask;
     int halfWidth = width;
     int halfHeight = height;
     for (int depth = 1; ((depth < pyramidDepth)); depth++) {
@@ -155,29 +166,34 @@ void TurboRegMask::buildPyramid (
         fullHeight = halfHeight;
         halfWidth /= 2;
         halfHeight /= 2;
-        double* halfMask = getHalfMask2D(fullMask, fullWidth, fullHeight);
-        pyramid.push(halfMask);
-        fullMask = halfMask;
+
+        MaskStackItem stackItem(halfWidth * halfHeight);
+
+        //std::vector<double> halfMask = getHalfMask2D(fullMask, fullWidth, fullHeight);
+        getHalfMask2D(fullMask, fullWidth, fullHeight, stackItem.halfMask);
+
+        pyramid.push(stackItem);
+        fullMask = stackItem.halfMask;
     }
 } /* end buildPyramid */
 
 /*------------------------------------------------------------------*/
-double* TurboRegMask::getHalfMask2D (
-        double* fullMask,
+std::vector<double> TurboRegMask::getHalfMask2D (
+        std::vector<double> &fullMask,
         int fullWidth,
-        int fullHeight
+        int fullHeight,
+        std::vector<double> &halfMask
 ) {
     int halfWidth = fullWidth / 2;
     int halfHeight = fullHeight / 2;
     bool oddWidth = ((2 * halfWidth) != fullWidth);
-    int workload = 2 * halfHeight;
-    double* halfMask = new double[halfWidth * halfHeight];
+
+    //std::vector<double> halfMask(halfWidth * halfHeight);
     int k = 0;
     for (int y = 0; y < halfHeight; y++) {
         for (int x = 0; (x < halfWidth); x++) {
             halfMask[k++] = 0.0F;
         }
-        workload--;
     }
 
     k = 0;
