@@ -6,34 +6,44 @@
 #include <numeric>
 #include <iterator>
 
+#include "TurboReg.h"
+#include "TurboRegImage.h"
+#include "TurboRegMask.h"
+#include "TurboRegPointHandler.h"
+#include "TurboRegTransform.h"
+#include "matrix.h"
 
-static PyObject *stackreg_std(PyObject *self, PyObject *args);
-static PyObject *stackreg_mean(PyObject *self, PyObject *args);
-static PyObject *stackreg_mean_center(PyObject *self, PyObject *args);
+static PyObject *stackgreg_register(PyObject *self, PyObject *args);
+static PyObject *stackgreg_transform(PyObject *self, PyObject *args);
+static PyObject *stackgreg_register_transform(PyObject *self, PyObject *args);
+static PyObject *stackgreg_get_points(PyObject *self, PyObject *args);
+static PyObject *stackgreg_get_matrix(PyObject *self, PyObject *args);
 
 static char pystackreg_docs[] = "PyStackReg\n";
 static PyMethodDef module_methods[] = {
-    {"std", (PyCFunction)stackreg_std, METH_VARARGS, pystackreg_docs},
-	{"mean", (PyCFunction)stackreg_mean, METH_VARARGS, pystackreg_docs},
-	{"mean_center", (PyCFunction)stackreg_mean_center, METH_VARARGS, pystackreg_docs},
+    {"register", (PyCFunction)stackgreg_register, METH_VARARGS, pystackreg_docs},
+	{"transform", (PyCFunction)stackgreg_transform, METH_VARARGS, pystackreg_docs},
+	{"register_transform", (PyCFunction)stackgreg_register_transform, METH_VARARGS, pystackreg_docs},
+	{"get_points", (PyCFunction)stackgreg_get_points, METH_VARARGS, pystackreg_docs},
+	{"get_matrix", (PyCFunction)stackgreg_get_matrix, METH_VARARGS, pystackreg_docs},
     {NULL}
 };
 
-static struct PyModuleDef PyStackReg =
+static struct PyModuleDef pystackreg =
 {
     PyModuleDef_HEAD_INIT,
-    "PyStackReg", /* name of module */
-    "PyStackReg\n", /* module documentation, may be NULL */
+    "pystackreg", /* name of module */
+    "pystackreg\n", /* module documentation, may be NULL */
     -1,   /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
     module_methods
 };
 
-PyMODINIT_FUNC PyInit_PyStackReg(void)
+PyMODINIT_FUNC PyInit_stackreg(void)
 {
     /* Load `numpy` functionality. */
     import_array();
 
-    return PyModule_Create(&PyStackReg);
+    return PyModule_Create(&pystackreg);
 }
 
 
@@ -59,118 +69,112 @@ double cstd(double *x, int N) {
 	return std / ((double)N - 1);
 }
 
+std::vector<double> registerImg(double *pDataRef, double *pDataMov, Transformation transformation, int width, int height) {
+	TurboRegImage refImg(pDataRef, width, height, transformation, true);
+	TurboRegImage movImg(pDataMov, width, height, transformation, false);
+
+	TurboRegPointHandler refPH(refImg, transformation);
+	TurboRegPointHandler movPH(movImg, transformation);
+
+	TurboRegMask refMsk(refImg);
+	TurboRegMask movMsk(movImg);
+
+	refMsk.clearMask();
+	movMsk.clearMask();
+
+	int pyramidDepth = getPyramidDepth(
+			movImg.getWidth(), movImg.getHeight(),
+			refImg.getWidth(), refImg.getHeight()
+			);
+	refImg.setPyramidDepth(pyramidDepth);
+	refMsk.setPyramidDepth(pyramidDepth);
+	movImg.setPyramidDepth(pyramidDepth);
+	movMsk.setPyramidDepth(pyramidDepth);
+
+	refImg.init();
+	refMsk.init();
+	movImg.init();
+	movMsk.init();
 
 
+	TurboRegTransform tform(movImg, movMsk, movPH, refImg, refMsk, refPH, transformation, false);
 
-PyObject *stackreg_mean(PyObject *self, PyObject *args) {
-    PyObject *x_obj;
+	tform.doRegistration();
 
-    /* Parse the input tuple */
-    if (!PyArg_ParseTuple(args, "O", &x_obj))
-        return NULL;
-
-    /* Interpret the input objects as numpy arrays. */
-    PyObject *x_array = PyArray_FROM_OTF(x_obj, NPY_DOUBLE, NPY_IN_ARRAY);
-
-
-    /* If that didn't work, throw an exception. */
-    if (x_array == NULL) {
-        Py_XDECREF(x_array);
-        return NULL;
-    }
-
-    /* How many data points are there? */
-    int N = (int)PyArray_DIM(x_array, 0);
-
-    /* Get pointers to the data as C-types. */
-    double *x    = (double*)PyArray_DATA(x_array);
-
-	return PyFloat_FromDouble(mean(x, N));
+	std::vector<double> imgout = tform.doFinalTransform(width, height);
+	return imgout;
 }
 
-PyObject *stackreg_mean_center(PyObject *self, PyObject *args) {
 
-    PyObject *x_obj;
+PyObject *stackgreg_register(PyObject *self, PyObject *args) {
+
+    PyObject *ref, *mov;
 
     /* Parse the input tuple */
-    if (!PyArg_ParseTuple(args, "O", &x_obj))
-        return NULL;
+    if (!PyArg_ParseTuple(args, "OO", &ref, &mov)) {
+    	return NULL;
+    }
+
 
     /* Interpret the input objects as numpy arrays. */
-    PyObject *x_array = PyArray_FROM_OTF(x_obj, NPY_DOUBLE, NPY_IN_ARRAY);
+    PyObject *ref_array = PyArray_FROM_OTF(ref, NPY_DOUBLE, NPY_IN_ARRAY);
+    PyObject *mov_array = PyArray_FROM_OTF(mov, NPY_DOUBLE, NPY_IN_ARRAY);
 
 
     /* If that didn't work, throw an exception. */
-    if (x_array == NULL) {
-        Py_XDECREF(x_array);
+    if (ref_array == NULL || mov_array == NULL) {
+        Py_XDECREF(ref_array);
+        Py_XDECREF(mov_array);
+        return NULL;
+    }
+
+    int ndim_ref = (int)PyArray_NDIM(ref_array);
+    int ndim_mov = (int)PyArray_NDIM(mov_array);
+
+    if (ndim_ref != 2 || ndim_mov != 2) {
+        Py_XDECREF(ref_array);
+        Py_XDECREF(mov_array);
+    	PyErr_SetString(PyExc_ValueError, "Input arrays must be two dimensional");
         return NULL;
     }
 
     /* How many data points are there? */
-    int N = (int)PyArray_DIM(x_array, 0);
-    npy_intp dims[1] = {N};
+    int Nx_ref = (int)PyArray_DIM(ref_array, 0);
+    int Ny_ref = (int)PyArray_DIM(ref_array, 1);
+    int Nx_mov = (int)PyArray_DIM(mov_array, 0);
+    int Ny_mov = (int)PyArray_DIM(mov_array, 1);
+
+    if( Nx_ref != Nx_mov || Ny_ref != Ny_mov) {
+        Py_XDECREF(ref_array);
+        Py_XDECREF(mov_array);
+    	PyErr_SetString(PyExc_ValueError, "Input arrays must of the same shape");
+        return NULL;
+    }
+
+
+    npy_intp dims[2] = {Nx_ref, Ny_ref};
 
     /* Get pointers to the data as C-types. */
-    double *x    = (double*)PyArray_DATA(x_array);
+    double *img_ref    = (double*)PyArray_DATA(ref_array);
+    double *img_mov    = (double*)PyArray_DATA(mov_array);
 
+    std::vector<double> imgout = registerImg(img_ref, img_mov, RIGID_BODY, Ny_ref, Nx_ref); // width and height (Nx/Ny) have to be swapped!
 
-	PyObject *ret = PyArray_SimpleNew(1, (npy_intp*) &dims, NPY_DOUBLE);
+	PyObject *ret = PyArray_SimpleNew(2, (npy_intp*) &dims, NPY_DOUBLE);
 
-	double avg = mean(x, N);
+	memcpy((void*)PyArray_DATA(ret), &imgout[0], (Nx_ref * Ny_ref * sizeof(double)));
 
-	memcpy((void*)PyArray_DATA(ret), x, (N * sizeof(double)));
-
-	double* y = (double*)PyArray_DATA(ret);
-
-	for(int i=0; i < N; i++) {
-		y[i] -= avg;
-	}
+    /* clean up */
+    Py_XDECREF(ref_array);
+    Py_XDECREF(mov_array);
 
 
 	return ret;
 }
-
-static PyObject *stackreg_std(PyObject *self, PyObject *args)
-{
-    PyObject *x_obj;
-
-    /* Parse the input tuple */
-    if (!PyArg_ParseTuple(args, "O", &x_obj))
-        return NULL;
-
-    /* Interpret the input objects as numpy arrays. */
-    PyObject *x_array = PyArray_FROM_OTF(x_obj, NPY_DOUBLE, NPY_IN_ARRAY);
-
-
-    /* If that didn't work, throw an exception. */
-    if (x_array == NULL) {
-        Py_XDECREF(x_array);
-        return NULL;
-    }
-
-    /* How many data points are there? */
-    int N = (int)PyArray_DIM(x_array, 0);
-
-    /* Get pointers to the data as C-types. */
-    double *x    = (double*)PyArray_DATA(x_array);
-
-    /* Call the external C function to compute the chi-squared. */
-    double value = cstd(x, N);
-
-    /* Clean up. */
-    Py_DECREF(x_array);
-
-    if (value < 0.0) {
-        PyErr_SetString(PyExc_RuntimeError,
-                    "Chi-squared returned an impossible value.");
-        return NULL;
-    }
-
-    /* Build the output tuple */
-    PyObject *ret = Py_BuildValue("d", value);
-    return ret;
-}
-
+PyObject *stackgreg_transform(PyObject *self, PyObject *args) {return NULL;}
+PyObject *stackgreg_register_transform(PyObject *self, PyObject *args) {return NULL;}
+PyObject *stackgreg_get_points(PyObject *self, PyObject *args) {return NULL;}
+PyObject *stackgreg_get_matrix(PyObject *self, PyObject *args) {return NULL;}
 
 /*
 static PyObject *std_std(PyObject *self, PyObject *args)

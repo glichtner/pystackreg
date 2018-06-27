@@ -200,28 +200,28 @@ std::vector<double> TurboRegMask::getHalfMask2D (
     int n = 0;
     for (int y = 0; y < (halfHeight - 1); y++) {
         for (int x = 0; (x < (halfWidth - 1)); x++) {
-            halfMask[k] += abs(fullMask[n++]);
-            halfMask[k] += abs(fullMask[n]);
-            halfMask[++k] += abs(fullMask[n++]);
+            halfMask[k] += std::abs(fullMask[n++]);
+            halfMask[k] += std::abs(fullMask[n]);
+            halfMask[++k] += std::abs(fullMask[n++]);
         }
-        halfMask[k] += abs(fullMask[n++]);
-        halfMask[k++] += abs(fullMask[n++]);
+        halfMask[k] += std::abs(fullMask[n++]);
+        halfMask[k++] += std::abs(fullMask[n++]);
         
         if (oddWidth) {
             n++;
         }
         for (int x = 0; (x < (halfWidth - 1)); x++) {
-            halfMask[k - halfWidth] += abs(fullMask[n]);
-            halfMask[k] += abs(fullMask[n++]);
-            halfMask[k - halfWidth] += abs(fullMask[n]);
-            halfMask[k - halfWidth + 1] += abs(fullMask[n]);
-            halfMask[k] += abs(fullMask[n]);
-            halfMask[++k] += abs(fullMask[n++]);
+            halfMask[k - halfWidth] += std::abs(fullMask[n]);
+            halfMask[k] += std::abs(fullMask[n++]);
+            halfMask[k - halfWidth] += std::abs(fullMask[n]);
+            halfMask[k - halfWidth + 1] += std::abs(fullMask[n]);
+            halfMask[k] += std::abs(fullMask[n]);
+            halfMask[++k] += std::abs(fullMask[n++]);
         }
-        halfMask[k - halfWidth] += abs(fullMask[n]);
-        halfMask[k] += abs(fullMask[n++]);
-        halfMask[k - halfWidth] += abs(fullMask[n]);
-        halfMask[k++] += abs(fullMask[n++]);
+        halfMask[k - halfWidth] += std::abs(fullMask[n]);
+        halfMask[k] += std::abs(fullMask[n++]);
+        halfMask[k - halfWidth] += std::abs(fullMask[n]);
+        halfMask[k++] += std::abs(fullMask[n++]);
         
         if (oddWidth) {
             n++;
@@ -231,13 +231,13 @@ std::vector<double> TurboRegMask::getHalfMask2D (
     }
 
     for (int x = 0; (x < (halfWidth - 1)); x++) {
-        halfMask[k] += abs(fullMask[n++]);
-        halfMask[k] += abs(fullMask[n]);
-        halfMask[++k] += abs(fullMask[n++]);
+        halfMask[k] += std::abs(fullMask[n++]);
+        halfMask[k] += std::abs(fullMask[n]);
+        halfMask[++k] += std::abs(fullMask[n++]);
     }
 
-    halfMask[k] += abs(fullMask[n++]);
-    halfMask[k++] += abs(fullMask[n++]);
+    halfMask[k] += std::abs(fullMask[n++]);
+    halfMask[k++] += std::abs(fullMask[n++]);
     
     if (oddWidth) {
         n++;
@@ -246,12 +246,12 @@ std::vector<double> TurboRegMask::getHalfMask2D (
     k -= halfWidth;
 
     for (int x = 0; (x < (halfWidth - 1)); x++) {
-        halfMask[k] += abs(fullMask[n++]);
-        halfMask[k] += abs(fullMask[n]);
-        halfMask[++k] += abs(fullMask[n++]);
+        halfMask[k] += std::abs(fullMask[n++]);
+        halfMask[k] += std::abs(fullMask[n]);
+        halfMask[++k] += std::abs(fullMask[n++]);
     }
-    halfMask[k] += abs(fullMask[n++]);
-    halfMask[k] += abs(fullMask[n]);
+    halfMask[k] += std::abs(fullMask[n++]);
+    halfMask[k] += std::abs(fullMask[n]);
     return(halfMask);
 } /* end getHalfMask2D */
 

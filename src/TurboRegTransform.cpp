@@ -222,7 +222,7 @@ std::vector<double> TurboRegTransform::doFinalTransform (
 /*********************************************************************
  Compute the image.
     ********************************************************************/
-/*std::vector<double> TurboRegTransform::doFinalTransform (
+std::vector<double> TurboRegTransform::doFinalTransform (
         TurboRegImage &sourceImg,
         TurboRegPointHandler &sourcePh,
         TurboRegImage &targetImg,
@@ -270,7 +270,62 @@ std::vector<double> TurboRegTransform::doFinalTransform (
         }
     }
     return(outImg);
-}*/ /* end doFinalTransform */
+} /* end doFinalTransform */
+
+std::vector<double> TurboRegTransform::doFinalTransform (
+        TurboRegImage &sourceImg,
+		matrix<double> &m
+) {
+    this->sourceImg = sourceImg;
+    this->targetImg = targetImg;
+    this->transformation = transformation;
+    this->accelerated = accelerated;
+    if (accelerated) {
+        inImg = sourceImg.getImage();
+    }
+    else {
+        inImg = sourceImg.getCoefficient();
+    }
+    inNx = sourceImg.getWidth();
+    inNy = sourceImg.getHeight();
+    twiceInNx = 2 * inNx;
+    twiceInNy = 2 * inNy;
+
+    outNx = sourceImg.getWidth();
+    outNy = sourceImg.getHeight();
+    outImg.resize(outNx * outNy);
+
+    Transformation transformation;
+
+    switch(m.ncols()) {
+    case 1: transformation = TRANSLATION; break;
+    case 3: transformation = AFFINE; break; // or RIGID_BODY or SCALED_ROT, but that doesn't matter
+    case 4: transformation = BILINEAR; break;
+    }
+
+    switch (transformation) {
+        case TRANSLATION: {
+            translationTransform(m);
+            break;
+        }
+        case RIGID_BODY:
+        case SCALED_ROTATION:
+        case AFFINE: {
+            affineTransform(m);
+            break;
+        }
+        case BILINEAR: {
+            bilinearTransform(m);
+            break;
+        }
+    }
+    return(outImg);
+} /* end doFinalTransform */
+
+
+matrix<double> TurboRegTransform::getTransformationMatrix () {
+    return getTransformationMatrix(targetPoint, sourcePoint);
+}
 
 /*********************************************************************
  Refine the landmarks.
@@ -3364,8 +3419,8 @@ void TurboRegTransform::yWeights (
 } /* yWeights */
 
 void TurboRegTransform::printMatrix(matrix<double> &m) {
-    for (int i = 0; i < m.nrows(); i++) {
-        for (int j = 0; j < m.ncols(); j++) {
+    for (unsigned int i = 0; i < m.nrows(); i++) {
+        for (unsigned int j = 0; j < m.ncols(); j++) {
             printf("%.2f\t", m(i,j));
         }
         printf("\n");

@@ -46,14 +46,27 @@ public:
             int width,
             int height
     );
-        std::vector<double> doFinalTransform (
-                TurboRegImage &sourceImg,
-                TurboRegPointHandler &sourcePh,
-                TurboRegImage &targetImg,
-                TurboRegPointHandler &targetPh,
-                Transformation transformation,
-                bool accelerated
-        );
+
+	std::vector<double> doFinalTransform (
+			TurboRegImage &sourceImg,
+			TurboRegPointHandler &sourcePh,
+			TurboRegImage &targetImg,
+			TurboRegPointHandler &targetPh,
+			Transformation transformation,
+			bool accelerated
+	);
+
+	std::vector<double> doFinalTransform (
+	        TurboRegImage &sourceImg,
+			matrix<double> &m
+	);
+
+    matrix<double> getTransformationMatrix (
+            matrix<double> &fromCoord,
+            matrix<double> &toCoord
+    );
+
+    matrix<double> getTransformationMatrix ();
 
     void doRegistration (
     );
@@ -248,10 +261,6 @@ private:
             std::vector<double> &gradient
     );
 
-    matrix<double> getTransformationMatrix (
-            matrix<double> &fromCoord,
-            matrix<double> &toCoord
-    );
 
     double getTranslationMeanSquares (
             matrix<double> &m

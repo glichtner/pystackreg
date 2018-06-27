@@ -502,7 +502,7 @@ double TurboRegImage::getInitialCausalCoefficientMirrorOffBounds (
     double sum = (1.0 + z) * (c[0] + zn * c[c.size() - 1]);
     int horizon = c.size();
     if (0.0 < tolerance) {
-        horizon = 2 + (int)(log(tolerance) / log((double)abs(z)));
+        horizon = 2 + (int)(log(tolerance) / log((double)std::abs(z)));
         horizon = (horizon < (int)c.size()) ? (horizon) : (c.size());
     }
     zn = zn * zn;

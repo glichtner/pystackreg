@@ -5,3 +5,7 @@
 .cproject
 /Debug/
 /Default/
+__pycache__/
+build/
+pystackreg/
+

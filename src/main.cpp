@@ -38,7 +38,7 @@ void writeFile(const char* filename, std::vector<uint16_t> &data)
    fout.close();
 }
 
-int main(int argc, char **argv)
+int main(int argc, const char **argv)
 {
     //int width = 128;
     //int height = 256;
@@ -56,11 +56,13 @@ int main(int argc, char **argv)
     double *pDataRef= &imgdata_ref[0];
     double *pDataMov= &imgdata_mov[0];
 
-    TurboRegImage refImg(pDataRef, width, height, RIGID_BODY, true);
-    TurboRegImage movImg(pDataMov, width, height, RIGID_BODY, false);
+    Transformation transformation = RIGID_BODY;
 
-    TurboRegPointHandler refPH(refImg);
-    TurboRegPointHandler movPH(movImg);
+    TurboRegImage refImg(pDataRef, width, height, transformation, true);
+    TurboRegImage movImg(pDataMov, width, height, transformation, false);
+
+    TurboRegPointHandler refPH(refImg, transformation);
+    TurboRegPointHandler movPH(movImg, transformation);
 
     TurboRegMask refMsk(refImg);
     TurboRegMask movMsk(movImg);
@@ -83,15 +85,24 @@ int main(int argc, char **argv)
     movMsk.init();
 
   
-    TurboRegTransform tform(movImg, movMsk, movPH, refImg, refMsk, refPH, RIGID_BODY, false);
+    TurboRegTransform tform(movImg, movMsk, movPH, refImg, refMsk, refPH, transformation, false);
     
     tform.doRegistration();
 
     std::vector<double> imgout = tform.doFinalTransform(width, height);
 
+    TurboRegPointHandler refPH2(refPH.getPoints());
+    TurboRegPointHandler movPH2(movPH.getPoints());
+
+    std::vector<double> imgout2 = tform.doFinalTransform (movImg, movPH2, refImg, refPH2, RIGID_BODY, false);
+
+    matrix<double> tm = tform.getTransformationMatrix();
+
+    //std::vector<double> imgout2 = tform.doFinalTransform(movImg, tm);
+
     tform.printPoints();
 
-    std::vector<uint16_t> int_imgout(imgout.begin(), imgout.end());
+    std::vector<uint16_t> int_imgout(imgout2.begin(), imgout2.end());
 
     writeFile("/media/storage/eric/data/180614_Rut1_Papain/Use These Files/pygreg_test_out.bin", int_imgout);
 
