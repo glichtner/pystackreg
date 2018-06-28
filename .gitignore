@@ -10,3 +10,4 @@ build/
 Debug Py2.7/
 *.so
 *.pyc
+dist/
