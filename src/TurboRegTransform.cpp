@@ -57,6 +57,33 @@ TurboRegTransform::TurboRegTransform(
     }
 } /* end TurboRegTransform */
 
+
+ TurboRegTransform::TurboRegTransform(
+         TurboRegImage &sourceImg,
+         TurboRegMask &sourceMsk,
+         TurboRegPointHandler &sourcePh,
+		 Transformation transformation,
+		 bool accelerated
+ ) :
+     dxWeight(4),
+     dyWeight(4),
+     xWeight(4),
+     yWeight(4),
+     xIndex(4),
+     yIndex(4),
+     sourceImg{sourceImg},
+     sourceMsk{sourceMsk},
+     sourcePh{sourcePh},
+     targetImg{targetImg},
+     targetMsk{targetMsk},
+     accelerated{accelerated},
+     transformation{transformation}
+  {
+     pixelPrecision = PIXEL_HIGH_PRECISION;
+     maxIterations = MANY_ITERATIONS;
+
+ } /* end TurboRegTransform */
+
 /*....................................................................
 public methods
 ....................................................................*/
@@ -272,14 +299,12 @@ std::vector<double> TurboRegTransform::doFinalTransform (
     return(outImg);
 } /* end doFinalTransform */
 
+
 std::vector<double> TurboRegTransform::doFinalTransform (
         TurboRegImage &sourceImg,
 		matrix<double> &m
 ) {
     this->sourceImg = sourceImg;
-    this->targetImg = targetImg;
-    this->transformation = transformation;
-    this->accelerated = accelerated;
     if (accelerated) {
         inImg = sourceImg.getImage();
     }
@@ -294,14 +319,6 @@ std::vector<double> TurboRegTransform::doFinalTransform (
     outNx = sourceImg.getWidth();
     outNy = sourceImg.getHeight();
     outImg.resize(outNx * outNy);
-
-    Transformation transformation;
-
-    switch(m.ncols()) {
-    case 1: transformation = TRANSLATION; break;
-    case 3: transformation = AFFINE; break; // or RIGID_BODY or SCALED_ROT, but that doesn't matter
-    case 4: transformation = BILINEAR; break;
-    }
 
     switch (transformation) {
         case TRANSLATION: {

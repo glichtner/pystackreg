@@ -114,6 +114,21 @@ TurboRegImage::TurboRegImage (
     
 } /* end turboRegImage */
 
+TurboRegImage::TurboRegImage (
+    double *img, int width, int height, bool isTarget
+) {
+    this->isTarget = isTarget;
+    this->width = width;
+    this->height = height;
+    int k = 0;
+
+    image.resize(width * height);
+    for (int y = 0; (y < height); y++) {
+        for (int x = 0; (x < width); x++, k++) {
+            image[k] = (double)img[k];
+        }
+    }
+}
 
 void TurboRegImage::antiSymmetricFirMirrorOffBounds1D(
         std::vector<double> &h,

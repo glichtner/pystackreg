@@ -1,6 +1,8 @@
 #ifndef TURBOREG_H_
 #define TURBOREG_H_
 
+#include "matrix.h"
+
 typedef enum Transformation {
 /*********************************************************************
  Generic geometric transformation.
@@ -54,5 +56,6 @@ const static int PYRAMID_MIN_SIZE = 12;
 
 
 int getPyramidDepth(int sourceWidth, int sourceHeight, int targetWidth, int targetHeight);
+Transformation getTransformationFromMatrix(matrix<double> &m);
 
 #endif

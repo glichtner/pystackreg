@@ -31,6 +31,14 @@ class matrix {
 			return &(m[i * cols]);
 		}
 
+		T* begin() {
+			return &m[0];
+		}
+
+		T* end() {
+			return &m[rows * cols];
+		}
+
 		T* getPtr(unsigned int const i, unsigned int const j) {
 			return &(m[i * cols + j]);
 		}

@@ -38,7 +38,8 @@ void writeFile(const char* filename, std::vector<uint16_t> &data)
    fout.close();
 }
 
-int main(int argc, const char **argv)
+
+int mainX(int argc, const char **argv)
 {
     //int width = 128;
     //int height = 256;

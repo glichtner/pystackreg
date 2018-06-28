@@ -25,14 +25,22 @@ public:
      @param interactive Shows or hides the resulting image.
      ********************************************************************/
     TurboRegTransform (
-            TurboRegImage &sourceImg,
-            TurboRegMask &sourceMsk,
-            TurboRegPointHandler &sourcePh,
-            TurboRegImage &targetImg,
-            TurboRegMask &targetMsk,
-            TurboRegPointHandler &targetPh,
-            Transformation transformation,
-            bool accelerated
+		TurboRegImage &sourceImg,
+		TurboRegMask &sourceMsk,
+		TurboRegPointHandler &sourcePh,
+		TurboRegImage &targetImg,
+		TurboRegMask &targetMsk,
+		TurboRegPointHandler &targetPh,
+		Transformation transformation,
+		bool accelerated
+    );
+
+    TurboRegTransform(
+		TurboRegImage &sourceImg,
+		TurboRegMask &sourceMsk,
+		TurboRegPointHandler &sourcePh,
+		Transformation transformation,
+		bool accelerated
     );
 
     void appendTransformation (
@@ -164,19 +172,19 @@ private:
     std::vector<double> outMsk;
     std::vector<double> xGradient;
     std::vector<double> yGradient;
-    int inNx;
-    int inNy;
-    int iterationCost;
-    int iterationPower;
-    int maxIterations;
-    int outNx;
-    int outNy;
-    int p;
-    int pyramidDepth;
-    int q;
+    int inNx= 0;
+    int inNy= 0;
+    int iterationCost= 0;
+    int iterationPower= 0;
+    int maxIterations= 0;
+    int outNx= 0;
+    int outNy= 0;
+    int p = 0;
+    int pyramidDepth = 0;
+    int q = 0;
     Transformation transformation;
-    int twiceInNx;
-    int twiceInNy;
+    int twiceInNx= 0;
+    int twiceInNy= 0;
     TurboRegImage &sourceImg;
     TurboRegImage &targetImg;
     TurboRegMask &sourceMsk;

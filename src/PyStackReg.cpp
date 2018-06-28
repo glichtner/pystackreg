@@ -5,7 +5,7 @@
  *      Author: lichtneg
  */
 
-
+#if 0
 #include <Python.h>
 #include <numpy/arrayobject.h>
 
@@ -137,5 +137,6 @@ extern "C" {
 } // end extern "C"
 #endif // __cplusplus
 
+#endif
 
 

@@ -19,3 +19,16 @@ int getPyramidDepth (
     }
     return(pyramidDepth);
 } /* end getPyramidDepth */
+
+Transformation getTransformationFromMatrix(matrix<double> &m) {
+
+	Transformation transformation;
+
+	switch(m.ncols()) {
+    case 1: transformation = TRANSLATION; break;
+    case 3: transformation = AFFINE; break; // or RIGID_BODY or SCALED_ROT, but that doesn't matter
+    case 4: transformation = BILINEAR; break;
+    }
+
+	return transformation;
+}

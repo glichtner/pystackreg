@@ -1,7 +1,7 @@
 import os
-import pystackreg
+from pystackreg import StackReg
 import numpy as np
-#from matplotlib import pyplot as plt
+
 from skimage import io
 
 def test():
@@ -13,13 +13,12 @@ def test():
 	print(ref.shape)
 	print(mov.shape)
 
-	out = pystackreg.register(ref,mov)
+	#out = pystackreg.register(ref,mov)
 
-	#f, ax = plt.subplots(3,1)
-	#ax[0].imshow(ref)
-	#ax[1].imshow(mov)
-	#ax[2].imshow(out)
-	
-	#plt.show()
+	sr = StackReg(StackReg.RIGID_BODY)
+	sr.register(ref,mov)
+	out = sr.transform(mov)
+
+
 
 

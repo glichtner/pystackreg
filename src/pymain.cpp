@@ -1,4 +1,4 @@
-#if 0
+#if 1
 #include <Python.h>
 #include <numpy/arrayobject.h>
 
@@ -11,21 +11,27 @@
 #include "TurboRegMask.h"
 #include "TurboRegPointHandler.h"
 #include "TurboRegTransform.h"
-#include "matrix.h"
+
+
+typedef struct regMat {
+	matrix<double> mat;
+	matrix<double> refPts;
+	matrix<double> movPts;
+} regMat;
 
 static PyObject *stackgreg_register(PyObject *self, PyObject *args);
 static PyObject *stackgreg_transform(PyObject *self, PyObject *args);
-static PyObject *stackgreg_register_transform(PyObject *self, PyObject *args);
-static PyObject *stackgreg_get_points(PyObject *self, PyObject *args);
-static PyObject *stackgreg_get_matrix(PyObject *self, PyObject *args);
+//static PyObject *stackgreg_register_transform(PyObject *self, PyObject *args);
+//static PyObject *stackgreg_get_points(PyObject *self, PyObject *args);
+//static PyObject *stackgreg_get_matrix(PyObject *self, PyObject *args);
 
 static char pystackreg_docs[] = "PyStackReg\n";
 static PyMethodDef module_methods[] = {
-    {"register", (PyCFunction)stackgreg_register, METH_VARARGS, pystackreg_docs},
-	{"transform", (PyCFunction)stackgreg_transform, METH_VARARGS, pystackreg_docs},
-	{"register_transform", (PyCFunction)stackgreg_register_transform, METH_VARARGS, pystackreg_docs},
-	{"get_points", (PyCFunction)stackgreg_get_points, METH_VARARGS, pystackreg_docs},
-	{"get_matrix", (PyCFunction)stackgreg_get_matrix, METH_VARARGS, pystackreg_docs},
+    {"_register", (PyCFunction)stackgreg_register, METH_VARARGS, pystackreg_docs},
+	{"_transform", (PyCFunction)stackgreg_transform, METH_VARARGS, pystackreg_docs},
+	//{"register_transform", (PyCFunction)stackgreg_register_transform, METH_VARARGS, pystackreg_docs},
+	//{"get_points", (PyCFunction)stackgreg_get_points, METH_VARARGS, pystackreg_docs},
+	//{"get_matrix", (PyCFunction)stackgreg_get_matrix, METH_VARARGS, pystackreg_docs},
     {NULL}
 };
 
@@ -46,30 +52,7 @@ PyMODINIT_FUNC PyInit_stackreg(void)
     return PyModule_Create(&pystackreg);
 }
 
-
-double mean(double *x, int N) {
-	double avg = 0;
-
-	for(int i=0; i < N; i++) {
-		avg += x[i];
-	}
-
-	return avg / (double)N;
-}
-
-double cstd(double *x, int N) {
-
-	double avg = mean(x, N);
-	double std = 0;
-
-	for(int i=0; i < N; i++) {
-		std += std::pow(x[i] - avg, 2);
-	}
-
-	return std / ((double)N - 1);
-}
-
-std::vector<double> registerImg(double *pDataRef, double *pDataMov, Transformation transformation, int width, int height) {
+bool registerImg(double *pDataRef, double *pDataMov, Transformation transformation, int width, int height, regMat &rm) {
 	TurboRegImage refImg(pDataRef, width, height, transformation, true);
 	TurboRegImage movImg(pDataMov, width, height, transformation, false);
 
@@ -101,20 +84,60 @@ std::vector<double> registerImg(double *pDataRef, double *pDataMov, Transformati
 
 	tform.doRegistration();
 
-	std::vector<double> imgout = tform.doFinalTransform(width, height);
+
+	rm.mat = tform.getTransformationMatrix();
+	rm.refPts = refPH.getPoints();
+	rm.movPts = movPH.getPoints();
+
+	return true;
+}
+
+std::vector<double> transformImg(matrix<double> m, double *pDataMov, int width, int height) {
+
+	Transformation transformation = getTransformationFromMatrix(m);
+
+	TurboRegImage movImg(pDataMov, width, height, transformation, false);
+
+	TurboRegPointHandler movPH(movImg, transformation);
+
+	TurboRegMask movMsk(movImg);
+
+	movMsk.clearMask();
+
+	int pyramidDepth = getPyramidDepth(
+			movImg.getWidth(), movImg.getHeight(),
+			movImg.getWidth(), movImg.getHeight()
+			);
+	movImg.setPyramidDepth(pyramidDepth);
+	movMsk.setPyramidDepth(pyramidDepth);
+
+	movImg.init();
+	movMsk.init();
+
+
+	TurboRegTransform tform(movImg, movMsk, movPH, transformation, false);
+
+	std::vector<double> imgout = tform.doFinalTransform(movImg, m);
 	return imgout;
+
 }
 
 
 PyObject *stackgreg_register(PyObject *self, PyObject *args) {
 
     PyObject *ref, *mov;
+    regMat rm;
+    unsigned char tf;
 
     /* Parse the input tuple */
-    if (!PyArg_ParseTuple(args, "OO", &ref, &mov)) {
+    if (!PyArg_ParseTuple(args, "OOB", &ref, &mov, &tf)) {
     	return NULL;
     }
 
+    if ((tf != TRANSLATION) && (tf != RIGID_BODY) && (tf != SCALED_ROTATION) && (tf != AFFINE)) {
+    	PyErr_SetString(PyExc_ValueError, "Invalid transformation");
+        return NULL;
+    }
 
     /* Interpret the input objects as numpy arrays. */
     PyObject *ref_array = PyArray_FROM_OTF(ref, NPY_DOUBLE, NPY_IN_ARRAY);
@@ -151,30 +174,110 @@ PyObject *stackgreg_register(PyObject *self, PyObject *args) {
         return NULL;
     }
 
-
-    npy_intp dims[2] = {Nx_ref, Ny_ref};
-
     /* Get pointers to the data as C-types. */
     double *img_ref    = (double*)PyArray_DATA(ref_array);
     double *img_mov    = (double*)PyArray_DATA(mov_array);
 
-    std::vector<double> imgout = registerImg(img_ref, img_mov, RIGID_BODY, Ny_ref, Nx_ref); // width and height (Nx/Ny) have to be swapped!
-
-	PyObject *ret = PyArray_SimpleNew(2, (npy_intp*) &dims, NPY_DOUBLE);
-
-	memcpy((void*)PyArray_DATA(ret), &imgout[0], (Nx_ref * Ny_ref * sizeof(double)));
+    registerImg(img_ref, img_mov, RIGID_BODY, Ny_ref, Nx_ref, rm); // width and height (Nx/Ny) have to be swapped!
 
     /* clean up */
     Py_XDECREF(ref_array);
     Py_XDECREF(mov_array);
 
+    npy_intp dims_mat[2] = {rm.mat.nrows(), rm.mat.ncols()};
+    npy_intp dims_pts[2] = {rm.refPts.nrows(), rm.refPts.ncols()};
+	PyObject *retMat = PyArray_SimpleNew(2, (npy_intp*) &dims_mat, NPY_DOUBLE);
+	PyObject *retPtsRef = PyArray_SimpleNew(2, (npy_intp*) &dims_pts, NPY_DOUBLE);
+	PyObject *retPtsMov = PyArray_SimpleNew(2, (npy_intp*) &dims_pts, NPY_DOUBLE);
 
-	return ret;
+	memcpy((void*)PyArray_DATA(retMat),    rm.mat.begin(), (dims_mat[0] * dims_mat[1] * sizeof(double)));
+	memcpy((void*)PyArray_DATA(retPtsRef), rm.refPts.begin(), (dims_pts[0] * dims_pts[1] * sizeof(double)));
+	memcpy((void*)PyArray_DATA(retPtsMov), rm.movPts.begin(), (dims_pts[0] * dims_pts[1] * sizeof(double)));
+
+
+    return Py_BuildValue("OOO", retMat, retPtsRef, retPtsMov);
+
 }
-PyObject *stackgreg_transform(PyObject *self, PyObject *args) {return NULL;}
-PyObject *stackgreg_register_transform(PyObject *self, PyObject *args) {return NULL;}
-PyObject *stackgreg_get_points(PyObject *self, PyObject *args) {return NULL;}
-PyObject *stackgreg_get_matrix(PyObject *self, PyObject *args) {return NULL;}
+
+
+PyObject *stackgreg_transform(PyObject *self, PyObject *args) {
+
+    PyObject *mov;
+    PyObject *mat;
+
+    /* Parse the input tuple */
+    if (!PyArg_ParseTuple(args, "OO", &mov, &mat)) {
+    	return NULL;
+    }
+
+    /* Interpret the input objects as numpy arrays. */
+    PyObject *mov_array = PyArray_FROM_OTF(mov, NPY_DOUBLE, NPY_IN_ARRAY);
+    PyObject *mat_array = PyArray_FROM_OTF(mat, NPY_DOUBLE, NPY_IN_ARRAY);
+
+
+    /* If that didn't work, throw an exception. */
+    if (mov_array == NULL || mat_array == NULL) {
+        Py_XDECREF(mat_array);
+        Py_XDECREF(mov_array);
+        return NULL;
+    }
+
+    int ndim_mov = (int)PyArray_NDIM(mov_array);
+    int ndim_mat = (int)PyArray_NDIM(mat_array);
+
+    if (ndim_mov != 2 || ndim_mat != 2) {
+        Py_XDECREF(mat_array);
+        Py_XDECREF(mov_array);
+    	PyErr_SetString(PyExc_ValueError, "Input arrays must be two dimensional");
+        return NULL;
+    }
+
+    /* How many data points are there? */
+    int Nx_mov = (int)PyArray_DIM(mov_array, 0);
+    int Ny_mov = (int)PyArray_DIM(mov_array, 1);
+    int Nx_mat = (int)PyArray_DIM(mat_array, 0);
+    int Ny_mat = (int)PyArray_DIM(mat_array, 1);
+
+
+    if( Nx_mat != 2 || (
+    		(Ny_mat != 1) && (Ny_mat != 3) && (Ny_mat != 4))) {
+    	Py_XDECREF(mov_array);
+    	Py_XDECREF(mat_array);
+    	PyErr_SetString(PyExc_ValueError, "Transformation matrix must be of shape (2,1), (2,3) or (2,4)");
+        return NULL;
+    }
+
+    /* Get pointers to the data as C-types. */
+    double *img_mov    = (double*)PyArray_DATA(mov_array);
+    double *tmat    = (double*)PyArray_DATA(mat_array);
+
+    matrix<double> m(Nx_mat, Ny_mat);
+    memcpy(m.begin(), tmat, (Nx_mat * Ny_mat * sizeof(double)));
+
+
+
+    std::vector<double> imgout = transformImg(m, img_mov, Ny_mov, Nx_mov); // width and height (Nx/Ny) have to be swapped!
+
+    /* clean up */
+    Py_XDECREF(mat_array);
+    Py_XDECREF(mov_array);
+
+	npy_intp dims[2] = {Nx_mov, Ny_mov};
+
+	PyObject *ret = PyArray_SimpleNew(2, (npy_intp*) &dims, NPY_DOUBLE);
+
+	memcpy((void*)PyArray_DATA(ret), &imgout[0], (Nx_mov * Ny_mov * sizeof(double)));
+
+
+    return ret;
+
+
+}
+
+
+//PyObject *stackgreg_register_transform(PyObject *self, PyObject *args) {return NULL;}
+//PyObject *stackgreg_get_points(PyObject *self, PyObject *args) {return NULL;}
+//PyObject *stackgreg_get_matrix(PyObject *self, PyObject *args) {return NULL;}
 
 /*
 static PyObject *std_std(PyObject *self, PyObject *args)

@@ -134,7 +134,7 @@ finally:
     return return_value;
 }
 
-int mainX(int argc, const char **argv) {
+int main(int argc, const char **argv) {
 	 /* argv - Expected to be 4 strings:
 	 *      - Name of the executable.
 	 *      - Path to the directory that the Python module is in.

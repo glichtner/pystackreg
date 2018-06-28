@@ -41,6 +41,7 @@ class TurboRegImage { /* class turboRegImage */
 
 public:
     TurboRegImage (double *img, int width, int height, Transformation transformation, bool isTarget);
+    TurboRegImage (double *img, int width, int height, bool isTarget);
     
     std::vector<double> &getCoefficient () {
         return(this->coefficient);
