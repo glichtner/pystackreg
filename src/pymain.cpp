@@ -1,4 +1,13 @@
-#if 1
+/*
+ * pymain.cpp
+ *
+ * C++/Python Interface functions for the PyStackReg package.
+ *
+ *  Created on: Jun 27, 2018
+ *      Author: lichtneg
+ */
+
+
 #include <Python.h>
 #include <numpy/arrayobject.h>
 
@@ -21,17 +30,11 @@ typedef struct regMat {
 
 static PyObject *stackgreg_register(PyObject *self, PyObject *args);
 static PyObject *stackgreg_transform(PyObject *self, PyObject *args);
-//static PyObject *stackgreg_register_transform(PyObject *self, PyObject *args);
-//static PyObject *stackgreg_get_points(PyObject *self, PyObject *args);
-//static PyObject *stackgreg_get_matrix(PyObject *self, PyObject *args);
 
 static char pystackreg_docs[] = "PyStackReg\n";
 static PyMethodDef module_methods[] = {
     {"_register", (PyCFunction)stackgreg_register, METH_VARARGS, pystackreg_docs},
 	{"_transform", (PyCFunction)stackgreg_transform, METH_VARARGS, pystackreg_docs},
-	//{"register_transform", (PyCFunction)stackgreg_register_transform, METH_VARARGS, pystackreg_docs},
-	//{"get_points", (PyCFunction)stackgreg_get_points, METH_VARARGS, pystackreg_docs},
-	//{"get_matrix", (PyCFunction)stackgreg_get_matrix, METH_VARARGS, pystackreg_docs},
     {NULL}
 };
 
@@ -274,43 +277,5 @@ PyObject *stackgreg_transform(PyObject *self, PyObject *args) {
 
 }
 
-
-//PyObject *stackgreg_register_transform(PyObject *self, PyObject *args) {return NULL;}
-//PyObject *stackgreg_get_points(PyObject *self, PyObject *args) {return NULL;}
-//PyObject *stackgreg_get_matrix(PyObject *self, PyObject *args) {return NULL;}
-
-/*
-static PyObject *std_std(PyObject *self, PyObject *args)
-{
-  PyObject* input;
-  PyArg_ParseTuple(args, "O", &input);
-
-  int size = PyList_Size(input);
-
-  std::vector<double> list;
-  list.resize(size);
-
-  for(int i = 0; i < size; i++) {
-    list[i] = PyFloat_AS_DOUBLE(PyList_GET_ITEM(input, i));
-  }
-  return PyFloat_FromDouble(standardDeviation(list));
-}
-
-static PyMethodDef std_methods[] = {
-	{"standard_dev", std_standard_dev,	METH_VARARGS,
-	 "Return the standard deviation of a list."},
-	{NULL,		NULL}
-};
-
-extern void initstd(void)
-{
-	PyImport_AddModule("std");
-	Py_InitModule("std", std_methods);
-}
-
-int main(int argc, char **argv)
-{
-	return 0;
-}*/
 
 #endif
