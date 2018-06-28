@@ -66,31 +66,32 @@ constructors
     @param interactive Shows or hides the resulting image.
     ********************************************************************/
 TurboRegTransform::TurboRegTransform(
-        TurboRegImage &sourceImg,
-        TurboRegMask &sourceMsk,
-        TurboRegPointHandler &sourcePh,
-        TurboRegImage &targetImg,
-        TurboRegMask &targetMsk,
-        TurboRegPointHandler &targetPh,
+        TurboRegImage *sourceImg,
+        TurboRegMask *sourceMsk,
+        TurboRegPointHandler *sourcePh,
+        TurboRegImage *targetImg,
+        TurboRegMask *targetMsk,
+        TurboRegPointHandler *targetPh,
         Transformation transformation,
         bool accelerated
 ) :     
-    dxWeight(4),
+	accelerated{accelerated},
+	dxWeight(4),
     dyWeight(4),
     xWeight(4),
     yWeight(4),
     xIndex(4),
     yIndex(4),
+	transformation{transformation},
     sourceImg{sourceImg},
-    sourceMsk{sourceMsk},
-    sourcePh{sourcePh},
-    targetImg{targetImg},
-    targetMsk{targetMsk},
-    accelerated{accelerated},
-    transformation{transformation}
+	targetImg{targetImg},
+	sourceMsk{sourceMsk},
+	targetMsk{targetMsk},
+	sourcePh{sourcePh}
+
  {
-    sourcePoint = sourcePh.getPoints();
-    targetPoint = targetPh.getPoints();
+    sourcePoint = sourcePh->getPoints();
+    targetPoint = targetPh->getPoints();
 
     if (accelerated) {
         pixelPrecision = PIXEL_LOW_PRECISION;
@@ -104,25 +105,27 @@ TurboRegTransform::TurboRegTransform(
 
 
  TurboRegTransform::TurboRegTransform(
-         TurboRegImage &sourceImg,
-         TurboRegMask &sourceMsk,
-         TurboRegPointHandler &sourcePh,
+         TurboRegImage *sourceImg,
+         TurboRegMask *sourceMsk,
+         TurboRegPointHandler *sourcePh,
 		 Transformation transformation,
 		 bool accelerated
  ) :
+	 accelerated{accelerated},
      dxWeight(4),
      dyWeight(4),
      xWeight(4),
      yWeight(4),
      xIndex(4),
      yIndex(4),
-     sourceImg{sourceImg},
-     sourceMsk{sourceMsk},
-     sourcePh{sourcePh},
-     targetImg{targetImg},
-     targetMsk{targetMsk},
-     accelerated{accelerated},
-     transformation{transformation}
+	 transformation{transformation},
+	 sourceImg{sourceImg},
+	 //targetImg{targetImg},
+	 //targetImg(TurboRegImage()),
+	 sourceMsk{sourceMsk},
+	 //targetMsk{targetMsk},
+	 sourcePh{sourcePh}
+
   {
      pixelPrecision = PIXEL_HIGH_PRECISION;
      maxIterations = MANY_ITERATIONS;
@@ -141,10 +144,10 @@ public methods
 void TurboRegTransform::appendTransformation (
         std::string pathAndFilename
 ) {
-    outNx = targetImg.getWidth();
-    outNy = targetImg.getHeight();
-    inNx = sourceImg.getWidth();
-    inNy = sourceImg.getHeight();
+    outNx = targetImg->getWidth();
+    outNy = targetImg->getHeight();
+    inNx = sourceImg->getWidth();
+    inNy = sourceImg->getHeight();
     /*if (pathAndFilename == null) {
         return;
     }
@@ -213,18 +216,18 @@ void TurboRegTransform::doBatchFinalTransform (
         std::vector<double> &pixels
 ) {
     if (accelerated) {
-        inImg = sourceImg.getImage();
+        inImg = sourceImg->getImage();
     }
     else {
-        inImg = sourceImg.getCoefficient();
+        inImg = sourceImg->getCoefficient();
     }
-    inNx = sourceImg.getWidth();
-    inNy = sourceImg.getHeight();
+    inNx = sourceImg->getWidth();
+    inNy = sourceImg->getHeight();
     twiceInNx = 2 * inNx;
     twiceInNy = 2 * inNy;
     outImg = pixels;
-    outNx = targetImg.getWidth();
-    outNy = targetImg.getHeight();
+    outNx = targetImg->getWidth();
+    outNy = targetImg->getHeight();
     matrix<double> m = getTransformationMatrix(targetPoint, sourcePoint);
     switch (transformation) {
         case TRANSLATION: {
@@ -252,14 +255,14 @@ std::vector<double> TurboRegTransform::doFinalTransform (
         int height
 ) {
     if (accelerated) {
-        inImg = sourceImg.getImage();
+        inImg = sourceImg->getImage();
     }
     else {
-        inImg = sourceImg.getCoefficient();
+        inImg = sourceImg->getCoefficient();
     }
-    inMsk = sourceMsk.getMask();
-    inNx = sourceImg.getWidth();
-    inNy = sourceImg.getHeight();
+    inMsk = sourceMsk->getMask();
+    inNx = sourceImg->getWidth();
+    inNy = sourceImg->getHeight();
     twiceInNx = 2 * inNx;
     twiceInNy = 2 * inNy;
 
@@ -295,10 +298,10 @@ std::vector<double> TurboRegTransform::doFinalTransform (
  Compute the image.
     ********************************************************************/
 std::vector<double> TurboRegTransform::doFinalTransform (
-        TurboRegImage &sourceImg,
-        TurboRegPointHandler &sourcePh,
-        TurboRegImage &targetImg,
-        TurboRegPointHandler &targetPh,
+        TurboRegImage *sourceImg,
+        TurboRegPointHandler *sourcePh,
+        TurboRegImage *targetImg,
+        TurboRegPointHandler *targetPh,
         Transformation transformation,
         bool accelerated
 ) {
@@ -307,20 +310,20 @@ std::vector<double> TurboRegTransform::doFinalTransform (
     this->sourcePh = sourcePh;
     this->transformation = transformation;
     this->accelerated = accelerated;
-    sourcePoint = sourcePh.getPoints();
-    targetPoint = targetPh.getPoints();
+    sourcePoint = sourcePh->getPoints();
+    targetPoint = targetPh->getPoints();
     if (accelerated) {
-        inImg = sourceImg.getImage();
+        inImg = sourceImg->getImage();
     }
     else {
-        inImg = sourceImg.getCoefficient();
+        inImg = sourceImg->getCoefficient();
     }
-    inNx = sourceImg.getWidth();
-    inNy = sourceImg.getHeight();
+    inNx = sourceImg->getWidth();
+    inNy = sourceImg->getHeight();
     twiceInNx = 2 * inNx;
     twiceInNy = 2 * inNy;
-    outNx = targetImg.getWidth();
-    outNy = targetImg.getHeight();
+    outNx = targetImg->getWidth();
+    outNy = targetImg->getHeight();
     outImg.resize(outNx * outNy);
 
     matrix<double> m = getTransformationMatrix(targetPoint, sourcePoint);
@@ -346,23 +349,23 @@ std::vector<double> TurboRegTransform::doFinalTransform (
 
 
 std::vector<double> TurboRegTransform::doFinalTransform (
-        TurboRegImage &sourceImg,
+        TurboRegImage *sourceImg,
 		matrix<double> &m
 ) {
     this->sourceImg = sourceImg;
     if (accelerated) {
-        inImg = sourceImg.getImage();
+        inImg = sourceImg->getImage();
     }
     else {
-        inImg = sourceImg.getCoefficient();
+        inImg = sourceImg->getCoefficient();
     }
-    inNx = sourceImg.getWidth();
-    inNy = sourceImg.getHeight();
+    inNx = sourceImg->getWidth();
+    inNy = sourceImg->getHeight();
     twiceInNx = 2 * inNx;
     twiceInNy = 2 * inNy;
 
-    outNx = sourceImg.getWidth();
-    outNy = sourceImg.getHeight();
+    outNx = sourceImg->getWidth();
+    outNy = sourceImg->getHeight();
     outImg.resize(outNx * outNy);
 
     switch (transformation) {
@@ -399,18 +402,18 @@ void TurboRegTransform::doRegistration (
     std::stack<ImageStackItem> targetImgPyramid;
     std::stack<MaskStackItem> targetMskPyramid;
     if (!hasSourceMask()) {
-        sourceImgPyramid = sourceImg.getPyramid();
+        sourceImgPyramid = sourceImg->getPyramid();
         //sourceMskPyramid = null;
-        targetImgPyramid = targetImg.getPyramid();
-        targetMskPyramid = targetMsk.getPyramid();
+        targetImgPyramid = targetImg->getPyramid();
+        targetMskPyramid = targetMsk->getPyramid();
     }
     else {
-        sourceImgPyramid = sourceImg.getPyramid();
-        sourceMskPyramid = sourceMsk.getPyramid();
-        targetImgPyramid = targetImg.getPyramid();
-        targetMskPyramid = targetMsk.getPyramid();
+        sourceImgPyramid = sourceImg->getPyramid();
+        sourceMskPyramid = sourceMsk->getPyramid();
+        targetImgPyramid = targetImg->getPyramid();
+        targetMskPyramid = targetMsk->getPyramid();
     }
-    pyramidDepth = targetImg.getPyramidDepth();
+    pyramidDepth = targetImg->getPyramidDepth();
     iterationPower = (int)pow(
             (double)ITERATION_PROGRESSION, (double)pyramidDepth);
 
@@ -505,41 +508,41 @@ void TurboRegTransform::doRegistration (
                 break;
         }
         scaleUpLandmarks();
-        sourcePh.setPoints(sourcePoint);
+        sourcePh->setPoints(sourcePoint);
         iterationCost *= ITERATION_PROGRESSION;
     }
     /* 3 *****************/ 
     iterationPower /= ITERATION_PROGRESSION;
     if (transformation == BILINEAR) {
-        inNx = sourceImg.getWidth();
-        inNy = sourceImg.getHeight();
-        inImg = sourceImg.getCoefficient();
+        inNx = sourceImg->getWidth();
+        inNy = sourceImg->getHeight();
+        inImg = sourceImg->getCoefficient();
         if (!hasSourceMask()) {
             inMsk.clear();
         }
         else {
-            inMsk = sourceMsk.getMask();
+            inMsk = sourceMsk->getMask();
         }
-        outNx = targetImg.getWidth();
-        outNy = targetImg.getHeight();
-        outImg = targetImg.getImage();
-        outMsk = targetMsk.getMask();
+        outNx = targetImg->getWidth();
+        outNy = targetImg->getHeight();
+        outImg = targetImg->getImage();
+        outMsk = targetMsk->getMask();
     }
     else {
-        inNx = targetImg.getWidth();
-        inNy = targetImg.getHeight();
-        inImg = targetImg.getCoefficient();
-        inMsk = targetMsk.getMask();
-        outNx = sourceImg.getWidth();
-        outNy = sourceImg.getHeight();
-        outImg = sourceImg.getImage();
-        xGradient = sourceImg.getXGradient();
-        yGradient = sourceImg.getYGradient();
+        inNx = targetImg->getWidth();
+        inNy = targetImg->getHeight();
+        inImg = targetImg->getCoefficient();
+        inMsk = targetMsk->getMask();
+        outNx = sourceImg->getWidth();
+        outNy = sourceImg->getHeight();
+        outImg = sourceImg->getImage();
+        xGradient = sourceImg->getXGradient();
+        yGradient = sourceImg->getYGradient();
         if (!hasSourceMask()) {
             outMsk.clear();
         }
         else {
-            outMsk = sourceMsk.getMask();
+            outMsk = sourceMsk->getMask();
         }
     }
     twiceInNx = 2 * inNx;
@@ -561,7 +564,7 @@ void TurboRegTransform::doRegistration (
             break;
         }
     }
-    sourcePh.setPoints(sourcePoint);
+    sourcePh->setPoints(sourcePoint);
     iterationPower = (int)pow(
             (double)ITERATION_PROGRESSION, (double)pyramidDepth);
 
@@ -575,10 +578,10 @@ void TurboRegTransform::doRegistration (
 /*std::string TurboRegTransform::saveTransformation (
         std::string filename
 ) {
-    inNx = sourceImg.getWidth();
-    inNy = sourceImg.getHeight();
-    outNx = targetImg.getWidth();
-    outNy = targetImg.getHeight();
+    inNx = sourceImg->getWidth();
+    inNy = sourceImg->getHeight();
+    outNx = targetImg->getWidth();
+    outNy = targetImg->getHeight();
     std::string path = "";
     if (filename == null) {
         Frame f = new Frame();

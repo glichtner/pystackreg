@@ -39,7 +39,7 @@ void writeFile(const char* filename, std::vector<uint16_t> &data)
 }
 
 
-int mainX(int argc, const char **argv)
+int main(int argc, const char **argv)
 {
     //int width = 128;
     //int height = 256;
@@ -86,7 +86,7 @@ int mainX(int argc, const char **argv)
     movMsk.init();
 
   
-    TurboRegTransform tform(movImg, movMsk, movPH, refImg, refMsk, refPH, transformation, false);
+    TurboRegTransform tform(&movImg, &movMsk, &movPH, &refImg, &refMsk, &refPH, transformation, false);
     
     tform.doRegistration();
 
@@ -95,7 +95,7 @@ int mainX(int argc, const char **argv)
     TurboRegPointHandler refPH2(refPH.getPoints());
     TurboRegPointHandler movPH2(movPH.getPoints());
 
-    std::vector<double> imgout2 = tform.doFinalTransform (movImg, movPH2, refImg, refPH2, RIGID_BODY, false);
+    std::vector<double> imgout2 = tform.doFinalTransform (&movImg, &movPH2, &refImg, &refPH2, RIGID_BODY, false);
 
     matrix<double> tm = tform.getTransformationMatrix();
 

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from distutils.core import setup, Extension
 import numpy.distutils.misc_util
 
@@ -17,3 +19,4 @@ setup(
 			"src/TurboRegPointHandler.cpp"])],
     include_dirs=['inc/'] + numpy.distutils.misc_util.get_numpy_include_dirs(),
 ) 
+

@@ -2,6 +2,10 @@
 
 #include <Python.h>
 
+#if PY_MAJOR_VERSION >= 3
+#define ISPY3
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -61,6 +65,11 @@ int import_call_execute(int argc, const char *argv[]) {
     PyObject *pFunc     = NULL;
     PyObject *pResult   = NULL;
 
+#ifndef ISPY3
+    char progname[strlen(argv[0]) + 1];
+    memcpy(progname, argv[0], sizeof(progname));
+#endif
+
     const char *paths[] = {
     		"/home/lichtneg/anaconda2/envs/caiman/lib/python36.zip",
 			"/home/lichtneg/anaconda2/envs/caiman/lib/python3.6/",
@@ -76,7 +85,11 @@ int import_call_execute(int argc, const char *argv[]) {
         return_value = -1;
         goto except;
     }
+#ifdef ISPY3
     Py_SetProgramName((wchar_t*)argv[0]);
+#else
+    Py_SetProgramName(progname);
+#endif
     Py_Initialize();
 
 
@@ -134,7 +147,7 @@ finally:
     return return_value;
 }
 
-int main(int argc, const char **argv) {
+int mainX(int argc,  char **argv) {
 	 /* argv - Expected to be 4 strings:
 	 *      - Name of the executable.
 	 *      - Path to the directory that the Python module is in.
@@ -142,6 +155,7 @@ int main(int argc, const char **argv) {
 	 *      - Name of the function in the module.*/
 	const char *arg[]={"this", "/home/lichtneg/code/pyStackReg", "test_pystackreg", "test"};
 	return import_call_execute(4, arg);
+
 
 }
 

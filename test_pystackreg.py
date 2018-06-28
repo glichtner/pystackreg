@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 from pystackreg import StackReg
 import numpy as np

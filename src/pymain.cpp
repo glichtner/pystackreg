@@ -4,9 +4,8 @@
  * C++/Python Interface functions for the PyStackReg package.
  *
  *  Created on: Jun 27, 2018
- *      Author: lichtneg
+ *      Author: Gregor Lichtner
  */
-
 
 #include <Python.h>
 #include <numpy/arrayobject.h>
@@ -21,6 +20,10 @@
 #include "TurboRegPointHandler.h"
 #include "TurboRegTransform.h"
 
+#if PY_MAJOR_VERSION >= 3
+#define ISPY3
+#endif
+
 
 typedef struct regMat {
 	matrix<double> mat;
@@ -31,6 +34,8 @@ typedef struct regMat {
 static PyObject *stackgreg_register(PyObject *self, PyObject *args);
 static PyObject *stackgreg_transform(PyObject *self, PyObject *args);
 
+
+
 static char pystackreg_docs[] = "PyStackReg\n";
 static PyMethodDef module_methods[] = {
     {"_register", (PyCFunction)stackgreg_register, METH_VARARGS, pystackreg_docs},
@@ -38,14 +43,16 @@ static PyMethodDef module_methods[] = {
     {NULL}
 };
 
+#ifdef ISPY3
 static struct PyModuleDef pystackreg =
 {
     PyModuleDef_HEAD_INIT,
-    "pystackreg", /* name of module */
-    "pystackreg\n", /* module documentation, may be NULL */
+    "stackreg", /* name of module */
+    "stackreg\n", /* module documentation, may be NULL */
     -1,   /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
     module_methods
 };
+
 
 PyMODINIT_FUNC PyInit_stackreg(void)
 {
@@ -54,6 +61,16 @@ PyMODINIT_FUNC PyInit_stackreg(void)
 
     return PyModule_Create(&pystackreg);
 }
+#else
+
+PyMODINIT_FUNC initstackreg(void)
+{
+    /* Load `numpy` functionality. */
+    import_array();
+    PyObject *module = Py_InitModule("stackreg", module_methods);
+}
+
+#endif
 
 bool registerImg(double *pDataRef, double *pDataMov, Transformation transformation, int width, int height, regMat &rm) {
 	TurboRegImage refImg(pDataRef, width, height, transformation, true);
@@ -83,7 +100,7 @@ bool registerImg(double *pDataRef, double *pDataMov, Transformation transformati
 	movMsk.init();
 
 
-	TurboRegTransform tform(movImg, movMsk, movPH, refImg, refMsk, refPH, transformation, false);
+	TurboRegTransform tform(&movImg, &movMsk, &movPH, &refImg, &refMsk, &refPH, transformation, false);
 
 	tform.doRegistration();
 
@@ -118,9 +135,9 @@ std::vector<double> transformImg(matrix<double> m, double *pDataMov, int width, 
 	movMsk.init();
 
 
-	TurboRegTransform tform(movImg, movMsk, movPH, transformation, false);
+	TurboRegTransform tform(&movImg, &movMsk, &movPH, transformation, false);
 
-	std::vector<double> imgout = tform.doFinalTransform(movImg, m);
+	std::vector<double> imgout = tform.doFinalTransform(&movImg, m);
 	return imgout;
 
 }
@@ -276,6 +293,3 @@ PyObject *stackgreg_transform(PyObject *self, PyObject *args) {
 
 
 }
-
-
-#endif

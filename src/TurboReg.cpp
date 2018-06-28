@@ -43,6 +43,8 @@
 | publish results that are based on it.
 \===================================================================*/
 
+#include <stdexcept>
+
 #include "TurboReg.h"
 
 int getPyramidDepth (
@@ -73,6 +75,9 @@ Transformation getTransformationFromMatrix(matrix<double> &m) {
     case 1: transformation = TRANSLATION; break;
     case 3: transformation = AFFINE; break; // or RIGID_BODY or SCALED_ROT, but that doesn't matter
     case 4: transformation = BILINEAR; break;
+    default:
+    	throw std::runtime_error("Invalid transformation");
+
     }
 
 	return transformation;

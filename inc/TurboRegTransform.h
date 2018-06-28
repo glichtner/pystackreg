@@ -70,20 +70,20 @@ public:
      @param interactive Shows or hides the resulting image.
      ********************************************************************/
     TurboRegTransform (
-		TurboRegImage &sourceImg,
-		TurboRegMask &sourceMsk,
-		TurboRegPointHandler &sourcePh,
-		TurboRegImage &targetImg,
-		TurboRegMask &targetMsk,
-		TurboRegPointHandler &targetPh,
+		TurboRegImage *sourceImg,
+		TurboRegMask *sourceMsk,
+		TurboRegPointHandler *sourcePh,
+		TurboRegImage *targetImg,
+		TurboRegMask *targetMsk,
+		TurboRegPointHandler *targetPh,
 		Transformation transformation,
 		bool accelerated
     );
 
     TurboRegTransform(
-		TurboRegImage &sourceImg,
-		TurboRegMask &sourceMsk,
-		TurboRegPointHandler &sourcePh,
+		TurboRegImage *sourceImg,
+		TurboRegMask *sourceMsk,
+		TurboRegPointHandler *sourcePh,
 		Transformation transformation,
 		bool accelerated
     );
@@ -101,16 +101,16 @@ public:
     );
 
 	std::vector<double> doFinalTransform (
-			TurboRegImage &sourceImg,
-			TurboRegPointHandler &sourcePh,
-			TurboRegImage &targetImg,
-			TurboRegPointHandler &targetPh,
+			TurboRegImage *sourceImg,
+			TurboRegPointHandler *sourcePh,
+			TurboRegImage *targetImg,
+			TurboRegPointHandler *targetPh,
 			Transformation transformation,
 			bool accelerated
 	);
 
 	std::vector<double> doFinalTransform (
-	        TurboRegImage &sourceImg,
+	        TurboRegImage *sourceImg,
 			matrix<double> &m
 	);
 
@@ -230,11 +230,11 @@ private:
     Transformation transformation;
     int twiceInNx= 0;
     int twiceInNy= 0;
-    TurboRegImage &sourceImg;
-    TurboRegImage &targetImg;
-    TurboRegMask &sourceMsk;
-    TurboRegMask &targetMsk;
-    TurboRegPointHandler &sourcePh;
+    TurboRegImage *sourceImg;
+    TurboRegImage *targetImg;
+    TurboRegMask *sourceMsk;
+    TurboRegMask *targetMsk;
+    TurboRegPointHandler *sourcePh;
     bool bHasSourceMask = true;
 
 

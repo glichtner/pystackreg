@@ -1,4 +1,6 @@
-from pystackreg import stackreg
+# -*- coding: utf-8 -*-
+#from pystackreg import stackreg
+from . import stackreg
 
 class StackReg:
 
