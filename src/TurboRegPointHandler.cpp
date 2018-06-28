@@ -75,8 +75,8 @@ void TurboRegPointHandler::setPointsByTransformation(
 	switch (transformation) {
 	case TRANSLATION: {	//AFFINE: { //should be three points, not one.
 		precisionPoint.resize(1,2);
-		precisionPoint(0, 0) = (double)(width / 2);
-		precisionPoint(0, 1) = (double)(height / 2);
+		precisionPoint(0, 0) = floor((double)(width / 2.0));
+		precisionPoint(0, 1) = floor((double)(height / 2.0));
 		break;
 	}
 	case RIGID_BODY: { //three points
@@ -91,32 +91,43 @@ void TurboRegPointHandler::setPointsByTransformation(
 		precisionPoint(2,0) = floor(width / 2.0);
 		precisionPoint(2,1) = height - ceil(height * 0.25 * GOLDEN_RATIO);
 #else
-		precisionPoint(0, 0) = (double)(width / 2);
-		precisionPoint(0, 1) = (double)(height / 2);
-		precisionPoint(1, 0) = (double)(width / 2);
-		precisionPoint(1, 1) = (double)(height / 4);
-		precisionPoint(2, 0) = (double)(width / 2);
-		precisionPoint(2, 1) = (double)((3 * height) / 4);
+		precisionPoint(0, 0) = floor((double)(width / 2.0));
+		precisionPoint(0, 1) = floor((double)(height / 2.0));
+		precisionPoint(1, 0) = floor((double)(width / 2.0));
+		precisionPoint(1, 1) = floor((double)(height / 4.0));
+		precisionPoint(2, 0) = floor((double)(width / 2.0));
+		precisionPoint(2, 1) = floor((double)((3.0 * height) / 4.0));
 #endif
 		break;
 
 	}
 	case SCALED_ROTATION: { //two points
 		precisionPoint.resize(2,2);
-		precisionPoint(0, 0) = (double)(width / 4);
-		precisionPoint(0, 1) = (double)(height / 2);
-		precisionPoint(1, 0) = (double)((3 * width) / 4);
-		precisionPoint(1, 1) = (double)(height / 2);
+		precisionPoint(0, 0) = floor((double)(width / 4.0));
+		precisionPoint(0, 1) = floor((double)(height / 2.0));
+		precisionPoint(1, 0) = floor((double)((3.0 * width) / 4.0));
+		precisionPoint(1, 1) = floor((double)(height / 2.0));
 		break;
 	}
 	case AFFINE: {
 		precisionPoint.resize(3,2);
-		precisionPoint(0, 0) = (double)(width / 2);
-		precisionPoint(0, 1) = (double)(height / 4);
-		precisionPoint(1, 0) = (double)(width / 4);
-		precisionPoint(1, 1) = (double)((3 * height) / 4);
-		precisionPoint(2, 0) = (double)((3 * width) / 4);
-		precisionPoint(2, 1) = (double)((3 * height) / 4);
+#ifdef TURBOREG_MODE
+		precisionPoint(0,0) = floor(width / 2.0);
+		precisionPoint(0,1) = floor(0.25 * GOLDEN_RATIO * (double)height);
+		precisionPoint(1,0) = floor(0.25 * GOLDEN_RATIO * (double)width);
+		precisionPoint(1,1) = height - ceil(0.25 * GOLDEN_RATIO * height);
+		precisionPoint(2,0) = width - ceil(0.25 * GOLDEN_RATIO * (double)width);
+		precisionPoint(2,1) = height - ceil(height * 0.25 * GOLDEN_RATIO);
+
+#else
+		precisionPoint(0, 0) = floor((double)(width / 2.0));
+		precisionPoint(0, 1) = floor((double)(height / 4.0));
+		precisionPoint(1, 0) = floor((double)(width / 4.0));
+		precisionPoint(1, 1) = floor((double)((3.0 * height) / 4.0));
+		precisionPoint(2, 0) = floor((double)((3.0 * width) / 4.0));
+		precisionPoint(2, 1) = floor((double)((3.0 * height) / 4.0));
+
+#endif
 		break;
 	}
 	default: {

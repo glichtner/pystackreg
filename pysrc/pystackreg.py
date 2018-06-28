@@ -35,7 +35,7 @@ class StackReg:
 
     def register_transform(self, ref, mov):
         self.register(ref, mov)
-        self.transform(mov)
+        return self.transform(mov)
     
     def get_matrix(self):
         return self.m

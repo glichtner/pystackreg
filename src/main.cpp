@@ -48,8 +48,8 @@ int main(int argc, const char **argv)
 	int width = 256;
 	int height = 128;
 
-    std::vector<uint16_t> int_imgdata_ref = readFile("/media/storage/eric/data/180614_Rut1_Papain/Use These Files/pygreg_test_ref.bin");
-    std::vector<uint16_t> int_imgdata_mov = readFile("/media/storage/eric/data/180614_Rut1_Papain/Use These Files/pygreg_test_mov.bin");
+    std::vector<uint16_t> int_imgdata_ref = readFile("/media/storage/eric/data/180614_Rut1_Papain/Use These Files/pygreg_test_src.bin");
+    std::vector<uint16_t> int_imgdata_mov = readFile("/media/storage/eric/data/180614_Rut1_Papain/Use These Files/pygreg_test_aff.bin");
 
     std::vector<double> imgdata_ref(int_imgdata_ref.begin(), int_imgdata_ref.end());
     std::vector<double> imgdata_mov(int_imgdata_mov.begin(), int_imgdata_mov.end());
@@ -57,7 +57,7 @@ int main(int argc, const char **argv)
     double *pDataRef= &imgdata_ref[0];
     double *pDataMov= &imgdata_mov[0];
 
-    Transformation transformation = RIGID_BODY;
+    Transformation transformation = AFFINE;
 
     TurboRegImage refImg(pDataRef, width, height, transformation, true);
     TurboRegImage movImg(pDataMov, width, height, transformation, false);
@@ -95,7 +95,7 @@ int main(int argc, const char **argv)
     TurboRegPointHandler refPH2(refPH.getPoints());
     TurboRegPointHandler movPH2(movPH.getPoints());
 
-    std::vector<double> imgout2 = tform.doFinalTransform (&movImg, &movPH2, &refImg, &refPH2, RIGID_BODY, false);
+    std::vector<double> imgout2 = tform.doFinalTransform (&movImg, &movPH2, &refImg, &refPH2, transformation, false);
 
     matrix<double> tm = tform.getTransformationMatrix();
 

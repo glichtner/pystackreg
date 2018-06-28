@@ -198,7 +198,7 @@ PyObject *stackgreg_register(PyObject *self, PyObject *args) {
     double *img_ref    = (double*)PyArray_DATA(ref_array);
     double *img_mov    = (double*)PyArray_DATA(mov_array);
 
-    registerImg(img_ref, img_mov, RIGID_BODY, Ny_ref, Nx_ref, rm); // width and height (Nx/Ny) have to be swapped!
+    registerImg(img_ref, img_mov, (Transformation)tf, Ny_ref, Nx_ref, rm); // width and height (Nx/Ny) have to be swapped!
 
     /* clean up */
     Py_XDECREF(ref_array);

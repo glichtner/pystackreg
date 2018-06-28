@@ -6,10 +6,12 @@ import numpy.distutils.misc_util
 setup(
 	name="pystackreg",
 	description='Python implementation of the ImageJ/FIJI Plugin TurboReg/StackReg',
+	version="0.1",
 	author='Gregor Lichtner (python/C++ port); TurboReg Author: Philippe Thévenaz, Biomedical Imaging Group, Swiss Federal Institute of Technology Lausanne',
-	package_dir={'' : 'pystackreg'},
+	package_dir={'pystackreg' : 'pysrc'},
+	packages=['pystackreg'],
     ext_modules=[
-		Extension("stackreg", [
+		Extension("pystackreg.stackreg", [
 			"src/pymain.cpp",
 			#"src/PyStackReg.cpp",
 			"src/TurboReg.cpp",

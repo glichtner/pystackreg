@@ -3113,14 +3113,15 @@ void TurboRegTransform::invertGauss (
             //std::vector<double> fullLine(n);
             
             //System.arraycopy(m[j], j, partialLine, 0, n - j);
-            std::vector<int> partialLine(m.getPtr(j, j), m.getPtr(j, n-j));
+        	// copy m[k][j->n] to m[j][j->n]
+            std::vector<double> partialLine(m.getPtr(j, j), m.getPtr(j, n));
 
             //System.arraycopy(m[k], j, m[j], j, n - j);
-            // copy m[k][j->n-j] to m[j][j->n-j]
-            std::copy(m.getPtr(k,j), m.getPtr(k,n-j), m.getPtr(j,j));
+            // copy m[k][j->n] to m[j][j->n]
+            std::copy(m.getPtr(k,j), m.getPtr(k,n), m.getPtr(j,j));
             
             //System.arraycopy(partialLine, 0, m[k], j, n - j);
-            // copy partialLine[0->n-j] to m[k][j->n-j]
+            // copy partialLine[0->n] to m[k][j->n]
             std::copy(std::begin(partialLine), std::end(partialLine), m.getPtr(k,j));
             
             //System.arraycopy(inverse[j], 0, fullLine, 0, n);
