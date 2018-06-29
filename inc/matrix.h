@@ -28,7 +28,7 @@ class matrix {
 
 		T* getRowPtr(unsigned int const i)
 		{
-			return &(m[i * cols]);
+			return &m[0] + i * cols;
 		}
 
 		T* begin() {
@@ -36,11 +36,11 @@ class matrix {
 		}
 
 		T* end() {
-			return &m[rows * cols];
+			return &m[0] + rows * cols;
 		}
 
 		T* getPtr(unsigned int const i, unsigned int const j) {
-			return &(m[i * cols + j]);
+			return &m[0] + i * cols + j;
 		}
 
 		unsigned int nrows() {

@@ -4,7 +4,6 @@
  * Porting by Gregor Lichtner
  */
 
-
 /*====================================================================
 | Philippe Thevenaz
 | EPFL/STI/IMT/LIB/BM.4.137
@@ -42,13 +41,15 @@
 | you to include a citation or acknowledgment whenever you present or
 | publish results that are based on it.
 \===================================================================*/
-
+#define _SECURE_SCL_DEPRECATE 0
+#pragma warning(disable:4996)
 #include <cmath>
 #include <algorithm>
 #include "TurboRegTransform.h"
 #include "matrix.h"
 
 #ifdef _MSC_VER
+
 template <typename T, size_t N>
 T* begin(T(&arr)[N]) { return &arr[0]; }
 template <typename T, size_t N>
@@ -101,7 +102,8 @@ TurboRegTransform::TurboRegTransform(
 	targetImg(targetImg),
 	sourceMsk(sourceMsk),
 	targetMsk(targetMsk),
-	sourcePh(sourcePh)
+	sourcePh(sourcePh),
+	bHasSourceMask(true)
  {
     sourcePoint = sourcePh->getPoints();
     targetPoint = targetPh->getPoints();
@@ -134,7 +136,8 @@ TurboRegTransform::TurboRegTransform(
 	 transformation(transformation),
 	 sourceImg(sourceImg),
 	 sourceMsk(sourceMsk),
-	 sourcePh(sourcePh)
+	 sourcePh(sourcePh),
+	 bHasSourceMask(true)
   {
      pixelPrecision = PIXEL_HIGH_PRECISION;
      maxIterations = MANY_ITERATIONS;

@@ -203,7 +203,7 @@ void TurboRegMask::buildPyramid (
 ) {
     int fullWidth;
     int fullHeight;
-    std::vector<double> &fullMask = mask;
+    double *pFullMask = &mask[0];
     int halfWidth = width;
     int halfHeight = height;
     for (int depth = 1; ((depth < pyramidDepth)); depth++) {
@@ -215,16 +215,16 @@ void TurboRegMask::buildPyramid (
         MaskStackItem stackItem(halfWidth * halfHeight);
 
         //std::vector<double> halfMask = getHalfMask2D(fullMask, fullWidth, fullHeight);
-        getHalfMask2D(fullMask, fullWidth, fullHeight, stackItem.halfMask);
+        getHalfMask2D(pFullMask, fullWidth, fullHeight, stackItem.halfMask);
 
         pyramid.push(stackItem);
-        fullMask = stackItem.halfMask;
+		pFullMask = &stackItem.halfMask[0];
     }
 } /* end buildPyramid */
 
 /*------------------------------------------------------------------*/
 std::vector<double> TurboRegMask::getHalfMask2D (
-        std::vector<double> &fullMask,
+        double *pFullMask,
         int fullWidth,
         int fullHeight,
         std::vector<double> &halfMask
@@ -245,28 +245,28 @@ std::vector<double> TurboRegMask::getHalfMask2D (
     int n = 0;
     for (int y = 0; y < (halfHeight - 1); y++) {
         for (int x = 0; (x < (halfWidth - 1)); x++) {
-            halfMask[k] += std::abs(fullMask[n++]);
-            halfMask[k] += std::abs(fullMask[n]);
-            halfMask[++k] += std::abs(fullMask[n++]);
+            halfMask[k] += std::abs(pFullMask[n++]);
+            halfMask[k] += std::abs(pFullMask[n]);
+            halfMask[++k] += std::abs(pFullMask[n++]);
         }
-        halfMask[k] += std::abs(fullMask[n++]);
-        halfMask[k++] += std::abs(fullMask[n++]);
+        halfMask[k] += std::abs(pFullMask[n++]);
+        halfMask[k++] += std::abs(pFullMask[n++]);
         
         if (oddWidth) {
             n++;
         }
         for (int x = 0; (x < (halfWidth - 1)); x++) {
-            halfMask[k - halfWidth] += std::abs(fullMask[n]);
-            halfMask[k] += std::abs(fullMask[n++]);
-            halfMask[k - halfWidth] += std::abs(fullMask[n]);
-            halfMask[k - halfWidth + 1] += std::abs(fullMask[n]);
-            halfMask[k] += std::abs(fullMask[n]);
-            halfMask[++k] += std::abs(fullMask[n++]);
+            halfMask[k - halfWidth] += std::abs(pFullMask[n]);
+            halfMask[k] += std::abs(pFullMask[n++]);
+            halfMask[k - halfWidth] += std::abs(pFullMask[n]);
+            halfMask[k - halfWidth + 1] += std::abs(pFullMask[n]);
+            halfMask[k] += std::abs(pFullMask[n]);
+            halfMask[++k] += std::abs(pFullMask[n++]);
         }
-        halfMask[k - halfWidth] += std::abs(fullMask[n]);
-        halfMask[k] += std::abs(fullMask[n++]);
-        halfMask[k - halfWidth] += std::abs(fullMask[n]);
-        halfMask[k++] += std::abs(fullMask[n++]);
+        halfMask[k - halfWidth] += std::abs(pFullMask[n]);
+        halfMask[k] += std::abs(pFullMask[n++]);
+        halfMask[k - halfWidth] += std::abs(pFullMask[n]);
+        halfMask[k++] += std::abs(pFullMask[n++]);
         
         if (oddWidth) {
             n++;
@@ -276,13 +276,13 @@ std::vector<double> TurboRegMask::getHalfMask2D (
     }
 
     for (int x = 0; (x < (halfWidth - 1)); x++) {
-        halfMask[k] += std::abs(fullMask[n++]);
-        halfMask[k] += std::abs(fullMask[n]);
-        halfMask[++k] += std::abs(fullMask[n++]);
+        halfMask[k] += std::abs(pFullMask[n++]);
+        halfMask[k] += std::abs(pFullMask[n]);
+        halfMask[++k] += std::abs(pFullMask[n++]);
     }
 
-    halfMask[k] += std::abs(fullMask[n++]);
-    halfMask[k++] += std::abs(fullMask[n++]);
+    halfMask[k] += std::abs(pFullMask[n++]);
+    halfMask[k++] += std::abs(pFullMask[n++]);
     
     if (oddWidth) {
         n++;
@@ -291,12 +291,12 @@ std::vector<double> TurboRegMask::getHalfMask2D (
     k -= halfWidth;
 
     for (int x = 0; (x < (halfWidth - 1)); x++) {
-        halfMask[k] += std::abs(fullMask[n++]);
-        halfMask[k] += std::abs(fullMask[n]);
-        halfMask[++k] += std::abs(fullMask[n++]);
+        halfMask[k] += std::abs(pFullMask[n++]);
+        halfMask[k] += std::abs(pFullMask[n]);
+        halfMask[++k] += std::abs(pFullMask[n++]);
     }
-    halfMask[k] += std::abs(fullMask[n++]);
-    halfMask[k] += std::abs(fullMask[n]);
+    halfMask[k] += std::abs(pFullMask[n++]);
+    halfMask[k] += std::abs(pFullMask[n]);
     return(halfMask);
 } /* end getHalfMask2D */
 

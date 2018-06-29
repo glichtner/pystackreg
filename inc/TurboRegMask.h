@@ -87,7 +87,7 @@ private:
     void buildPyramid ();
 
     std::vector<double> getHalfMask2D (
-            std::vector<double> &fullMask,
+            double *pFullMask,
             int fullWidth,
             int fullHeight,
             std::vector<double> &halfMask
