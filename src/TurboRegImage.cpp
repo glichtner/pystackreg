@@ -49,6 +49,14 @@
 #include <vector>
 #include <cmath>
 
+#ifdef _MSC_VER
+template <typename T, size_t N>
+T* begin(T(&arr)[N]) { return &arr[0]; }
+template <typename T, size_t N>
+T* end(T(&arr)[N]) { return &arr[0] + N; }
+#endif
+
+
 //#define COUNTOF(x) (sizeof(x) / sizeof(*x))
 
 /*====================================================================
@@ -370,7 +378,13 @@ void TurboRegImage::cardinalToDual2D (
 void TurboRegImage::coefficientToGradient1D (
         std::vector<double> &c
 ) {
-    std::vector<double> h = {0.0, 1.0 / 2.0};
+#ifdef _MSC_VER
+	double hh[] = { 0.0, 1.0 / 2.0 };
+	std::vector<double> h(begin(hh), end(hh));
+#else
+	std::vector<double> h = { 0.0, 1.0 / 2.0 };
+#endif
+    
     std::vector<double> s(c.size()); //OK
     antiSymmetricFirMirrorOffBounds1D(h, c, s);
     //System.arraycopy(s, 0, c, 0, s.size());
@@ -381,7 +395,13 @@ void TurboRegImage::coefficientToGradient1D (
 void TurboRegImage::coefficientToSamples1D (
         std::vector<double> &c
 ) {
-    std::vector<double> h = {2.0 / 3.0, 1.0 / 6.0};
+#ifdef _MSC_VER
+	double hh[] = { 2.0 / 3.0, 1.0 / 6.0 };
+	std::vector<double> h(begin(hh), end(hh));
+#else
+	std::vector<double> h = { 2.0 / 3.0, 1.0 / 6.0 };
+#endif
+    
     std::vector<double> s(c.size()); //OK
     symmetricFirMirrorOffBounds1D(h, c, s);
     //System.arraycopy(s, 0, c, 0, s.size());
@@ -456,7 +476,7 @@ void TurboRegImage::extractRow (
         int y,
         std::vector<double> &row
 ) {
-    y *= row.size();
+    y *= (int)row.size();
     for (unsigned int i = 0; (i < row.size()); i++) {
         row[i] = (double)array[y++];
     }
@@ -557,12 +577,12 @@ double TurboRegImage::getInitialCausalCoefficientMirrorOffBounds (
         double tolerance
 ) {
     double z1 = z;
-    double zn = pow(z, c.size());
+    double zn = pow(z, (double)c.size());
     double sum = (1.0 + z) * (c[0] + zn * c[c.size() - 1]);
-    int horizon = c.size();
+    int horizon = (int)c.size();
     if (0.0 < tolerance) {
         horizon = 2 + (int)(log(tolerance) / log((double)std::abs(z)));
-        horizon = (horizon < (int)c.size()) ? (horizon) : (c.size());
+        horizon = (horizon < (int)c.size()) ? (horizon) : ((int)c.size());
     }
     zn = zn * zn;
     for (int n = 1; (n < (horizon - 1)); n++) {
@@ -570,7 +590,7 @@ double TurboRegImage::getInitialCausalCoefficientMirrorOffBounds (
         zn = zn / z;
         sum = sum + (z1 + zn) * c[n];
     }
-    return(sum / (1.0 - pow(z, 2 * c.size())));
+    return(sum / (1.0 - pow(z, (double)(2 * c.size()))));
 } /* end getInitialCausalCoefficientMirrorOffBounds */
 
 /*------------------------------------------------------------------*/

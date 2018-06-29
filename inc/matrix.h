@@ -21,7 +21,7 @@ class matrix {
         	m.resize(rows*cols);
         }
 
-		T& operator()(unsigned int const i, unsigned int const j) noexcept
+		T& operator()(unsigned int const i, unsigned int const j)
 		{
 			return m[i * cols + j];
 		}
@@ -52,8 +52,8 @@ class matrix {
 		}
 
     private:
-		unsigned int cols = 0;
-		unsigned int rows = 0;
+		unsigned int cols;
+		unsigned int rows;
 
 };
 #endif

@@ -67,7 +67,7 @@ PyMODINIT_FUNC initstackreg(void)
 {
     /* Load `numpy` functionality. */
     import_array();
-    PyObject *module = Py_InitModule("stackreg", module_methods);
+    Py_InitModule("stackreg", module_methods);
 }
 
 #endif

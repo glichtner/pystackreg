@@ -48,6 +48,8 @@
 
 #define TURBOREG_MODE
 
+double TurboRegPointHandler::GOLDEN_RATIO = 0.5 * (sqrt(5.0) - 1.0);
+
 TurboRegPointHandler::TurboRegPointHandler (
 	TurboRegImage &img,
 	Transformation transformation
@@ -60,7 +62,7 @@ TurboRegPointHandler::TurboRegPointHandler (
 TurboRegPointHandler::TurboRegPointHandler (
 	matrix<double> &precisionPoint
 ) :
-	precisionPoint{precisionPoint}
+	precisionPoint(precisionPoint)
 {
 
 };

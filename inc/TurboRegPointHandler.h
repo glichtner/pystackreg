@@ -78,17 +78,10 @@ public:
 
 private:
     /*********************************************************************
-     The number of points we are willing to deal with is at most
-    <code>4</code>.
-    @see TurboRegDialog#transformation
-    ********************************************************************/
-    int NUM_POINTS = 4;
-
-    /*********************************************************************
      The golden ratio mathematical constant determines where to put the
     initial landmarks.
     ********************************************************************/
-    double GOLDEN_RATIO = 0.5 * (sqrt(5.0) - 1.0);
+    static double GOLDEN_RATIO;
 
 
     matrix<double> precisionPoint; // = new double[NUM_POINTS * 2];

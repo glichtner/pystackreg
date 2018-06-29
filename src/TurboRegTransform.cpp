@@ -48,6 +48,20 @@
 #include "TurboRegTransform.h"
 #include "matrix.h"
 
+#ifdef _MSC_VER
+template <typename T, size_t N>
+T* begin(T(&arr)[N]) { return &arr[0]; }
+template <typename T, size_t N>
+T* end(T(&arr)[N]) { return &arr[0] + N; }
+#endif
+
+const int TurboRegTransform::FEW_ITERATIONS = 5;
+const double TurboRegTransform::FIRST_LAMBDA = 1.0;
+const double TurboRegTransform::LAMBDA_MAGSTEP = 4.0;
+const int TurboRegTransform::MANY_ITERATIONS = 10;
+const double TurboRegTransform::PIXEL_HIGH_PRECISION = 0.001;
+const double TurboRegTransform::PIXEL_LOW_PRECISION = 0.1;
+const int TurboRegTransform::ITERATION_PROGRESSION = 2;
 
 /*....................................................................
 constructors
@@ -75,20 +89,19 @@ TurboRegTransform::TurboRegTransform(
         Transformation transformation,
         bool accelerated
 ) :     
-	accelerated{accelerated},
+	accelerated(accelerated),
 	dxWeight(4),
     dyWeight(4),
     xWeight(4),
     yWeight(4),
     xIndex(4),
     yIndex(4),
-	transformation{transformation},
-    sourceImg{sourceImg},
-	targetImg{targetImg},
-	sourceMsk{sourceMsk},
-	targetMsk{targetMsk},
-	sourcePh{sourcePh}
-
+	transformation(transformation),
+    sourceImg(sourceImg),
+	targetImg(targetImg),
+	sourceMsk(sourceMsk),
+	targetMsk(targetMsk),
+	sourcePh(sourcePh)
  {
     sourcePoint = sourcePh->getPoints();
     targetPoint = targetPh->getPoints();
@@ -111,21 +124,17 @@ TurboRegTransform::TurboRegTransform(
 		 Transformation transformation,
 		 bool accelerated
  ) :
-	 accelerated{accelerated},
+	 accelerated(accelerated),
      dxWeight(4),
      dyWeight(4),
      xWeight(4),
      yWeight(4),
      xIndex(4),
      yIndex(4),
-	 transformation{transformation},
-	 sourceImg{sourceImg},
-	 //targetImg{targetImg},
-	 //targetImg(TurboRegImage()),
-	 sourceMsk{sourceMsk},
-	 //targetMsk{targetMsk},
-	 sourcePh{sourcePh}
-
+	 transformation(transformation),
+	 sourceImg(sourceImg),
+	 sourceMsk(sourceMsk),
+	 sourcePh(sourcePh)
   {
      pixelPrecision = PIXEL_HIGH_PRECISION;
      maxIterations = MANY_ITERATIONS;
@@ -3122,7 +3131,12 @@ void TurboRegTransform::invertGauss (
             
             //System.arraycopy(partialLine, 0, m[k], j, n - j);
             // copy partialLine[0->n] to m[k][j->n]
-            std::copy(std::begin(partialLine), std::end(partialLine), m.getPtr(k,j));
+#ifdef _MSC_VER
+			std::copy(partialLine.begin(), partialLine.end(), m.getPtr(k, j));
+#else
+			std::copy(std::begin(partialLine), std::end(partialLine), m.getPtr(k, j));
+#endif
+			
             
             //System.arraycopy(inverse[j], 0, fullLine, 0, n);
             // copy inverse[j][0->n] to fullLine
@@ -3134,7 +3148,12 @@ void TurboRegTransform::invertGauss (
 
             //System.arraycopy(fullLine, 0, inverse[k], 0, n);
             // copy fullLine to inverse[k][0->n]
-            std::copy(std::begin(fullLine), std::end(fullLine), inverse.getRowPtr(k));
+#ifdef _MSC_VER
+			std::copy(fullLine.begin(), fullLine.end(), inverse.getRowPtr(k));
+#else
+			std::copy(std::begin(fullLine), std::end(fullLine), inverse.getRowPtr(k));
+#endif
+            
 
         }
         for (k = 0; (k <= j); k++) {

@@ -139,17 +139,17 @@ private:
      of the pyramid than at the fine levels.
      @see TurboRegTransform#ITERATION_PROGRESSION
      ********************************************************************/
-    const int FEW_ITERATIONS = 5;
+	static const int FEW_ITERATIONS;
 
     /*********************************************************************
      Initial value of the Marquardt-Levenberg fudge factor.
      ********************************************************************/
-    const double FIRST_LAMBDA = 1.0;
+	static const double FIRST_LAMBDA;
 
     /*********************************************************************
      Update parameter of the Marquardt-Levenberg fudge factor.
      ********************************************************************/
-    const double LAMBDA_MAGSTEP = 4.0;
+	static const double LAMBDA_MAGSTEP;
 
     /*********************************************************************
      Maximal number of registration iterations per level, when
@@ -158,51 +158,51 @@ private:
      of the pyramid than at the fine levels.
      @see TurboRegTransform#ITERATION_PROGRESSION
      ********************************************************************/
-    const int MANY_ITERATIONS = 10;
+	static const int MANY_ITERATIONS;
 
     /*********************************************************************
      Minimal update distance of the landmarks, in pixel units, when
      accuracy is requested at the expense of speed. This distance does
      not depend on the pyramid level.
      ********************************************************************/
-    const double PIXEL_HIGH_PRECISION = 0.001;
+	static const double PIXEL_HIGH_PRECISION;
 
     /*********************************************************************
      Minimal update distance of the landmarks, in pixel units, when
      speed is requested at the expense of accuracy. This distance does
      not depend on the pyramid level.
      ********************************************************************/
-    const double PIXEL_LOW_PRECISION = 0.1;
+	static const double PIXEL_LOW_PRECISION;
 
     /*********************************************************************
      Multiplicative factor that determines how many more iterations
      are allowed for a pyramid level one unit coarser.
      ********************************************************************/
-    const int ITERATION_PROGRESSION = 2;
+	static const int ITERATION_PROGRESSION;
 
     bool accelerated;
-    double c0 = 0;
-    double c0u = 0;
-    double c0v = 0;
-    double c0uv = 0;
-    double c1 = 0;
-    double c1u = 0;
-    double c1v = 0;
-    double c1uv = 0;
-    double c2 = 0;
-    double c2u = 0;
-    double c2v = 0;
-    double c2uv = 0;
-    double c3 = 0;
-    double c3u = 0;
-    double c3v = 0;
-    double c3uv = 0;
-    double pixelPrecision = 0;
-    double s = 0;
-    double t = 0;
-    double targetJacobian = 0;
-    double x = 0;
-    double y = 0;
+    double c0;
+    double c0u;
+    double c0v;
+    double c0uv;
+    double c1;
+    double c1u;
+    double c1v;
+    double c1uv;
+    double c2;
+    double c2u;
+    double c2v;
+    double c2uv;
+    double c3;
+    double c3u;
+    double c3v;
+    double c3uv;
+    double pixelPrecision;
+    double s;
+    double t;
+    double targetJacobian;
+    double x;
+    double y;
     matrix<double> sourcePoint;
     matrix<double> targetPoint;
     std::vector<double> dxWeight;
@@ -217,25 +217,25 @@ private:
     std::vector<double> outMsk;
     std::vector<double> xGradient;
     std::vector<double> yGradient;
-    int inNx= 0;
-    int inNy= 0;
-    int iterationCost= 0;
-    int iterationPower= 0;
-    int maxIterations= 0;
-    int outNx= 0;
-    int outNy= 0;
-    int p = 0;
-    int pyramidDepth = 0;
-    int q = 0;
+    int inNx;
+    int inNy;
+    int iterationCost;
+    int iterationPower;
+    int maxIterations;
+    int outNx;
+    int outNy;
+    int p;
+    int pyramidDepth;
+    int q;
     Transformation transformation;
-    int twiceInNx= 0;
-    int twiceInNy= 0;
+    int twiceInNx;
+    int twiceInNy;
     TurboRegImage *sourceImg;
     TurboRegImage *targetImg;
     TurboRegMask *sourceMsk;
     TurboRegMask *targetMsk;
     TurboRegPointHandler *sourcePh;
-    bool bHasSourceMask = true;
+    bool bHasSourceMask;
 
 
 

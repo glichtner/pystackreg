@@ -61,7 +61,7 @@ public:
     
 
     ImageStackItem(int halfWidth, int halfHeight, bool gradient)
-    : halfWidth{halfWidth}, halfHeight{halfHeight}
+    : halfWidth(halfWidth), halfHeight(halfHeight)
      {
         halfImg.resize(halfHeight * halfWidth);
 
