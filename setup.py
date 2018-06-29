@@ -8,16 +8,18 @@ import os
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+exec(open('pysrc/version.py').read())
+
 setup(
 	name="pystackreg",
 	description='Python implementation of the ImageJ/FIJI Plugin TurboReg/StackReg',
 	long_description=read('README.rst'),
-	version="0.1.3",
+	version=__version__,
 	author='Gregor Lichtner (python/C++ port); TurboReg Author: Philippe Thévenaz, Biomedical Imaging Group, Swiss Federal Institute of Technology Lausanne',
 	url='https://bitbucket.org/glichtner/pystackreg',
 	package_dir={'pystackreg' : 'pysrc'},
 	packages=['pystackreg'],
-    ext_modules=[
+	ext_modules=[
 		Extension("pystackreg.stackreg", [
 			"src/pymain.cpp",
 			#"src/PyStackReg.cpp",
@@ -26,7 +28,7 @@ setup(
 			"src/TurboRegImage.cpp",
 			"src/TurboRegTransform.cpp",
 			"src/TurboRegPointHandler.cpp"])],
-    include_dirs=['inc/'] + numpy.distutils.misc_util.get_numpy_include_dirs(),
-	install_requires = ['numpy']
+	include_dirs=['inc/'] + numpy.distutils.misc_util.get_numpy_include_dirs(),
+	install_requires = ['numpy', 'tqdm']
 ) 
 

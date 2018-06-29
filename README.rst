@@ -1,13 +1,24 @@
-==================================================
-pystackreg: A python/c++ port of TurboReg/Stackreg
-==================================================
-
-|Pypi Package| |Build Status| |Coverage Status| |Code Health| |License|
+pyStackReg
+==========
 
 Summary
 -------
-Python/C++ port of the ImageJ extension TurboReg/StackReg written by Philippe Thevenaz/EPFL
+Python/C++ port of the ImageJ extension TurboReg/StackReg written by Philippe Thevenaz/EPFL.
 
+A python extension for the automatic alignment of a source image or a stack (movie) to a target image/reference frame.
+
+Description
+-----------
+pyStackReg is used to align (register) one or more images to a common reference image, as is required usually in time-resolved fluorescence or wide-field microscopy. It is directly ported from the source code of the ImageJ plugin ``TurboReg`` and provides additionally the functionality of the ImageJ plugin ``StackReg``, both of which were written by Philippe Thevenaz/EPFL (available at http://bigwww.epfl.ch/thevenaz/turboreg/).
+
+pyStackReg provides the following four types of distortion:
+
+- translation
+- rigid body (translation + rotation)
+- scaled rotation (translation + rotation + scaling)
+- affine (translation + rotation + scaling + shearing)
+
+Bilinear transformation is not (yet) made available, althought the source code has been fully ported. For technical details, please refer to http://bigwww.epfl.ch/thevenaz/turboreg/.
 
 
 Installation
@@ -28,19 +39,24 @@ The following example opens two different files and registers them using all dif
 
     from pystackreg import StackReg
     from skimage import io
-    
+
+    #load reference and "moved" image
     ref = io.imread('some_original_image.tif')
     mov = io.imread('some_changed_image.tif')
-    
+
+    #Translational transformation
     sr = StackReg(StackReg.TRANSLATION)
     out_tra = sr.register_transform(ref, mov)
-    
+
+    #Rigid Body transformation
     sr = StackReg(StackReg.RIGID_BODY)
     out_rot = sr.register_transform(ref, mov)
-    
+
+    #Scaled Rotation transformation
     sr = StackReg(StackReg.SCALED_ROTATION)
     out_sca = sr.register_transform(ref, mov)
-    
+
+    #Affine transformation
     sr = StackReg(StackReg.AFFINE)
     out_aff = sr.register_transform(ref, mov)
 
@@ -53,13 +69,18 @@ The next example shows how to separate registration from transformation (e.g., t
 
     from pystackreg import StackReg
     from skimage import io
-    
-    img0 = io.imread('some_multiframe_image.tif') # 3 dimensions : frames x width x height
+
+    img0 = io.imread('some_multiframe_image.tif')
     img1 = io.imread('another_multiframe_image.tif')
-    
+    # img0.shape: frames x width x height (3D)
+
     sr = StackReg(StackReg.RIGID_BODY)
-    sr.register(img0[0, :, :], img0[1,:,:]) # register 2nd image to 1st
-    out = sr.transform(img1[1,:,:]) # use the transformation from the above registration to register another frame
+
+    # register 2nd image to 1st
+    sr.register(img0[0, :, :], img0[1,:,:])
+
+    # use the transformation from the above registration to register another frame
+    out = sr.transform(img1[1,:,:]) 
 
 The next examples shows how to register and transform a whole stack:
 
@@ -73,20 +94,20 @@ The next examples shows how to register and transform a whole stack:
     sr = StackReg(StackReg.RIGID_BODY)
     
     # register to first image
-    out_first = register_transform_stack(img0, reference='first')
+    out_first = sr.register_transform_stack(img0, reference='first')
     
     # register to mean image
-    out_mean = register_transform_stack(img0, reference='mean')
+    out_mean = sr.register_transform_stack(img0, reference='mean')
     
     # register each frame to the previous (already registered) one 
-    out_previous = register_transform_stack(img0, reference='previous')
+    out_previous = sr.register_transform_stack(img0, reference='previous')
     
     # register to mean of first 10 images
-    out_first10 = register_transform_stack(img0, reference='first', n_frames=10)
+    out_first10 = sr.register_transform_stack(img0, reference='first', n_frames=10)
     
-    # calculate a moving average of 10 images, then register the moving average to the mean of the first 10 images
-    # and transform the original image (not the moving average)
-    out_moving10 = register_transform_stack(img0, reference='first', n_frames=10, moving_average = 10)
+    # calculate a moving average of 10 images, then register the moving average to the mean of 
+    # the first 10 images and transform the original image (not the moving average)
+    out_moving10 = sr.register_transform_stack(img0, reference='first', n_frames=10, moving_average = 10)
 
 
 Author information
