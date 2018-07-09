@@ -218,7 +218,7 @@ void TurboRegMask::buildPyramid (
         getHalfMask2D(pFullMask, fullWidth, fullHeight, stackItem.halfMask);
 
         pyramid.push(stackItem);
-		pFullMask = &stackItem.halfMask[0];
+		pFullMask = &pyramid.top().halfMask[0];
     }
 } /* end buildPyramid */
 

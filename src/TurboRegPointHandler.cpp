@@ -46,7 +46,7 @@
 #include <cmath>
 #include "TurboRegPointHandler.h"
 
-#define TURBOREG_MODE
+//#define TURBOREG_MODE
 
 double TurboRegPointHandler::GOLDEN_RATIO = 0.5 * (sqrt(5.0) - 1.0);
 
@@ -73,6 +73,10 @@ void TurboRegPointHandler::setPointsByTransformation(
 		int height,
 		Transformation transformation
 ) {
+	// increment width and height because images are supplied cropped by 1 px from python
+	// (this cropping is exactly what StackReg does when calling TurboReg)
+	width++;
+	height++;
 
 	switch (transformation) {
 	case TRANSLATION: {	//AFFINE: { //should be three points, not one.

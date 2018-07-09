@@ -31,15 +31,15 @@ typedef struct regMat {
 	matrix<double> movPts;
 } regMat;
 
-static PyObject *stackgreg_register(PyObject *self, PyObject *args);
-static PyObject *stackgreg_transform(PyObject *self, PyObject *args);
+static PyObject *turbogreg_register(PyObject *self, PyObject *args);
+static PyObject *turbogreg_transform(PyObject *self, PyObject *args);
 
 
 
 static char pystackreg_docs[] = "PyStackReg\n";
 static PyMethodDef module_methods[] = {
-    {"_register", (PyCFunction)stackgreg_register, METH_VARARGS, pystackreg_docs},
-	{"_transform", (PyCFunction)stackgreg_transform, METH_VARARGS, pystackreg_docs},
+    {"_register", (PyCFunction)turbogreg_register, METH_VARARGS, pystackreg_docs},
+	{"_transform", (PyCFunction)turbogreg_transform, METH_VARARGS, pystackreg_docs},
     {NULL}
 };
 
@@ -47,14 +47,14 @@ static PyMethodDef module_methods[] = {
 static struct PyModuleDef pystackreg =
 {
     PyModuleDef_HEAD_INIT,
-    "stackreg", /* name of module */
-    "stackreg\n", /* module documentation, may be NULL */
+    "turboreg", /* name of module */
+    "turboreg\n", /* module documentation, may be NULL */
     -1,   /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
     module_methods
 };
 
 
-PyMODINIT_FUNC PyInit_stackreg(void)
+PyMODINIT_FUNC PyInit_turboreg(void)
 {
     /* Load `numpy` functionality. */
     import_array();
@@ -63,11 +63,11 @@ PyMODINIT_FUNC PyInit_stackreg(void)
 }
 #else
 
-PyMODINIT_FUNC initstackreg(void)
+PyMODINIT_FUNC initturboreg(void)
 {
     /* Load `numpy` functionality. */
     import_array();
-    Py_InitModule("stackreg", module_methods);
+    Py_InitModule("turboreg", module_methods);
 }
 
 #endif
@@ -143,7 +143,7 @@ std::vector<double> transformImg(matrix<double> m, double *pDataMov, int width, 
 }
 
 
-PyObject *stackgreg_register(PyObject *self, PyObject *args) {
+PyObject *turbogreg_register(PyObject *self, PyObject *args) {
 
     PyObject *ref, *mov;
     regMat rm;
@@ -220,7 +220,7 @@ PyObject *stackgreg_register(PyObject *self, PyObject *args) {
 }
 
 
-PyObject *stackgreg_transform(PyObject *self, PyObject *args) {
+PyObject *turbogreg_transform(PyObject *self, PyObject *args) {
 
     PyObject *mov;
     PyObject *mat;

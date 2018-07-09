@@ -20,14 +20,15 @@ setup(
 	package_dir={'pystackreg' : 'pysrc'},
 	packages=['pystackreg'],
 	ext_modules=[
-		Extension("pystackreg.stackreg", [
+		Extension("pystackreg.turboreg", [
 			"src/pymain.cpp",
 			#"src/PyStackReg.cpp",
 			"src/TurboReg.cpp",
 			"src/TurboRegMask.cpp",
 			"src/TurboRegImage.cpp",
 			"src/TurboRegTransform.cpp",
-			"src/TurboRegPointHandler.cpp"])],
+			"src/TurboRegPointHandler.cpp"],
+			)],
 	include_dirs=['inc/'] + numpy.distutils.misc_util.get_numpy_include_dirs(),
 	install_requires = ['numpy', 'tqdm']
 ) 
