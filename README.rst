@@ -18,7 +18,9 @@ pyStackReg provides the following four types of distortion:
 - scaled rotation (translation + rotation + scaling)
 - affine (translation + rotation + scaling + shearing)
 
-Bilinear transformation is not (yet) made available, althought the source code has been fully ported. For technical details, please refer to http://bigwww.epfl.ch/thevenaz/turboreg/.
+pyStackReg supports the full functionality of StackReg plus some additional options, e.g., using different reference images and having access to the actual transformation matrices (please see the examples below).
+
+As in StackReg, bilinear transformation is not supported as bilinear transformation matrices cannot be propagated. For technical details, please refer to http://bigwww.epfl.ch/thevenaz/turboreg/.
 
 
 Installation
@@ -92,15 +94,16 @@ The next examples shows how to register and transform a whole stack:
     img0 = io.imread('some_multiframe_image.tif') # 3 dimensions : frames x width x height
     
     sr = StackReg(StackReg.RIGID_BODY)
-    
+
+    # register each frame to the previous (already registered) one 
+    # this is what the original StackReg ImageJ plugin uses
+    out_previous = sr.register_transform_stack(img0, reference='previous')
+
     # register to first image
     out_first = sr.register_transform_stack(img0, reference='first')
     
     # register to mean image
     out_mean = sr.register_transform_stack(img0, reference='mean')
-    
-    # register each frame to the previous (already registered) one 
-    out_previous = sr.register_transform_stack(img0, reference='previous')
     
     # register to mean of first 10 images
     out_first10 = sr.register_transform_stack(img0, reference='first', n_frames=10)
@@ -108,6 +111,49 @@ The next examples shows how to register and transform a whole stack:
     # calculate a moving average of 10 images, then register the moving average to the mean of 
     # the first 10 images and transform the original image (not the moving average)
     out_moving10 = sr.register_transform_stack(img0, reference='first', n_frames=10, moving_average = 10)
+
+The next example shows how to separate registration from transformation for a stack (e.g., to register in one color channel and then use that information to transform another color channel):
+
+.. code-block:: python
+
+    from pystackreg import StackReg
+    from skimage import io
+    
+    img0 = io.imread('some_multiframe_image.tif') # 3 dimensions : frames x width x height
+    img1 = io.imread('another_multiframe_image.tif') # same shape as img0
+
+    # both stacks must have the same shape
+    assert img0.shape == img1.shape
+
+    sr = StackReg(StackReg.RIGID_BODY)
+
+    # register each frame to the previous (already registered) one 
+    # this is what the original StackReg ImageJ plugin uses
+    tmats = sr.register_stack(img0, reference='previous')
+    out = sr.transform_stack(img1)
+
+    # tmats contains the transformation matrices -> they can be saved
+    # and loaded at another time
+    import numpy as np
+    np.save('transformation_matrices.npy', tmats)
+
+    tmats_loaded = np.load('transformation_matrices.npy')
+
+    # make sure you use the correct transformation here!
+    sr = StackReg(StackReg.RIGID_BODY) 
+
+    # transform stack using the tmats loaded from file
+    sr.transform_stack(img1, tmats=tmats_loaded)
+
+    # with the transformation matrices at hand you can also
+    # use the transformation algorithms from other packages:
+    from skimage import transform as tf
+
+    out = np.zeros(img0.shape).astype(np.float)
+    
+    for i in range(tmats.shape[0]):
+        tform = tf.AffineTransform(matrix=tmats[i, :, :])
+        out[i, :, :] = tf.warp(img1[i, :, :], tform)
 
 
 Author information
