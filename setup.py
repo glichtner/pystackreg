@@ -8,7 +8,7 @@ import os
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-exec(open('pysrc/version.py').read())
+exec(open('pystackreg/version.py').read())
 
 setup(
 	name="pystackreg",
@@ -17,7 +17,7 @@ setup(
 	version=__version__,
 	author='Gregor Lichtner (python/C++ port); TurboReg Author: Philippe Thévenaz, Biomedical Imaging Group, Swiss Federal Institute of Technology Lausanne',
 	url='https://bitbucket.org/glichtner/pystackreg',
-	package_dir={'pystackreg' : 'pysrc'},
+	#package_dir={'pystackreg':'pysrc'},
 	packages=['pystackreg'],
 	ext_modules=[
 		Extension("pystackreg.turboreg", [

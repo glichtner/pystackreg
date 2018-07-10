@@ -1,0 +1,350 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>pystackreg API reference &#8212; pystackreg 0.1.1rc2 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to pystackreg’s documentation!" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="pystackreg-api-reference">
+<h1>pystackreg API reference<a class="headerlink" href="#pystackreg-api-reference" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<span class="target" id="module-pystackreg"></span><dl class="class">
+<dt id="pystackreg.StackReg">
+<em class="property">class </em><code class="descclassname">pystackreg.</code><code class="descname">StackReg</code><span class="sig-paren">(</span><em>transformation</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pystackreg/pystackreg.html#StackReg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pystackreg.StackReg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Python implementation of the ImageJ/Fiji StackReg plugin ( <a class="reference external" href="http://bigwww.epfl.ch/thevenaz/stackreg/">http://bigwww.epfl.ch/thevenaz/stackreg/</a> )</p>
+<dl class="method">
+<dt id="pystackreg.StackReg.get_matrix">
+<code class="descname">get_matrix</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pystackreg/pystackreg.html#StackReg.get_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pystackreg.StackReg.get_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the current transformation matrix</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray(3,3)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The transformation matrix</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pystackreg.StackReg.get_points">
+<code class="descname">get_points</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pystackreg/pystackreg.html#StackReg.get_points"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pystackreg.StackReg.get_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the pairs of corresponding points from which the
+transformation matrix can be calculated.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">(ndarray, ndarray)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(Point coordinates of reference image, Point coordinates of image to be aligned)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pystackreg.StackReg.is_registered">
+<code class="descname">is_registered</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pystackreg/pystackreg.html#StackReg.is_registered"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pystackreg.StackReg.is_registered" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates whether register() was already called and a transformation matrix was calculated</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if a transformation matrix was already calculated</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pystackreg.StackReg.register">
+<code class="descname">register</code><span class="sig-paren">(</span><em>ref</em>, <em>mov</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pystackreg/pystackreg.html#StackReg.register"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pystackreg.StackReg.register" title="Permalink to this definition">¶</a></dt>
+<dd><p>Registers an image to a reference image: Only the transformation matrix
+will be calculated, the image will not be transformed
+(use transform() or register_transform() ).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ref</strong> (<em>array_like</em><em> (</em><em>Ni...</em><em>, </em><em>Nj...</em><em>)</em>) – Reference image (static)</li>
+<li><strong>mov</strong> (<em>array_like</em><em> (</em><em>Ni...</em><em>, </em><em>Nj...</em><em>)</em>) – The image that should be aligned to the reference image</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">ndarray(3,3)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">2D transformation matrix</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pystackreg.StackReg.register_stack">
+<code class="descname">register_stack</code><span class="sig-paren">(</span><em>img</em>, <em>reference='previous'</em>, <em>n_frames=1</em>, <em>axis=0</em>, <em>moving_average=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pystackreg/pystackreg.html#StackReg.register_stack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pystackreg.StackReg.register_stack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register a stack of images (movie).
+Note that this function will not transform the image but only calculate the transformation matrices.
+For tranformation use transform_stack() after this function or use register_transform_stack() for a single call.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>img</strong> (<em>array_like</em><em>(</em><em>Ni...</em><em>, </em><em>Nj...</em><em>, </em><em>Nk...</em><em>)</em>) – The 3D stack of images that should be aligned</li>
+<li><strong>reference</strong> (<em>string</em><em>, </em><em>one of</em><em> [</em><em>'previous'</em><em>, </em><em>'first'</em><em>, </em><em>'mean'</em><em>]</em>) – <ul>
+<li><em>‘previous’</em>: Aligns each frame (image) to its previous frame in the stack</li>
+<li><em>’first:’</em> Aligns each frame (image) to the first frame in the stack - if n_frames is &gt; 1, then
+each frame is aligned to the mean of the first n_frames of the stack</li>
+<li><em>’mean’</em>: Aligns each frame (image) to the average of all images in the stack</li>
+</ul>
+</li>
+<li><strong>n_frames</strong> (<em>int</em><em>, </em><em>optional</em>) – If reference is ‘first’, then this parameter specifies the number of frames from the
+beginning of the stack that should be averaged to yield the reference image.</li>
+<li><strong>axis</strong> (<em>int</em><em>, </em><em>optional</em>) – The axis of the time dimension</li>
+<li><strong>moving_average</strong> (<em>int</em><em>, </em><em>optional</em>) – If moving_average is greater than 1, a moving average of the stack is first created (using
+a subset size of moving_average) before registration</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">ndarray(img.shape[axis], 3, 3)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The transformation matrix for each image in the stack</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pystackreg.StackReg.register_transform">
+<code class="descname">register_transform</code><span class="sig-paren">(</span><em>ref</em>, <em>mov</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pystackreg/pystackreg.html#StackReg.register_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pystackreg.StackReg.register_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register and transform an image to a reference image.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ref</strong> (<em>ref: array_like</em><em> (</em><em>Ni...</em><em>, </em><em>Nj...</em><em>)</em>) – Reference image (static)</li>
+<li><strong>mov</strong> (<em>array_like</em><em> (</em><em>Ni...</em><em>, </em><em>Nj...</em><em>)</em>) – The image that should be aligned to the reference image</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">ndarray (Ni…, Nj…)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Transformed image - will be of the same shape as the input image (cropping may occur)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pystackreg.StackReg.register_transform_stack">
+<code class="descname">register_transform_stack</code><span class="sig-paren">(</span><em>img</em>, <em>reference='previous'</em>, <em>n_frames=1</em>, <em>axis=0</em>, <em>moving_average=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pystackreg/pystackreg.html#StackReg.register_transform_stack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pystackreg.StackReg.register_transform_stack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register and transform stack of images (movie).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>img</strong> (<em>array_like</em><em>(</em><em>Ni...</em><em>, </em><em>Nj...</em><em>, </em><em>Nk...</em><em>)</em>) – The 3D stack of images that should be aligned</li>
+<li><strong>reference</strong> (<em>string</em><em>, </em><em>one of</em><em> [</em><em>'previous'</em><em>, </em><em>'first'</em><em>, </em><em>'mean'</em><em>]</em>) – <ul>
+<li><em>‘previous’</em>: Aligns each frame (image) to its previous frame in the stack</li>
+<li><em>’first:’</em> Aligns each frame (image) to the first frame in the stack - if n_frames is &gt; 1, then
+each frame is aligned to the mean of the first n_frames of the stack</li>
+<li><em>’mean’</em>: Aligns each frame (image) to the average of all images in the stack</li>
+</ul>
+</li>
+<li><strong>n_frames</strong> (<em>int</em><em>, </em><em>optional</em>) – If reference is ‘first’, then this parameter specifies the number of frames from the
+beginning of the stack that should be averaged to yield the reference image.</li>
+<li><strong>axis</strong> (<em>int</em><em>, </em><em>optional</em>) – The axis of the time dimension</li>
+<li><strong>moving_average</strong> (<em>int</em><em>, </em><em>optional</em>) – If moving_average is greater than 1, a moving average of the stack is first created (using
+a subset size of moving_average) before registration</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">ndarray(Ni…, Nj…, Nk…)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The transformed stack</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pystackreg.StackReg.set_matrix">
+<code class="descname">set_matrix</code><span class="sig-paren">(</span><em>mat</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pystackreg/pystackreg.html#StackReg.set_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pystackreg.StackReg.set_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the current transformation matrix</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>mat</strong> (<em>ndarray</em><em>(</em><em>3</em><em>,</em><em>3</em><em>)</em>) – The transformation matrix</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pystackreg.StackReg.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>mov</em>, <em>tmat=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pystackreg/pystackreg.html#StackReg.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pystackreg.StackReg.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform an image according to a previous registration.</p>
+<p>Either a transformation matrix has to be explicitly supplied or
+register() has to be called before calling transform().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>mov</strong> (<em>array_like</em><em> (</em><em>Ni...</em><em>, </em><em>Nj...</em><em>)</em>) – The image that will be transformed</li>
+<li><strong>tmat</strong> (<em>ndarray</em><em>(</em><em>3</em><em>,</em><em>3</em><em>)</em><em>, </em><em>optional</em>) – The transformation matrix</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">ndarray (Ni…, Nj…)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Transformed image - will be of the same shape as the input image (cropping may occur)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pystackreg.StackReg.transform_stack">
+<code class="descname">transform_stack</code><span class="sig-paren">(</span><em>img</em>, <em>axis=0</em>, <em>tmats=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pystackreg/pystackreg.html#StackReg.transform_stack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pystackreg.StackReg.transform_stack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform a stack after registration.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>img</strong> (<em>array_like</em><em>(</em><em>Ni...</em><em>, </em><em>Nj...</em><em>, </em><em>Nk...</em><em>)</em>) – The 3D stack of images that should be aligned</li>
+<li><strong>axis</strong> (<em>int</em><em>, </em><em>optional</em>) – The axis of the time dimension</li>
+<li><strong>tmats</strong> (<em>ndarray</em><em>(</em><em>img.shape</em><em>[</em><em>axis</em><em>]</em><em>, </em><em>3</em><em>, </em><em>3</em><em>)</em><em>, </em><em>optional</em>) – The transformation matrix for each image in the stack</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">ndarray(Ni…, Nj…, Nk…)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The transformed stack</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">pystackreg API reference</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to pystackreg’s documentation!</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/api.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Gregor Lichtner, Philippe Thevenaz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="_sources/api.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -10,14 +10,18 @@ def simple_slice(arr, inds, axis):
     This does the same as np.take() except only supports simple slicing, not
     advanced indexing, and thus is much faster
 
-    :param arr: array_like (Ni..., M, Nk...)
-        The source array to slice from
-    :param inds: int or array_like (Nj...)
+    :type arr: array_like (Ni..., M, Nk...)
+    :param arr: The source array to slice from
+
+    :type inds: int or array_like (Nj...)
+    :param inds:
         The indices of the values to extract
-    :param axis: int
-        The axis over which to select values
-    :return: ndarray(Ni..., Nj..., Nk...)
-        The returned array has the same type as arr
+
+    :type axis: int
+    :param axis: The axis over which to select values
+
+    :rtype:  ndarray(Ni..., Nj..., Nk...)
+    :return: The returned array has the same type as arr
     """
 
     sl = [slice(None)] * arr.ndim
@@ -31,14 +35,18 @@ def running_mean(x, N, axis=0):
     The array is padded with the first and last value such that
     the resulting running mean has the same dimensions as the input array.
 
-    :param x: array_like (Ni..., Nj..., Nk...)
-        The source array
-    :param N: int
+    :type x: array_like (Ni..., Nj..., Nk...)
+    :param x: The source array
+
+    :type N: int
+    :param N:
         Number of elements to average over
-    :param axis: int, optional
-        The axis across which the running mean is calculated
-    :return: ndarray(Ni..., Nj..., Nk...)
-        The returned array has the same shape and type as x
+
+    :type axis: int, optional
+    :param axis: The axis across which the running mean is calculated
+
+    :rtype:  ndarray(Ni..., Nj..., Nk...)
+    :return: The returned array has the same shape and type as x
     """
     pad_width = [[0,0]] * len(x.shape)
     pad_width[axis] = [int(np.ceil(N/2)), int(np.floor(N/2))]
@@ -81,8 +89,9 @@ class StackReg:
     def is_registered(self):
         """
         Indicates whether register() was already called and a transformation matrix was calculated
-        :return: bool
-            True if a transformation matrix was already calculated
+
+        :rtype:  bool
+        :return: True if a transformation matrix was already calculated
         """
         return self._is_registered
 
@@ -92,13 +101,15 @@ class StackReg:
         will be calculated, the image will not be transformed
         (use transform() or register_transform() ).
 
+        :type ref: array_like (Ni..., Nj...)
+        :param ref: Reference image (static)
 
-        :param ref: array_like (Ni..., Nj...)
-            Reference image (static)
-        :param mov: array_like (Ni..., Nj...)
+        :type mov: array_like (Ni..., Nj...)
+        :param mov:
             The image that should be aligned to the reference image
-        :return: ndarray(3,3)
-            2D transformation matrix
+
+        :rtype:  ndarray(3,3)
+        :return: 2D transformation matrix
         """
         self._is_registered = True
 
@@ -112,12 +123,14 @@ class StackReg:
         Either a transformation matrix has to be explicitly supplied or
         register() has to be called before calling transform().
 
-        :param mov: array_like (Ni..., Nj...)
-            The image that will be transformed
-        :param tmat:  ndarray(3,3), optional
-            The transformation matrix
-        :return: ndarray (Ni..., Nj...)
-            Transformed image - will be of the same shape as the input image (cropping may occur)
+        :type mov: array_like (Ni..., Nj...)
+        :param mov: The image that will be transformed
+
+        :type tmat:  ndarray(3,3), optional
+        :param tmat: The transformation matrix
+
+        :rtype:  ndarray (Ni..., Nj...)
+        :return: Transformed image - will be of the same shape as the input image (cropping may occur)
         """
         if tmat is None and not self.is_registered():
             raise Exception("Register first")
@@ -133,12 +146,14 @@ class StackReg:
         """
         Register and transform an image to a reference image.
 
-        :param ref: ref: array_like (Ni..., Nj...)
-            Reference image (static)
-        :param mov: array_like (Ni..., Nj...)
-            The image that should be aligned to the reference image
-        :return: ndarray (Ni..., Nj...)
-            Transformed image - will be of the same shape as the input image (cropping may occur)
+        :type ref: ref: array_like (Ni..., Nj...)
+        :param ref: Reference image (static)
+
+        :type mov: array_like (Ni..., Nj...)
+        :param mov: The image that should be aligned to the reference image
+
+        :rtype:  ndarray (Ni..., Nj...)
+        :return: Transformed image - will be of the same shape as the input image (cropping may occur)
         """
         self.register(ref, mov)
         return self.transform(mov)
@@ -146,17 +161,18 @@ class StackReg:
     def get_matrix(self):
         """
         Get the current transformation matrix
-        :return: ndarray(3,3)
-            The transformation matrix
+
+        :rtype:  ndarray(3,3)
+        :return: The transformation matrix
         """
         return self._matrix_short_to_long(self._m)
 
     def set_matrix(self, mat):
         """
         Sets the current transformation matrix
-        :param mat: ndarray(3,3)
-            The transformation matrix
-        :return: Nothing
+
+        :type mat: ndarray(3,3)
+        :param mat: The transformation matrix
         """
         self._m = self._matrix_long_to_short(mat)
 
@@ -165,10 +181,11 @@ class StackReg:
         Converts the transformation matrix from the short form used by TurboReg to
         the canonical form from linear algebra.
 
-        :param m: array_like
-            TurboReg transformation matrix
-        :return: ndarray(3,3)
-            Canonical transformation matrix
+        :type m: array_like
+        :param m: TurboReg transformation matrix
+
+        :rtype:  ndarray(3,3)
+        :return: Canonical transformation matrix
         """
         mat = np.identity(3).astype(np.double)
 
@@ -188,10 +205,11 @@ class StackReg:
         Converts the transformation matrix from the canonical form from linear algebra to
         the short form used by TurboReg.
 
-        :param mat: ndarray(3,3)
-            Canonical transformation matrix
-        :return: array_like
-            TurboReg transformation matrix
+        :type mat: ndarray(3,3)
+        :param mat: Canonical transformation matrix
+
+        :rtype:  array_like
+        :return: TurboReg transformation matrix
         """
         if self._transformation == self.TRANSLATION:
             m = mat[0:2, 2].reshape((2,1))
@@ -209,9 +227,8 @@ class StackReg:
         Returns the pairs of corresponding points from which the
         transformation matrix can be calculated.
 
-        :return: (ndarray, ndarray)
-            (Point coordinates of reference image,
-            Point coordinates of image to be aligned)
+        :rtype:  (ndarray, ndarray)
+        :return: (Point coordinates of reference image, Point coordinates of image to be aligned)
         """
         return self._refpts, self._movpts
 
@@ -221,24 +238,32 @@ class StackReg:
         Note that this function will not transform the image but only calculate the transformation matrices.
         For tranformation use transform_stack() after this function or use register_transform_stack() for a single call.
 
-        :param img: array_like(Ni..., Nj..., Nk...)
-            The 3D stack of images that should be aligned
-        :param reference: string, one of ['previous', 'first', 'mean']
-            previous: Aligns each frame (image) to its previous frame in the stack
-            first: Aligns each frame (image) to the first frame in the stack - if n_frames is > 1, then
-                each frame is aligned to the mean of the first n_frames of the stack
-            mean: Aligns each frame (image) to the average of all images in the stack
-        :param n_frames: int, optional
-            If reference is 'first', then this parameter specifies the number of frames from the
+        :type img: array_like(Ni..., Nj..., Nk...)
+        :param img: The 3D stack of images that should be aligned
+
+        :type reference: string, one of ['previous', 'first', 'mean']
+        :param reference:
+            *  *'previous'*: Aligns each frame (image) to its previous frame in the stack
+            *  *'first:'* Aligns each frame (image) to the first frame in the stack - if n_frames is > 1, then
+               each frame is aligned to the mean of the first n_frames of the stack
+            *  *'mean'*: Aligns each frame (image) to the average of all images in the stack
+
+        :type n_frames: int, optional
+        :param n_frames: If reference is 'first', then this parameter specifies the number of frames from the
             beginning of the stack that should be averaged to yield the reference image.
-        :param axis: int, optional
-            The axis of the time dimension
-        :param moving_average: int, optional
+
+        :type axis: int, optional
+        :param axis: The axis of the time dimension
+
+        :type moving_average: int, optional
+        :param moving_average:
             If moving_average is greater than 1, a moving average of the stack is first created (using
             a subset size of moving_average) before registration
-        :return: ndarray(img.shape[axis], 3, 3)
-            The transformation matrix for each image in the stack
+
+        :rtype:  ndarray(img.shape[axis], 3, 3)
+        :return: The transformation matrix for each image in the stack
         """
+
         if len(img.shape) != 3:
             raise Exception('Stack must have three dimensions')
 
@@ -277,14 +302,17 @@ class StackReg:
         """
         Transform a stack after registration.
 
-        :param img: array_like(Ni..., Nj..., Nk...)
-            The 3D stack of images that should be aligned
-        :param axis: int, optional
-            The axis of the time dimension
-        :param tmats: ndarray(img.shape[axis], 3, 3), optional
-            The transformation matrix for each image in the stack
-        :return: ndarray(Ni..., Nj..., Nk...)
-            The transformed stack
+        :type img: array_like(Ni..., Nj..., Nk...)
+        :param img: The 3D stack of images that should be aligned
+
+        :type axis: int, optional
+        :param axis: The axis of the time dimension
+
+        :type tmats: ndarray(img.shape[axis], 3, 3), optional
+        :param tmats: The transformation matrix for each image in the stack
+
+        :rtype:  ndarray(Ni..., Nj..., Nk...)
+        :return: The transformed stack
         """
         if tmats is None:
             tmats = self._tmats
@@ -305,23 +333,29 @@ class StackReg:
         """
         Register and transform stack of images (movie).
 
-        :param img: array_like(Ni..., Nj..., Nk...)
-            The 3D stack of images that should be aligned
-        :param reference: string, one of ['previous', 'first', 'mean']
-            previous: Aligns each frame (image) to its previous frame in the stack
-            first: Aligns each frame (image) to the first frame in the stack - if n_frames is > 1, then
-                each frame is aligned to the mean of the first n_frames of the stack
-            mean: Aligns each frame (image) to the average of all images in the stack
-        :param n_frames: int, optional
-            If reference is 'first', then this parameter specifies the number of frames from the
+        :type img: array_like(Ni..., Nj..., Nk...)
+        :param img: The 3D stack of images that should be aligned
+
+        :type reference: string, one of ['previous', 'first', 'mean']
+        :param reference:
+            *  *'previous'*: Aligns each frame (image) to its previous frame in the stack
+            *  *'first:'* Aligns each frame (image) to the first frame in the stack - if n_frames is > 1, then
+               each frame is aligned to the mean of the first n_frames of the stack
+            *  *'mean'*: Aligns each frame (image) to the average of all images in the stack
+
+        :type n_frames: int, optional
+        :param n_frames: If reference is 'first', then this parameter specifies the number of frames from the
             beginning of the stack that should be averaged to yield the reference image.
-        :param axis: int, optional
-            The axis of the time dimension
-        :param moving_average: int, optional
-            If moving_average is greater than 1, a moving average of the stack is first created (using
+
+        :type axis: int, optional
+        :param axis: The axis of the time dimension
+
+        :type moving_average: int, optional
+        :param moving_average: If moving_average is greater than 1, a moving average of the stack is first created (using
             a subset size of moving_average) before registration
-        :return: ndarray(Ni..., Nj..., Nk...)
-            The transformed stack
+
+        :rtype:  ndarray(Ni..., Nj..., Nk...)
+        :return: The transformed stack
         """
         self.register_stack(img, reference, n_frames, axis, moving_average)
         return self.transform_stack(img, axis)
