@@ -32,6 +32,13 @@ The package is available on PyPi. Install it using:
     pip install pystackreg
 
 
+Documentation
+-------------
+The documentation can be found on readthedocs:
+
+https://pystackreg.readthedocs.io/
+
+
 
 Usage
 -----

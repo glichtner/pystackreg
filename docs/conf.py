@@ -163,5 +163,5 @@ texinfo_documents = [
 
 
 # -- Extension configuration -------------------------------------------------
-autodoc_mock_imports = ['pystackreg.turboreg', 'tqdm.tqdm']
+autodoc_mock_imports = ['pystackreg.turboreg', 'tqdm']
 
