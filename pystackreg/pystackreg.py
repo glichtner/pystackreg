@@ -27,7 +27,7 @@ def simple_slice(arr, inds, axis):
 
     sl = [slice(None)] * arr.ndim
     sl[axis] = inds
-    return arr[sl]
+    return arr[tuple(sl)]
 
 def running_mean(x, N, axis=0):
     """
@@ -270,6 +270,10 @@ class StackReg:
         :rtype:  ndarray(img.shape[axis], 3, 3)
         :return: The transformation matrix for each image in the stack
         """
+
+        if self._transformation == self.BILINEAR and reference == "previous":
+            raise Exception("Bilinear stack transformation not supported with reference == \"previous\", as a combination of bilinear transformations does not generally result in a bilinear transformation. "
+                            "Use another reference or manually register/transform images to their previous image.")
 
         if len(img.shape) != 3:
             raise Exception('Stack must have three dimensions')
