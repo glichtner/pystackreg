@@ -154,7 +154,7 @@ PyObject *turbogreg_register(PyObject *self, PyObject *args) {
     	return NULL;
     }
 
-    if ((tf != TRANSLATION) && (tf != RIGID_BODY) && (tf != SCALED_ROTATION) && (tf != AFFINE)) {
+    if ((tf != TRANSLATION) && (tf != RIGID_BODY) && (tf != SCALED_ROTATION) && (tf != AFFINE) && (tf != BILINEAR)) {
     	PyErr_SetString(PyExc_ValueError, "Invalid transformation");
         return NULL;
     }

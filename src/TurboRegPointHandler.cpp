@@ -136,6 +136,22 @@ void TurboRegPointHandler::setPointsByTransformation(
 #endif
 		break;
 	}
+
+	case BILINEAR: {
+		precisionPoint.resize(4,2);
+
+		precisionPoint(0, 0) = (floor(0.25 * GOLDEN_RATIO * (double)width));
+		precisionPoint(0, 1) = (floor(0.25 * GOLDEN_RATIO * (double)height));
+		precisionPoint(1, 0) = (floor(0.25 * GOLDEN_RATIO * (double)width));
+		precisionPoint(1, 1) = height - (ceil(0.25 * GOLDEN_RATIO * (double)height));
+		precisionPoint(2, 0) = width - (ceil(0.25 * GOLDEN_RATIO * (double)width));
+		precisionPoint(2, 1) = (floor(0.25 * GOLDEN_RATIO * (double)height));
+		precisionPoint(3, 0) = width - (ceil(0.25 * GOLDEN_RATIO * (double)width));
+		precisionPoint(3, 1) = height - (ceil(0.25 * GOLDEN_RATIO * (double)height));
+
+		break;
+	}
+
 	default: {
 
 		return;

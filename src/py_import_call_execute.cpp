@@ -71,12 +71,12 @@ int import_call_execute(int argc, const char *argv[]) {
 #endif
 
     const char *paths[] = {
-    		"/home/lichtneg/anaconda2/envs/caiman/lib/python36.zip",
-			"/home/lichtneg/anaconda2/envs/caiman/lib/python3.6/",
-			"/home/lichtneg/anaconda2/envs/caiman/lib/python3.6/lib-dynload/",
-			"/home/lichtneg/anaconda2/envs/caiman/lib/python3.6/site-packages",
-			"/home/lichtneg/anaconda2/envs/caiman/lib/python3.6/site-packages/Mako-1.0.7-py3.6.egg",
-			"/home/lichtneg/anaconda2/envs/caiman/lib/python3.6/site-packages/cycler-0.10.0-py3.6.egg"};
+    		"/home/lichtneg/anaconda2/envs/py36/lib/python36.zip",
+			"/home/lichtneg/anaconda2/envs/py36/lib/python3.6/",
+			"/home/lichtneg/anaconda2/envs/py36/lib/python3.6/lib-dynload/",
+			"/home/lichtneg/anaconda2/envs/py36/lib/python3.6/site-packages",
+			"/home/lichtneg/anaconda2/envs/py36/lib/python3.6/site-packages/Mako-1.0.7-py3.6.egg",
+			"/home/lichtneg/anaconda2/envs/py36/lib/python3.6/site-packages/cycler-0.10.0-py3.6.egg"};
 
     if (argc != 4) {
         fprintf(stderr,
@@ -147,13 +147,13 @@ finally:
     return return_value;
 }
 
-int mainX(int argc,  char **argv) {
+int main(int argc,  char **argv) {
 	 /* argv - Expected to be 4 strings:
 	 *      - Name of the executable.
 	 *      - Path to the directory that the Python module is in.
 	 *      - Name of the Python module.
 	 *      - Name of the function in the module.*/
-	const char *arg[]={"this", "/home/lichtneg/code/pyStackReg", "test_pystackreg", "test"};
+	const char *arg[]={"this", "/home/lichtneg/code/pystackreg", "test_pystackreg", "test"};
 	return import_call_execute(4, arg);
 
 

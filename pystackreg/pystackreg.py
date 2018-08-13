@@ -2,6 +2,7 @@
 from . import turboreg
 import numpy as np
 from tqdm import tqdm
+import warnings
 
 def simple_slice(arr, inds, axis):
     """
@@ -114,7 +115,13 @@ class StackReg:
         self._is_registered = True
 
         self._m, self._refpts, self._movpts = turboreg._register(ref[:-1, :-1], mov[:-1, :-1], self._transformation)
-        return self.get_matrix()
+
+        # Matrix form of bilinear transformation not implemented
+        if self._transformation == self.BILINEAR:
+            warnings.warn("Matrix form of bilinear transformation not implemented, returning None")
+            return None
+        else:
+            return self.get_matrix()
     
     def transform(self, mov, tmat=None):
         """
@@ -315,6 +322,8 @@ class StackReg:
         :return: The transformed stack
         """
         if tmats is None:
+            if self._tmats is None:
+                raise Exception('No transformation matrices given. Please register first or pass transformation matrices explicitly.')
             tmats = self._tmats
 
         if tmats.shape[0] != img.shape[axis]:
