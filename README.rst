@@ -17,10 +17,11 @@ pyStackReg provides the following four types of distortion:
 - rigid body (translation + rotation)
 - scaled rotation (translation + rotation + scaling)
 - affine (translation + rotation + scaling + shearing)
+- bilinear (non-linear transformation; does not preserve straight lines)
 
 pyStackReg supports the full functionality of StackReg plus some additional options, e.g., using different reference images and having access to the actual transformation matrices (please see the examples below).
 
-As in StackReg, bilinear transformation is not supported as bilinear transformation matrices cannot be propagated. For technical details, please refer to http://bigwww.epfl.ch/thevenaz/turboreg/.
+Please note: The bilinear transformation cannot be propagated, as a combination of bilinear transformations does not generally result in a bilinear transformation. Therefore, stack registration/transform functions won't work with bilinear transformation when using "previous" image as reference image. You can either use another reference ("first" or "mean" for first or mean image, respectively), or try to register/transform each image of the stack separately to its respective previous image (and use the already transformed previous image as reference for the next image).
 
 
 Installation
@@ -69,6 +70,9 @@ The following example opens two different files and registers them using all dif
     sr = StackReg(StackReg.AFFINE)
     out_aff = sr.register_transform(ref, mov)
 
+    #Bilinear transformation
+    sr = StackReg(StackReg.BILINEAR)
+    out_bil = sr.register_transform(ref, mov)
 
 
 The next example shows how to separate registration from transformation (e.g., to register in one color channel and then use that information to transform another color channel):

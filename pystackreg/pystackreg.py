@@ -116,12 +116,7 @@ class StackReg:
 
         self._m, self._refpts, self._movpts = turboreg._register(ref[:-1, :-1], mov[:-1, :-1], self._transformation)
 
-        # Matrix form of bilinear transformation not implemented
-        if self._transformation == self.BILINEAR:
-            warnings.warn("Matrix form of bilinear transformation not implemented, returning None")
-            return None
-        else:
-            return self.get_matrix()
+        return self.get_matrix()
     
     def transform(self, mov, tmat=None):
         """
@@ -169,7 +164,7 @@ class StackReg:
         """
         Get the current transformation matrix
 
-        :rtype:  ndarray(3,3)
+        :rtype:  ndarray(3,3) or ndarray(4,4) for bilinear transformation
         :return: The transformation matrix
         """
         return self._matrix_short_to_long(self._m)
@@ -178,10 +173,18 @@ class StackReg:
         """
         Sets the current transformation matrix
 
-        :type mat: ndarray(3,3)
+        :type mat: ndarray(3,3) or ndarray(4,4) for bilinear transformation
         :param mat: The transformation matrix
         """
+
+        exp_shape = (4,4) if self._transformation == self.BILINEAR else (3,3)
+
+        if not exp_shape == mat.shape:
+            raise Exception("Invalid shape of transformation matrix: Expected %s, got %s" % (str(exp_shape), str(mat.shape)))
+
         self._m = self._matrix_long_to_short(mat)
+
+        self._is_registered = True
 
     def _matrix_short_to_long(self, m):
         """
@@ -194,14 +197,16 @@ class StackReg:
         :rtype:  ndarray(3,3)
         :return: Canonical transformation matrix
         """
-        mat = np.identity(3).astype(np.double)
 
         if self._transformation == self.TRANSLATION:
+            mat = np.identity(3).astype(np.double)
             mat[0:2, 2] = m[:,0]
         elif self._transformation in [self.RIGID_BODY, self.SCALED_ROTATION, self.AFFINE]:
+            mat = np.identity(3).astype(np.double)
             mat[0:2, :] = m[:, [1, 2, 0]]
         elif self._transformation == self.BILINEAR:
-            raise Exception("Bilinear transformation matrix not supported")
+            mat = np.identity(4).astype(np.double)
+            mat[0:2, :] = m[:, [1, 2, 3, 0]]
         else:
             raise Exception("Unexpected transformation")
 
@@ -223,7 +228,7 @@ class StackReg:
         elif self._transformation in [self.RIGID_BODY, self.SCALED_ROTATION, self.AFFINE]:
             m = mat[0:2, [2, 0, 1]]
         elif self._transformation == self.BILINEAR:
-            raise Exception("Bilinear transformation matrix not supported")
+            m = mat[0:2, [3, 0, 1, 2]]
         else:
             raise Exception("Unexpected transformation")
 
