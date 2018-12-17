@@ -28,6 +28,7 @@ setup(
 			"src/TurboRegImage.cpp",
 			"src/TurboRegTransform.cpp",
 			"src/TurboRegPointHandler.cpp"],
+			extra_compile_args=['-std=c++11']
 			)],
 	include_dirs=['inc/'] + numpy.distutils.misc_util.get_numpy_include_dirs(),
 	install_requires = ['numpy', 'tqdm']
