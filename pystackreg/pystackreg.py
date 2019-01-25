@@ -244,7 +244,7 @@ class StackReg:
         """
         return self._refpts, self._movpts
 
-    def register_stack(self, img, reference='previous', n_frames=1, axis=0, moving_average=1):
+    def register_stack(self, img, reference='previous', n_frames=1, axis=0, moving_average=1, progress_callback=None):
         """
         Register a stack of images (movie).
         Note that this function will not transform the image but only calculate the transformation matrices.
@@ -271,6 +271,12 @@ class StackReg:
         :param moving_average:
             If moving_average is greater than 1, a moving average of the stack is first created (using
             a subset size of moving_average) before registration
+
+        :type progress_callback: function, optional
+        :param progress_callback:
+            A function that is called after every iteration. This function should accept
+            the keyword arguments start_iteration:int, end_iteration:int and current_iteration:int.
+            If this parameter is not set or set to None, tqdm is used to display progress in stdout.
 
         :rtype:  ndarray(img.shape[axis], 3, 3)
         :return: The transformation matrix for each image in the stack
@@ -299,7 +305,12 @@ class StackReg:
             ref = img.mean(axis=0)
             idx_start = 0
 
-        for i in tqdm(range(idx_start, img.shape[axis])):
+        if progress_callback is None:
+            iterable = tqdm(range(idx_start, img.shape[axis]))
+        else:
+            iterable = range(idx_start, img.shape[axis])
+
+        for i in iterable:
 
             slc = [slice(None)] * len(img.shape)
             slc[axis] = slice(i, i+1)
@@ -311,6 +322,9 @@ class StackReg:
 
             if reference == 'previous' and i > 0:
                 self._tmats[i, :, :] = np.matmul(self._tmats[i, :, :], self._tmats[i-1, :, :])
+				
+            if progress_callback is not None:
+                progress_callback(start_iteration=idx_start, end_iteration=img.shape[axis], current_iteration=i)
 
         return self._tmats
 
@@ -347,7 +361,7 @@ class StackReg:
 
         return out
 
-    def register_transform_stack(self, img, reference='previous', n_frames=1, axis=0, moving_average=1):
+    def register_transform_stack(self, img, reference='previous', n_frames=1, axis=0, moving_average=1, progress_callback=None):
         """
         Register and transform stack of images (movie).
 
@@ -372,9 +386,15 @@ class StackReg:
         :param moving_average: If moving_average is greater than 1, a moving average of the stack is first created (using
             a subset size of moving_average) before registration
 
+        :type progress_callback: function, optional
+        :param progress_callback:
+            A function that is called after every iteration. This function should accept
+            the keyword arguments start_iteration:int, end_iteration:int and current_iteration:int.
+            If this parameter is not set or set to None, tqdm is used to display progress in stdout.
+
         :rtype:  ndarray(Ni..., Nj..., Nk...)
         :return: The transformed stack
         """
-        self.register_stack(img, reference, n_frames, axis, moving_average)
+        self.register_stack(img, reference, n_frames, axis, moving_average, progress_callback)
         return self.transform_stack(img, axis)
 
