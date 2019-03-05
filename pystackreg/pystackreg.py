@@ -4,6 +4,7 @@ import numpy as np
 from tqdm import tqdm
 import warnings
 
+
 def simple_slice(arr, inds, axis):
     """
     Take elements from an array along an axis.
@@ -28,6 +29,7 @@ def simple_slice(arr, inds, axis):
     sl = [slice(None)] * arr.ndim
     sl[axis] = inds
     return arr[tuple(sl)]
+
 
 def running_mean(x, N, axis=0):
     """
@@ -54,6 +56,7 @@ def running_mean(x, N, axis=0):
     cumsum = np.cumsum(np.pad(x, pad_width, 'edge'), axis=axis)
     return (cumsum[N:] - cumsum[:-N]) / float(N)
 
+
 class StackReg:
     """
     Python implementation of the ImageJ/Fiji StackReg plugin ( http://bigwww.epfl.ch/thevenaz/stackreg/ )
@@ -65,7 +68,6 @@ class StackReg:
     SCALED_ROTATION = 4
     AFFINE = 6
     BILINEAR = 8
-
 
     _valid_transformations = [
         TRANSLATION, RIGID_BODY, SCALED_ROTATION, AFFINE, BILINEAR
@@ -244,7 +246,7 @@ class StackReg:
         """
         return self._refpts, self._movpts
 
-    def register_stack(self, img, reference='previous', n_frames=1, axis=0, moving_average=1):
+    def register_stack(self, img, reference='previous', n_frames=1, axis=0, moving_average=1, verbose=True, progress_callback=None):
         """
         Register a stack of images (movie).
         Note that this function will not transform the image but only calculate the transformation matrices.
@@ -272,12 +274,23 @@ class StackReg:
             If moving_average is greater than 1, a moving average of the stack is first created (using
             a subset size of moving_average) before registration
 
+        :type verbose: bool, optional
+        :param verbose:
+            Specifies whether a progressbar should be shown using tqdm.
+
+        :type progress_callback: function, optional
+        :param progress_callback:
+            A function that is called after every iteration. This function should accept
+            the keyword arguments start_iteration:int, end_iteration:int and current_iteration:int.
+
         :rtype:  ndarray(img.shape[axis], 3, 3)
         :return: The transformation matrix for each image in the stack
         """
 
         if self._transformation == self.BILINEAR and reference == "previous":
-            raise Exception("Bilinear stack transformation not supported with reference == \"previous\", as a combination of bilinear transformations does not generally result in a bilinear transformation. "
+            raise Exception("Bilinear stack transformation not supported with reference == \"previous\", "
+                            "as a combination of bilinear transformations does not generally result in a "
+                            "bilinear transformation. "
                             "Use another reference or manually register/transform images to their previous image.")
 
         if len(img.shape) != 3:
@@ -291,7 +304,9 @@ class StackReg:
             size[axis] = moving_average
             img = running_mean(img, moving_average, axis=axis)
 
-        self._tmats = np.repeat(np.identity(3).reshape((1,3,3)),img.shape[axis], axis=0).astype(np.double)
+        tmatdim = 4 if self._transformation == self.BILINEAR else 3
+
+        self._tmats = np.repeat(np.identity(tmatdim).reshape((1, tmatdim, tmatdim)), img.shape[axis], axis=0).astype(np.double)
 
         if reference == 'first':
             ref = np.mean(img.take(range(n_frames), axis=axis), axis=axis)
@@ -299,7 +314,12 @@ class StackReg:
             ref = img.mean(axis=0)
             idx_start = 0
 
-        for i in tqdm(range(idx_start, img.shape[axis])):
+        iterable = range(idx_start, img.shape[axis])
+
+        if verbose:
+            iterable = tqdm(iterable)
+
+        for i in iterable:
 
             slc = [slice(None)] * len(img.shape)
             slc[axis] = slice(i, i+1)
@@ -311,6 +331,9 @@ class StackReg:
 
             if reference == 'previous' and i > 0:
                 self._tmats[i, :, :] = np.matmul(self._tmats[i, :, :], self._tmats[i-1, :, :])
+
+            if progress_callback is not None:
+                progress_callback(start_iteration=idx_start, end_iteration=img.shape[axis], current_iteration=i)
 
         return self._tmats
 
@@ -343,11 +366,12 @@ class StackReg:
         for i in range(img.shape[axis]):
             slc = [slice(None)] * len(out.shape)
             slc[axis] = slice(i, i + 1)
-            out[slc] = self.transform(simple_slice(img, i, axis), tmats[i, :, :])
+            out[tuple(slc)] = self.transform(simple_slice(img, i, axis), tmats[i, :, :])
 
         return out
 
-    def register_transform_stack(self, img, reference='previous', n_frames=1, axis=0, moving_average=1):
+    def register_transform_stack(self, img, reference='previous', n_frames=1, axis=0, moving_average=1, verbose=True,
+                                 progress_callback=None):
         """
         Register and transform stack of images (movie).
 
@@ -372,9 +396,19 @@ class StackReg:
         :param moving_average: If moving_average is greater than 1, a moving average of the stack is first created (using
             a subset size of moving_average) before registration
 
+        :type verbose: bool, optional
+        :param verbose:
+            Specifies whether a progressbar should be shown using tqdm.
+
+        :type progress_callback: function, optional
+        :param progress_callback:
+            A function that is called after every iteration. This function should accept
+            the keyword arguments start_iteration:int, end_iteration:int and current_iteration:int.
+
         :rtype:  ndarray(Ni..., Nj..., Nk...)
         :return: The transformed stack
         """
-        self.register_stack(img, reference, n_frames, axis, moving_average)
+        self.register_stack(img, reference, n_frames, axis, moving_average, verbose, progress_callback)
+
         return self.transform_stack(img, axis)
 
