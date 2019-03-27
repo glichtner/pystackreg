@@ -246,7 +246,8 @@ class StackReg:
         """
         return self._refpts, self._movpts
 
-    def register_stack(self, img, reference='previous', n_frames=1, axis=0, moving_average=1, verbose=True, progress_callback=None):
+    def register_stack(self, img, reference='previous', n_frames=1, axis=0, moving_average=1, verbose=False,
+                       progress_callback=None):
         """
         Register a stack of images (movie).
         Note that this function will not transform the image but only calculate the transformation matrices.
@@ -281,7 +282,7 @@ class StackReg:
         :type progress_callback: function, optional
         :param progress_callback:
             A function that is called after every iteration. This function should accept
-            the keyword arguments start_iteration:int, end_iteration:int and current_iteration:int.
+            the keyword arguments current_iteration:int and end_iteration:int.
 
         :rtype:  ndarray(img.shape[axis], 3, 3)
         :return: The transformation matrix for each image in the stack
@@ -333,7 +334,7 @@ class StackReg:
                 self._tmats[i, :, :] = np.matmul(self._tmats[i, :, :], self._tmats[i-1, :, :])
 
             if progress_callback is not None:
-                progress_callback(start_iteration=idx_start, end_iteration=img.shape[axis], current_iteration=i)
+                progress_callback(current_iteration=i - idx_start, end_iteration=img.shape[axis] - idx_start)
 
         return self._tmats
 
@@ -370,7 +371,7 @@ class StackReg:
 
         return out
 
-    def register_transform_stack(self, img, reference='previous', n_frames=1, axis=0, moving_average=1, verbose=True,
+    def register_transform_stack(self, img, reference='previous', n_frames=1, axis=0, moving_average=1, verbose=False,
                                  progress_callback=None):
         """
         Register and transform stack of images (movie).
@@ -403,7 +404,7 @@ class StackReg:
         :type progress_callback: function, optional
         :param progress_callback:
             A function that is called after every iteration. This function should accept
-            the keyword arguments start_iteration:int, end_iteration:int and current_iteration:int.
+            the keyword arguments current_iteration:int and end_iteration:int.
 
         :rtype:  ndarray(Ni..., Nj..., Nk...)
         :return: The transformed stack
