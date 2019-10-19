@@ -11,3 +11,7 @@ Debug Py2.7/
 *.so
 *.pyc
 dist/
+MANIFEST
+.idea/
+*.egg-info/
+.ipynb_checkpoints/

@@ -19,7 +19,7 @@ setup(
 	long_description=read('README.rst'),
 	version=__version__,
 	author='Gregor Lichtner (python/C++ port); TurboReg Author: Philippe Thévenaz, Biomedical Imaging Group, Swiss Federal Institute of Technology Lausanne',
-	url='https://bitbucket.org/glichtner/pystackreg',
+	url='https://github.com/glichtner/pystackreg',
 	packages=['pystackreg'],
 	ext_modules=[
 		Extension("pystackreg.turboreg", [

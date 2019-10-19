@@ -203,17 +203,18 @@ This is a port of the original Java code by Philippe Thevenaz to C++ with a Pyth
 
 License
 -------
-Below is the license of TurboReg/StackReg:
 
 ::
 
-    /*====================================================================
-    | Additional help available at http://bigwww.epfl.ch/thevenaz/turboreg/
-    |
-    | You'll be free to use this software for research purposes, but you
-    | should not redistribute it without our consent. In addition, we expect
-    | you to include a citation or acknowledgment whenever you present or
-    | publish results that are based on it.
-    \===================================================================*/
+    You are free to use this software for commercial and non-commercial
+    purposes. However, we expect you to include a citation or acknowledgement
+    whenever you present or publish research results that are based
+    on this software. You are free to modify this software or derive
+    works from it, but you are only allowed to distribute it under the
+    same terms as this license specifies. Additionally, you must include
+    a reference to the research paper above in all software and works
+    derived from this software.
+
+
     
 

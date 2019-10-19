@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2
+
+### changed
+- License changed to allow distribution on python package repositories
+
 ## 0.2.1
 
 ### added
