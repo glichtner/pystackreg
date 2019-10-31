@@ -1,1 +1,2 @@
 include inc/*.h
+include LICENSE.txt
