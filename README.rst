@@ -1,6 +1,34 @@
 pyStackReg
 ==========
 
+.. start-badges
+
+.. image:: https://ci.appveyor.com/api/projects/status/3kqq8qyc9b7o1coe?svg=true
+    :target: https://ci.appveyor.com/api/projects/status/3kqq8qyc9b7o1coe?svg=true
+    :alt: Build status
+
+.. image:: https://readthedocs.org/projects/pystackreg/badge/?version=latest
+    :target: https://pystackreg.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
+.. image:: https://badge.fury.io/py/pystackreg.svg
+    :alt: PyPI Package latest release
+    :target: https://pypi.org/project/pystackreg
+
+.. image:: https://img.shields.io/pypi/pyversions/pystackreg.svg
+    :alt: Supported Python Versions
+    :target: https://pypi.org/project/pystackreg/
+
+.. image:: https://pepy.tech/badge/pystackreg
+    :alt: Downloads
+    :target: https://pepy.tech/project/pystackreg/
+
+.. end-badges
+
+
+
+
+
 Summary
 -------
 Python/C++ port of the ImageJ extension TurboReg/StackReg written by Philippe Thevenaz/EPFL.
@@ -26,7 +54,15 @@ Please note: The bilinear transformation cannot be propagated, as a combination 
 
 Installation
 ------------
-The package is available on PyPi. Install it using:
+The package is available on conda forge and on PyPi.
+
+- Install using **conda**
+
+.. code-block:: python
+
+    conda install pystackreg -c conda-forge
+
+- Install using **pip**
 
 .. code-block:: python
 

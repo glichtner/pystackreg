@@ -37,4 +37,23 @@ setup(
     ],
     include_dirs=["inc/"] + numpy.distutils.misc_util.get_numpy_include_dirs(),
     install_requires=["numpy", "tqdm"],
+    classifiers=[
+        # complete list: http://pypi.python.org/pypi?%3Aaction=list_classifiers
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Science/Research",
+        "License :: Free To Use But Restricted",
+        "Operating System :: Microsoft :: Windows",
+        "Operating System :: Unix",
+        "Operating System :: POSIX",
+        "Programming Language :: C++",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Topic :: Scientific/Engineering :: Image Processing",
+        "Topic :: Utilities",
+    ],
 )
