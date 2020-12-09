@@ -51,9 +51,9 @@ def running_mean(x, N, axis=0):
     :rtype:  ndarray(Ni..., Nj..., Nk...)
     :return: The returned array has the same shape and type as x
     """
-    pad_width = [[0,0]] * len(x.shape)
-    pad_width[axis] = [int(np.ceil(N/2)), int(np.floor(N/2))]
-    cumsum = np.cumsum(np.pad(x, pad_width, 'edge'), axis=axis)
+    pad_width = [[0, 0]] * len(x.shape)
+    pad_width[axis] = [int(np.ceil(N / 2)), int(np.floor(N / 2))]
+    cumsum = np.cumsum(np.pad(x, pad_width, "edge"), axis=axis)
     return (cumsum[N:] - cumsum[:-N]) / float(N)
 
 
@@ -70,7 +70,11 @@ class StackReg:
     BILINEAR = 8
 
     _valid_transformations = [
-        TRANSLATION, RIGID_BODY, SCALED_ROTATION, AFFINE, BILINEAR
+        TRANSLATION,
+        RIGID_BODY,
+        SCALED_ROTATION,
+        AFFINE,
+        BILINEAR,
     ]
 
     _is_registered = False
@@ -82,13 +86,13 @@ class StackReg:
         """
         if transformation not in self._valid_transformations:
             raise Exception("Invalid transformation")
-        
+
         self._transformation = transformation
         self._m = None
         self._tmats = None
         self._refpts = None
         self._movpts = None
-    
+
     def is_registered(self):
         """
         Indicates whether register() was already called and a transformation matrix was calculated
@@ -116,10 +120,12 @@ class StackReg:
         """
         self._is_registered = True
 
-        self._m, self._refpts, self._movpts = turboreg._register(ref[:-1, :-1], mov[:-1, :-1], self._transformation)
+        self._m, self._refpts, self._movpts = turboreg._register(
+            ref[:-1, :-1], mov[:-1, :-1], self._transformation
+        )
 
         return self.get_matrix()
-    
+
     def transform(self, mov, tmat=None):
         """
         Transform an image according to a previous registration.
@@ -161,7 +167,7 @@ class StackReg:
         """
         self.register(ref, mov)
         return self.transform(mov)
-    
+
     def get_matrix(self):
         """
         Get the current transformation matrix
@@ -179,10 +185,13 @@ class StackReg:
         :param mat: The transformation matrix
         """
 
-        exp_shape = (4,4) if self._transformation == self.BILINEAR else (3,3)
+        exp_shape = (4, 4) if self._transformation == self.BILINEAR else (3, 3)
 
         if not exp_shape == mat.shape:
-            raise Exception("Invalid shape of transformation matrix: Expected %s, got %s" % (str(exp_shape), str(mat.shape)))
+            raise Exception(
+                "Invalid shape of transformation matrix: Expected %s, got %s"
+                % (str(exp_shape), str(mat.shape))
+            )
 
         self._m = self._matrix_long_to_short(mat)
 
@@ -202,8 +211,12 @@ class StackReg:
 
         if self._transformation == self.TRANSLATION:
             mat = np.identity(3).astype(np.double)
-            mat[0:2, 2] = m[:,0]
-        elif self._transformation in [self.RIGID_BODY, self.SCALED_ROTATION, self.AFFINE]:
+            mat[0:2, 2] = m[:, 0]
+        elif self._transformation in [
+            self.RIGID_BODY,
+            self.SCALED_ROTATION,
+            self.AFFINE,
+        ]:
             mat = np.identity(3).astype(np.double)
             mat[0:2, :] = m[:, [1, 2, 0]]
         elif self._transformation == self.BILINEAR:
@@ -226,8 +239,12 @@ class StackReg:
         :return: TurboReg transformation matrix
         """
         if self._transformation == self.TRANSLATION:
-            m = mat[0:2, 2].reshape((2,1))
-        elif self._transformation in [self.RIGID_BODY, self.SCALED_ROTATION, self.AFFINE]:
+            m = mat[0:2, 2].reshape((2, 1))
+        elif self._transformation in [
+            self.RIGID_BODY,
+            self.SCALED_ROTATION,
+            self.AFFINE,
+        ]:
             m = mat[0:2, [2, 0, 1]]
         elif self._transformation == self.BILINEAR:
             m = mat[0:2, [3, 0, 1, 2]]
@@ -246,8 +263,16 @@ class StackReg:
         """
         return self._refpts, self._movpts
 
-    def register_stack(self, img, reference='previous', n_frames=1, axis=0, moving_average=1, verbose=False,
-                       progress_callback=None):
+    def register_stack(
+        self,
+        img,
+        reference="previous",
+        n_frames=1,
+        axis=0,
+        moving_average=1,
+        verbose=False,
+        progress_callback=None,
+    ):
         """
         Register a stack of images (movie).
         Note that this function will not transform the image but only calculate the transformation matrices.
@@ -289,13 +314,15 @@ class StackReg:
         """
 
         if self._transformation == self.BILINEAR and reference == "previous":
-            raise Exception("Bilinear stack transformation not supported with reference == \"previous\", "
-                            "as a combination of bilinear transformations does not generally result in a "
-                            "bilinear transformation. "
-                            "Use another reference or manually register/transform images to their previous image.")
+            raise Exception(
+                'Bilinear stack transformation not supported with reference == "previous", '
+                "as a combination of bilinear transformations does not generally result in a "
+                "bilinear transformation. "
+                "Use another reference or manually register/transform images to their previous image."
+            )
 
         if len(img.shape) != 3:
-            raise Exception('Stack must have three dimensions')
+            raise Exception("Stack must have three dimensions")
 
         idx_start = 1
 
@@ -307,11 +334,13 @@ class StackReg:
 
         tmatdim = 4 if self._transformation == self.BILINEAR else 3
 
-        self._tmats = np.repeat(np.identity(tmatdim).reshape((1, tmatdim, tmatdim)), img.shape[axis], axis=0).astype(np.double)
+        self._tmats = np.repeat(
+            np.identity(tmatdim).reshape((1, tmatdim, tmatdim)), img.shape[axis], axis=0
+        ).astype(np.double)
 
-        if reference == 'first':
+        if reference == "first":
             ref = np.mean(img.take(range(n_frames), axis=axis), axis=axis)
-        elif reference == 'mean':
+        elif reference == "mean":
             ref = img.mean(axis=0)
             idx_start = 0
 
@@ -323,18 +352,23 @@ class StackReg:
         for i in iterable:
 
             slc = [slice(None)] * len(img.shape)
-            slc[axis] = slice(i, i+1)
+            slc[axis] = slice(i, i + 1)
 
-            if reference == 'previous':
-                ref = img.take(i-1, axis=axis)
+            if reference == "previous":
+                ref = img.take(i - 1, axis=axis)
 
             self._tmats[i, :, :] = self.register(ref, simple_slice(img, i, axis))
 
-            if reference == 'previous' and i > 0:
-                self._tmats[i, :, :] = np.matmul(self._tmats[i, :, :], self._tmats[i-1, :, :])
+            if reference == "previous" and i > 0:
+                self._tmats[i, :, :] = np.matmul(
+                    self._tmats[i, :, :], self._tmats[i - 1, :, :]
+                )
 
             if progress_callback is not None:
-                progress_callback(current_iteration=i - idx_start, end_iteration=img.shape[axis] - idx_start)
+                progress_callback(
+                    current_iteration=i - idx_start,
+                    end_iteration=img.shape[axis] - idx_start,
+                )
 
         return self._tmats
 
@@ -356,11 +390,15 @@ class StackReg:
         """
         if tmats is None:
             if self._tmats is None:
-                raise Exception('No transformation matrices given. Please register first or pass transformation matrices explicitly.')
+                raise Exception(
+                    "No transformation matrices given. Please register first or pass transformation matrices explicitly."
+                )
             tmats = self._tmats
 
         if tmats.shape[0] != img.shape[axis]:
-            raise Exception("Number of saved transformation matrices does not match stack length")
+            raise Exception(
+                "Number of saved transformation matrices does not match stack length"
+            )
 
         out = img.copy().astype(np.float)
 
@@ -371,8 +409,16 @@ class StackReg:
 
         return out
 
-    def register_transform_stack(self, img, reference='previous', n_frames=1, axis=0, moving_average=1, verbose=False,
-                                 progress_callback=None):
+    def register_transform_stack(
+        self,
+        img,
+        reference="previous",
+        n_frames=1,
+        axis=0,
+        moving_average=1,
+        verbose=False,
+        progress_callback=None,
+    ):
         """
         Register and transform stack of images (movie).
 
@@ -409,7 +455,8 @@ class StackReg:
         :rtype:  ndarray(Ni..., Nj..., Nk...)
         :return: The transformed stack
         """
-        self.register_stack(img, reference, n_frames, axis, moving_average, verbose, progress_callback)
+        self.register_stack(
+            img, reference, n_frames, axis, moving_average, verbose, progress_callback
+        )
 
         return self.transform_stack(img, axis)
-

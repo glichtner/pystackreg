@@ -61,12 +61,12 @@ public:
 };
 
 class TurboRegMask
-{ 
+{
 
 public:
     TurboRegMask (TurboRegImage &img);
     TurboRegMask (matrix<double> &imp, int width, int height);
-    
+
     void clearMask ();
     std::vector<double> &getMask();
 
@@ -92,7 +92,7 @@ private:
             int fullHeight,
             std::vector<double> &halfMask
     );
-        
+
 
 }; /* end class turboRegMask */
 

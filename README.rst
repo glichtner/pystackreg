@@ -93,7 +93,7 @@ The next example shows how to separate registration from transformation (e.g., t
     sr.register(img0[0, :, :], img0[1,:,:])
 
     # use the transformation from the above registration to register another frame
-    out = sr.transform(img1[1,:,:]) 
+    out = sr.transform(img1[1,:,:])
 
 The next examples shows how to register and transform a whole stack:
 
@@ -101,25 +101,25 @@ The next examples shows how to register and transform a whole stack:
 
     from pystackreg import StackReg
     from skimage import io
-    
+
     img0 = io.imread('some_multiframe_image.tif') # 3 dimensions : frames x width x height
-    
+
     sr = StackReg(StackReg.RIGID_BODY)
 
-    # register each frame to the previous (already registered) one 
+    # register each frame to the previous (already registered) one
     # this is what the original StackReg ImageJ plugin uses
     out_previous = sr.register_transform_stack(img0, reference='previous')
 
     # register to first image
     out_first = sr.register_transform_stack(img0, reference='first')
-    
+
     # register to mean image
     out_mean = sr.register_transform_stack(img0, reference='mean')
-    
+
     # register to mean of first 10 images
     out_first10 = sr.register_transform_stack(img0, reference='first', n_frames=10)
-    
-    # calculate a moving average of 10 images, then register the moving average to the mean of 
+
+    # calculate a moving average of 10 images, then register the moving average to the mean of
     # the first 10 images and transform the original image (not the moving average)
     out_moving10 = sr.register_transform_stack(img0, reference='first', n_frames=10, moving_average = 10)
 
@@ -129,7 +129,7 @@ The next example shows how to separate registration from transformation for a st
 
     from pystackreg import StackReg
     from skimage import io
-    
+
     img0 = io.imread('some_multiframe_image.tif') # 3 dimensions : frames x width x height
     img1 = io.imread('another_multiframe_image.tif') # same shape as img0
 
@@ -138,7 +138,7 @@ The next example shows how to separate registration from transformation for a st
 
     sr = StackReg(StackReg.RIGID_BODY)
 
-    # register each frame to the previous (already registered) one 
+    # register each frame to the previous (already registered) one
     # this is what the original StackReg ImageJ plugin uses
     tmats = sr.register_stack(img0, reference='previous')
     out = sr.transform_stack(img1)
@@ -151,7 +151,7 @@ The next example shows how to separate registration from transformation for a st
     tmats_loaded = np.load('transformation_matrices.npy')
 
     # make sure you use the correct transformation here!
-    sr = StackReg(StackReg.RIGID_BODY) 
+    sr = StackReg(StackReg.RIGID_BODY)
 
     # transform stack using the tmats loaded from file
     sr.transform_stack(img1, tmats=tmats_loaded)
@@ -161,7 +161,7 @@ The next example shows how to separate registration from transformation for a st
     from skimage import transform as tf
 
     out = np.zeros(img0.shape).astype(np.float)
-    
+
     for i in range(tmats.shape[0]):
         tform = tf.AffineTransform(matrix=tmats[i, :, :])
         out[i, :, :] = tf.warp(img1[i, :, :], tform)
@@ -185,7 +185,7 @@ This is a port of the original Java code by Philippe Thevenaz to C++ with a Pyth
     | X-400: /C=ch/A=400net/P=switch/O=epfl/S=thevenaz/G=philippe/
     | URL: http://bigwww.epfl.ch/
     \===================================================================*/
-    
+
     /*====================================================================
     | This work is based on the following paper:
     |
@@ -214,7 +214,3 @@ License
     same terms as this license specifies. Additionally, you must include
     a reference to the research paper above in all software and works
     derived from this software.
-
-
-    
-

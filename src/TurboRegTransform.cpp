@@ -89,7 +89,7 @@ TurboRegTransform::TurboRegTransform(
         TurboRegPointHandler *targetPh,
         Transformation transformation,
         bool accelerated
-) :     
+) :
 	accelerated(accelerated),
 	dxWeight(4),
     dyWeight(4),
@@ -430,9 +430,9 @@ void TurboRegTransform::doRegistration (
             (double)ITERATION_PROGRESSION, (double)pyramidDepth);
 
     iterationCost = 1;
-    
+
     scaleBottomDownLandmarks();
-    /* 1 *****************/ 
+    /* 1 *****************/
     while (!targetImgPyramid.empty()) {
 
         ImageStackItem srcImgItem = sourceImgPyramid.top();
@@ -481,7 +481,7 @@ void TurboRegTransform::doRegistration (
                 outMsk = srcMskItem.halfMask; //(float[])sourceMskPyramid.pop();
             }
         }
-        /* 2 *****************/ 
+        /* 2 *****************/
         twiceInNx = 2 * inNx;
         twiceInNy = 2 * inNy;
         switch (transformation) {
@@ -523,7 +523,7 @@ void TurboRegTransform::doRegistration (
         sourcePh->setPoints(sourcePoint);
         iterationCost *= ITERATION_PROGRESSION;
     }
-    /* 3 *****************/ 
+    /* 3 *****************/
     iterationPower /= ITERATION_PROGRESSION;
     if (transformation == BILINEAR) {
         inNx = sourceImg->getWidth();
@@ -790,7 +790,7 @@ void TurboRegTransform::bilinearTransform (
     int xMsk;
     int yMsk;
     int k = 0;
-    
+
     yx = m(0, 0);
     yy = m(1, 0);
     yxy = 0.0;
@@ -828,7 +828,7 @@ void TurboRegTransform::bilinearTransform (
         yy += m(1, 2);
         yxy += m(0, 3);
         yyy += m(1, 3);
-        
+
     }
 
 } /* bilinearTransform */
@@ -847,7 +847,7 @@ void TurboRegTransform::bilinearTransform (
     int xMsk;
     int yMsk;
     int k = 0;
-    
+
     yx = m(0, 0);
     yy = m(1, 0);
     yxy = 0.0;
@@ -887,7 +887,7 @@ void TurboRegTransform::bilinearTransform (
         yy += m(1, 2);
         yxy += m(0, 3);
         yyy += m(1, 3);
-        
+
     }
 
 } /* bilinearTransform */
@@ -3085,7 +3085,7 @@ void TurboRegTransform::inverseMarquardtLevenbergRigidBodyOptimization () {
         sourcePoint(k, 1) = (targetPoint(k, 0) - m(0, 0)) * m(0, 2)
                 + (targetPoint(k, 1) - m(1, 0)) * m(1, 2);
     }
-    
+
 } /* end inverseMarquardtLevenbergRigidBodyOptimization */
 
 /*------------------------------------------------------------------*/
@@ -3123,7 +3123,7 @@ void TurboRegTransform::invertGauss (
         if (k != j) {
             //std::vector<double> partialLine(n - j);
             //std::vector<double> fullLine(n);
-            
+
             //System.arraycopy(m[j], j, partialLine, 0, n - j);
         	// copy m[k][j->n] to m[j][j->n]
             std::vector<double> partialLine(m.getPtr(j, j), m.getPtr(j, n));
@@ -3131,7 +3131,7 @@ void TurboRegTransform::invertGauss (
             //System.arraycopy(m[k], j, m[j], j, n - j);
             // copy m[k][j->n] to m[j][j->n]
             std::copy(m.getPtr(k,j), m.getPtr(k,n), m.getPtr(j,j));
-            
+
             //System.arraycopy(partialLine, 0, m[k], j, n - j);
             // copy partialLine[0->n] to m[k][j->n]
 #ifdef _MSC_VER
@@ -3139,8 +3139,8 @@ void TurboRegTransform::invertGauss (
 #else
 			std::copy(std::begin(partialLine), std::end(partialLine), m.getPtr(k, j));
 #endif
-			
-            
+
+
             //System.arraycopy(inverse[j], 0, fullLine, 0, n);
             // copy inverse[j][0->n] to fullLine
             std::vector<double> fullLine(inverse.getRowPtr(j), inverse.getRowPtr(j+1));
@@ -3156,7 +3156,7 @@ void TurboRegTransform::invertGauss (
 #else
 			std::copy(std::begin(fullLine), std::end(fullLine), inverse.getRowPtr(k));
 #endif
-            
+
 
         }
         for (k = 0; (k <= j); k++) {
@@ -3238,7 +3238,7 @@ void TurboRegTransform::marquardtLevenbergOptimization (
         else {
             lambda *= LAMBDA_MAGSTEP;
         }
-        
+
     } while ((iteration < (maxIterations * iterationPower - 1))
             && (pixelPrecision <= displacement));
     invertGauss(hessian);
@@ -3256,7 +3256,7 @@ void TurboRegTransform::marquardtLevenbergOptimization (
             sourcePoint(k, 1) = attempt(k, 1);
         }
     }
-    
+
 } /* end marquardtLevenbergOptimization */
 
 /*------------------------------------------------------------------*/
@@ -3334,7 +3334,7 @@ void TurboRegTransform::translationTransform (
         yWeights();
     }
     int k = 0;
-    
+
     for (int v = 0; (v < outNy); v++) {
         y = dy++;
         yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
@@ -3367,7 +3367,7 @@ void TurboRegTransform::translationTransform (
                 outImg[k++] = 0.0F;
             }
         }
-        
+
     }
 
 } /* translationTransform */
@@ -3389,7 +3389,7 @@ void TurboRegTransform::translationTransform (
         yWeights();
     }
     int k = 0;
-    
+
     for (int v = 0; (v < outNy); v++) {
         y = dy++;
         yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
@@ -3425,7 +3425,7 @@ void TurboRegTransform::translationTransform (
                 outMsk[k] = 0.0F;
             }
         }
-        
+
     }
 
 } /* translationTransform */

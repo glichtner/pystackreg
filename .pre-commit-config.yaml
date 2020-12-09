@@ -1,0 +1,30 @@
+exclude: '^docs/'
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.5.0  # Use the ref you want to point at
+    hooks:
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+    -   id: mixed-line-ending
+    -   id: pretty-format-json
+-   repo: https://github.com/ambv/black
+    rev: stable
+    hooks:
+    - id: black
+      language_version: python3.7
+-   repo: https://github.com/thclark/pre-commit-sphinx
+    rev: 0.0.1
+    hooks:
+    - id: build-docs
+      args: ['--cache-dir', 'docs/doctrees', '--html-dir', 'docs/html', '--source-dir', 'docs/']
+      language_version: python3
+      additional_dependencies: ['numpy', 'tqdm']
+#-   repo: local
+#    hooks:
+#    -   id: tests
+#        name: Run pytest unit tests
+#        entry: pytest -v
+#        language: system
+#        types: [python]
+#        pass_filenames: false
+#        always_run: true

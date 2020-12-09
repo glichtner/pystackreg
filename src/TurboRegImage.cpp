@@ -133,7 +133,7 @@ TurboRegImage::TurboRegImage (
         }
     }
 
-    
+
 
     /*if (imp.getType() == ImagePlus.GRAY8) {
         image = new float[width * height];
@@ -142,7 +142,7 @@ TurboRegImage::TurboRegImage (
             for (int x = 0; (x < width); x++, k++) {
                 image[k] = (float)(pixels[k] & 0xFF);
             }
-            
+
         }
     }
     else if (imp.getType() == ImagePlus.GRAY16) {
@@ -157,13 +157,13 @@ TurboRegImage::TurboRegImage (
                     image[k] = (float)pixels[k];
                 }
             }
-            
+
         }
     }
     else if (imp.getType() == ImagePlus.GRAY32) {
         image = (double*)imp.getProcessor().getPixels();
     }*/
-    
+
 } /* end turboRegImage */
 
 TurboRegImage::TurboRegImage (
@@ -237,7 +237,7 @@ void TurboRegImage::basicToCardinal2D (
             h[0] = 1.0;
         }
     }
-    
+
     for (int y = 0; (y < height); y++) {
         extractRow(basic, y, hLine);
         symmetricFirMirrorOffBounds1D(h, hLine, hData);
@@ -271,17 +271,17 @@ void TurboRegImage::buildCoefficientPyramid (
         halfWidth /= 2;
         halfHeight /= 2;
         std::vector<double> halfDual = getHalfDual2D(fullDual, fullWidth, fullHeight);
-        
+
         ImageStackItem stackItem(halfWidth, halfHeight, false);
-        
-        //std::vector<double> halfCoefficient = 
+
+        //std::vector<double> halfCoefficient =
         getBasicFromCardinal2D(
                 halfDual, halfWidth, halfHeight, 7, stackItem.halfImg);
         pyramid.push(stackItem);
         /*pyramid.push(halfCoefficient);
         pyramid.push(new Integer(halfHeight));
         pyramid.push(new Integer(halfWidth));*/
-        
+
         fullDual = halfDual;
     }
 } /* end buildCoefficientPyramid */
@@ -305,9 +305,9 @@ void TurboRegImage::buildImageAndGradientPyramid (
         halfHeight /= 2;
 
         ImageStackItem stackItem(halfWidth, halfHeight, true);
-        
+
         std::vector<double> halfDual = getHalfDual2D(fullDual, fullWidth, fullHeight);
-        //std::vector<double> halfImage = 
+        //std::vector<double> halfImage =
         getBasicFromCardinal2D(
                 halfDual, halfWidth, halfHeight, 7, stackItem.halfImg);
         //std::vector<double> halfXGradient(halfWidth * halfHeight);
@@ -315,7 +315,7 @@ void TurboRegImage::buildImageAndGradientPyramid (
         coefficientToXYGradient2D(stackItem.halfImg, stackItem.xGradient, stackItem.yGradient,
                 halfWidth, halfHeight);
         basicToCardinal2D(stackItem.halfImg, stackItem.halfImg, halfWidth, halfHeight, 3);
-        
+
         pyramid.push(stackItem);
 
         /*pyramid.push(halfYGradient);
@@ -346,7 +346,7 @@ void TurboRegImage::buildImagePyramid (
         halfHeight /= 2;
 
         ImageStackItem stackItem(halfWidth, halfHeight, true);
-               
+
 
         std::vector<double> halfDual = getHalfDual2D(fullDual, fullWidth, fullHeight);
         //std::vector<double> halfImage(halfWidth * halfHeight);
@@ -384,7 +384,7 @@ void TurboRegImage::coefficientToGradient1D (
 #else
 	std::vector<double> h = { 0.0, 1.0 / 2.0 };
 #endif
-    
+
     std::vector<double> s(c.size()); //OK
     antiSymmetricFirMirrorOffBounds1D(h, c, s);
     //System.arraycopy(s, 0, c, 0, s.size());
@@ -401,7 +401,7 @@ void TurboRegImage::coefficientToSamples1D (
 #else
 	std::vector<double> h = { 2.0 / 3.0, 1.0 / 6.0 };
 #endif
-    
+
     std::vector<double> s(c.size()); //OK
     symmetricFirMirrorOffBounds1D(h, c, s);
     //System.arraycopy(s, 0, c, 0, s.size());
@@ -419,24 +419,24 @@ void TurboRegImage::coefficientToXYGradient2D (
     std::vector<double> hLine(width);
     std::vector<double> hData(width);
     std::vector<double> vLine(height);
-    
+
     for (int y = 0; ((y < height)); y++) {
         extractRow(basic, y, hLine);
         //System.arraycopy(hLine, 0, hData, 0, width);
         //memcpy(hData, hLine, sizeof(double) * width);
         hData = hLine;
         coefficientToGradient1D(hLine);
-        
+
         coefficientToSamples1D(hData);
         putRow(xGradient, y, hLine);
         putRow(yGradient, y, hData);
     }
-    
+
     for (int x = 0; ((x < width)); x++) {
         extractColumn(xGradient, width, x, vLine);
         coefficientToSamples1D(vLine);
         putColumn(xGradient, width, x, vLine);
-        
+
         extractColumn(yGradient, width, x, vLine);
         coefficientToGradient1D(vLine);
         putColumn(yGradient, width, x, vLine);
@@ -453,7 +453,7 @@ void TurboRegImage::dualToCardinal2D (
 ) {
     std::vector<double> basic(width * height);
     basicToCardinal2D(
-        getBasicFromCardinal2D(dual, width, height, 2 * degree + 1, basic), 
+        getBasicFromCardinal2D(dual, width, height, 2 * degree + 1, basic),
             cardinal, width, height, degree);
 } /* end dualToCardinal2D */
 
@@ -488,7 +488,7 @@ std::vector<double> TurboRegImage::getBasicFromCardinal2D (
     std::vector<double> basic(width * height);
     std::vector<double> hLine(width);
     std::vector<double> vLine(height);
-    
+
     for (int y = 0; (y < height); y++) {
         extractRow(image, y, hLine);
         samplesToInterpolationCoefficient1D(hLine, 3, 0.0);
@@ -499,7 +499,7 @@ std::vector<double> TurboRegImage::getBasicFromCardinal2D (
         samplesToInterpolationCoefficient1D(vLine, 3, 0.0);
         putColumn(basic, width, x, vLine);
     }
-    
+
     return(basic);
 } /* end getBasicFromCardinal2D */
 
@@ -514,7 +514,7 @@ std::vector<double> TurboRegImage::getBasicFromCardinal2D (
     //std::vector<double> basic(width * height);
     std::vector<double> hLine(width);
     std::vector<double> vLine(height);
-    
+
     for (int y = 0; ((y < height)); y++) {
         extractRow(cardinal, y, hLine);
         samplesToInterpolationCoefficient1D(hLine, degree, 0.0);
@@ -544,7 +544,7 @@ std::vector<double> TurboRegImage::getHalfDual2D (
     std::vector<double> vData(halfHeight);
     std::vector<double> demiDual(halfWidth * fullHeight);
     std::vector<double> halfDual(halfWidth * halfHeight);
-    
+
     for (int y = 0; ((y < fullHeight)); y++) {
         extractRow(fullDual, y, hLine);
         reduceDual1D(hLine, hData);
@@ -557,7 +557,7 @@ std::vector<double> TurboRegImage::getHalfDual2D (
         putColumn(halfDual, halfWidth, x, vData);
     }
 
-    
+
     return(halfDual);
 } /* end getHalfDual2D */
 
@@ -600,7 +600,7 @@ void TurboRegImage::imageToXYGradient2D (
     std::vector<double> vLine(height);
     xGradient.resize(width * height);
     yGradient.resize(width * height);
-    
+
     for (int y = 0; ((y < height)); y++) {
         extractRow(image, y, hLine);
         samplesToInterpolationCoefficient1D(hLine, 3, 0.0);
@@ -690,7 +690,7 @@ void TurboRegImage::samplesToInterpolationCoefficient1D (
         case 3: {
             //z = new double[1];
             z.resize(1);
-            
+
             z[0] = sqrt(3.0) - 2.0;
             break;
         }
@@ -830,4 +830,3 @@ void TurboRegImage::symmetricFirMirrorOffBounds1D (
         }
     }
 } /* end symmetricFirMirrorOffBounds1D */
-

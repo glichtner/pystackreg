@@ -84,7 +84,7 @@ TurboRegMask::TurboRegMask (
     this->width = img.getWidth();
     this->height = img.getHeight();
     int k = 0;
-    
+
     this->mask.resize(width * height);
 
     for (int y = 0; (y < height); y++) {
@@ -100,7 +100,7 @@ TurboRegMask::TurboRegMask (
     this->width = width;   //imp.getWidth();
     this->height = height; //imp.getHeight();
     int k = 0;
-    
+
     this->mask.resize(width * height);
 
     for (int y = 0; (y < height); y++) {
@@ -251,7 +251,7 @@ std::vector<double> TurboRegMask::getHalfMask2D (
         }
         halfMask[k] += std::abs(pFullMask[n++]);
         halfMask[k++] += std::abs(pFullMask[n++]);
-        
+
         if (oddWidth) {
             n++;
         }
@@ -267,12 +267,12 @@ std::vector<double> TurboRegMask::getHalfMask2D (
         halfMask[k] += std::abs(pFullMask[n++]);
         halfMask[k - halfWidth] += std::abs(pFullMask[n]);
         halfMask[k++] += std::abs(pFullMask[n++]);
-        
+
         if (oddWidth) {
             n++;
         }
         k -= halfWidth;
-        
+
     }
 
     for (int x = 0; (x < (halfWidth - 1)); x++) {
@@ -283,11 +283,11 @@ std::vector<double> TurboRegMask::getHalfMask2D (
 
     halfMask[k] += std::abs(pFullMask[n++]);
     halfMask[k++] += std::abs(pFullMask[n++]);
-    
+
     if (oddWidth) {
         n++;
     }
-    
+
     k -= halfWidth;
 
     for (int x = 0; (x < (halfWidth - 1)); x++) {
@@ -299,4 +299,3 @@ std::vector<double> TurboRegMask::getHalfMask2D (
     halfMask[k] += std::abs(pFullMask[n]);
     return(halfMask);
 } /* end getHalfMask2D */
-

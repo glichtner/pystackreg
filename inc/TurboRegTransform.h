@@ -126,7 +126,7 @@ public:
 
     void printMatrix(matrix<double> &m);
     void printPoints();
- 
+
 
 private:
 /*....................................................................

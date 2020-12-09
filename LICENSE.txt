@@ -34,12 +34,12 @@
 \===================================================================*/
 
 /*====================================================================
-| You are free to use this software for commercial and non-commercial 
+| You are free to use this software for commercial and non-commercial
 | purposes. However, we expect you to include a citation or acknowledgement
-| whenever you present or publish research results that are based 
-| on this software. You are free to modify this software or derive 
-| works from it, but you are only allowed to distribute it under the 
-| same terms as this license specifies. Additionally, you must include 
-| a reference to the research paper above in all software and works 
+| whenever you present or publish research results that are based
+| on this software. You are free to modify this software or derive
+| works from it, but you are only allowed to distribute it under the
+| same terms as this license specifies. Additionally, you must include
+| a reference to the research paper above in all software and works
 | derived from this software.
 \===================================================================*/

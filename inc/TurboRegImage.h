@@ -57,8 +57,8 @@ public:
     std::vector<double> yGradient;
     int halfWidth;
     int halfHeight;
-    
-    
+
+
 
     ImageStackItem(int halfWidth, int halfHeight, bool gradient)
     : halfWidth(halfWidth), halfHeight(halfHeight)
@@ -87,7 +87,7 @@ class TurboRegImage { /* class turboRegImage */
 public:
     TurboRegImage (double *img, int width, int height, Transformation transformation, bool isTarget);
     TurboRegImage (double *img, int width, int height, bool isTarget);
-    
+
     std::vector<double> &getCoefficient () {
         return(this->coefficient);
     };
@@ -138,7 +138,7 @@ public:
 
 private:
     std::stack<ImageStackItem> pyramid;
-    
+
     std::vector<double> image;
     std::vector<double> coefficient;
     std::vector<double> xGradient;
@@ -272,7 +272,7 @@ private:
         std::vector<double> &c,
         std::vector<double> &s
     );
-    
+
     void samplesToInterpolationCoefficient1D (
             std::vector<double> &c,
             int degree,
