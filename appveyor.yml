@@ -1,0 +1,40 @@
+version: '{branch}-{build}'
+image: Visual Studio 2019
+branches:
+  only:
+    - wheel
+    - /v\d*\.\d*\.\d*/
+environment:
+  matrix:
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      PYTHON: "C:/Python27-x64"
+    - PYTHON: "C:/Python35-x64"
+    - PYTHON: "C:/Python36-x64"
+    - PYTHON: "C:/Python37-x64"
+    - PYTHON: "C:/Python38-x64"
+    - PYTHON: "C:/Python39-x64"
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      PYTHON: "C:/Python27"
+    - PYTHON: "C:/Python35"
+    - PYTHON: "C:/Python36"
+    - PYTHON: "C:/Python37"
+    - PYTHON: "C:/Python38"
+    - PYTHON: "C:/Python39"
+build_script:
+- cmd: |
+    "%PYTHON%/python.exe" -m pip install --upgrade pip
+    "%PYTHON%/python.exe" -m pip install --upgrade setuptools wheel numpy
+    "%PYTHON%/python.exe" setup.py build
+    "%PYTHON%/python.exe" setup.py bdist_wheel
+artifacts:
+  - path: dist\*.whl
+    name: wheels
+deploy_script:
+  - ps: |
+      if($env:APPVEYOR_REPO_TAG -eq 'true') {
+        Write-Output ("Deploying " + $env:APPVEYOR_REPO_TAG_NAME + " to PyPI...")
+        &"${Env:PYTHON}/python.exe" -m pip install twine
+        &"${Env:PYTHON}/python.exe" -m twine upload -u ${Env:PYPI_USER} -p ${Env:PYPI_PASS} --skip-existing dist/*.whl
+      } else {
+        Write-Output "No tag for deployment"
+      }
