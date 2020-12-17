@@ -39,7 +39,7 @@ Description
 -----------
 pyStackReg is used to align (register) one or more images to a common reference image, as is required usually in time-resolved fluorescence or wide-field microscopy. It is directly ported from the source code of the ImageJ plugin ``TurboReg`` and provides additionally the functionality of the ImageJ plugin ``StackReg``, both of which were written by Philippe Thevenaz/EPFL (available at http://bigwww.epfl.ch/thevenaz/turboreg/).
 
-pyStackReg provides the following four types of distortion:
+pyStackReg provides the following five types of distortion:
 
 - translation
 - rigid body (translation + rotation)
