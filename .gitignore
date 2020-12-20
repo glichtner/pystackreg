@@ -15,3 +15,7 @@ MANIFEST
 .idea/
 *.egg-info/
 .ipynb_checkpoints/
+.tox/
+.coverage
+.coverage/
+.mypy_cache/

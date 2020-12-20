@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from . import turboreg
+from . import turboreg  # type: ignore
 import numpy as np
 from tqdm import tqdm
 import warnings
@@ -59,15 +59,34 @@ def running_mean(x, N, axis=0):
 
 class StackReg:
     """
-    Python implementation of the ImageJ/Fiji StackReg plugin ( http://bigwww.epfl.ch/thevenaz/stackreg/ )
+    Python implementation of the ImageJ/Fiji StackReg plugin
+    (http://bigwww.epfl.ch/thevenaz/stackreg/ )
     """
 
-    # Transformation
     TRANSLATION = 2
+    """
+    Translation
+    """
+
     RIGID_BODY = 3
+    """
+    Rigid body (translation + rotation)
+    """
+
     SCALED_ROTATION = 4
+    """
+    Scaled rotation (translation + rotation + scaling)
+    """
+
     AFFINE = 6
+    """
+    Affine (translation + rotation + scaling + shearing)
+    """
+
     BILINEAR = 8
+    """
+    Bilinear (non-linear transformation; does not preserve straight lines)
+    """
 
     _valid_transformations = [
         TRANSLATION,
@@ -82,7 +101,8 @@ class StackReg:
     def __init__(self, transformation):
         """
         Constructor
-        :param transformation: TRANSLATION, RIGID_BODY, SCALED_ROTATION, AFFINE, BILINEAR
+        :param transformation: TRANSLATION, RIGID_BODY, SCALED_ROTATION, AFFINE,
+                               BILINEAR
         """
         if transformation not in self._valid_transformations:
             raise Exception("Invalid transformation")
@@ -95,7 +115,8 @@ class StackReg:
 
     def is_registered(self):
         """
-        Indicates whether register() was already called and a transformation matrix was calculated
+        Indicates whether register() was already called and a transformation matrix
+        was calculated
 
         :rtype:  bool
         :return: True if a transformation matrix was already calculated
@@ -140,7 +161,8 @@ class StackReg:
         :param tmat: The transformation matrix
 
         :rtype:  ndarray (Ni..., Nj...)
-        :return: Transformed image - will be of the same shape as the input image (cropping may occur)
+        :return: Transformed image - will be of the same shape as the input image
+                 (cropping may occur)
         """
         if tmat is None and not self.is_registered():
             raise Exception("Register first")
@@ -163,7 +185,8 @@ class StackReg:
         :param mov: The image that should be aligned to the reference image
 
         :rtype:  ndarray (Ni..., Nj...)
-        :return: Transformed image - will be of the same shape as the input image (cropping may occur)
+        :return: Transformed image - will be of the same shape as the input image
+                 (cropping may occur)
         """
         self.register(ref, mov)
         return self.transform(mov)
@@ -229,8 +252,8 @@ class StackReg:
 
     def _matrix_long_to_short(self, mat):
         """
-        Converts the transformation matrix from the canonical form from linear algebra to
-        the short form used by TurboReg.
+        Converts the transformation matrix from the canonical form from linear algebra
+        to the short form used by TurboReg.
 
         :type mat: ndarray(3,3)
         :param mat: Canonical transformation matrix
@@ -256,7 +279,8 @@ class StackReg:
     @staticmethod
     def _detect_time_axis(img):
         """
-        Detects the time axis of a movie/stack by returning the dimension with the lowest average variability
+        Detects the time axis of a movie/stack by returning the dimension with the
+        lowest average variability
 
         :param img:
         :return:
@@ -270,7 +294,8 @@ class StackReg:
         transformation matrix can be calculated.
 
         :rtype:  (ndarray, ndarray)
-        :return: (Point coordinates of reference image, Point coordinates of image to be aligned)
+        :return: (Point coordinates of reference image, Point coordinates of image to
+                 be aligned)
         """
         return self._refpts, self._movpts
 
@@ -287,30 +312,36 @@ class StackReg:
     ):
         """
         Register a stack of images (movie).
-        Note that this function will not transform the image but only calculate the transformation matrices.
-        For tranformation use transform_stack() after this function or use register_transform_stack() for a single call.
+        Note that this function will not transform the image but only calculate the
+        transformation matrices.
+        For transformation use transform_stack() after this function or use
+        register_transform_stack() for a single call.
 
         :type img: array_like(Ni..., Nj..., Nk...)
         :param img: The 3D stack of images that should be aligned
 
         :type reference: string, one of ['previous', 'first', 'mean']
         :param reference:
-            *  *'previous'*: Aligns each frame (image) to its previous frame in the stack
-            *  *'first:'* Aligns each frame (image) to the first frame in the stack - if n_frames is > 1, then
-               each frame is aligned to the mean of the first n_frames of the stack
-            *  *'mean'*: Aligns each frame (image) to the average of all images in the stack
+            *  *'previous'*: Aligns each frame (image) to its previous frame in the
+               stack
+            *  *'first:'* Aligns each frame (image) to the first frame in the stack -
+               if n_frames is > 1, then each frame is  aligned to the
+               mean of the first n_frames of the stack
+            *  *'mean'*: Aligns each frame (image) to the average of all images in the
+               stack
 
         :type n_frames: int, optional
-        :param n_frames: If reference is 'first', then this parameter specifies the number of frames from the
-            beginning of the stack that should be averaged to yield the reference image.
+        :param n_frames: If reference is 'first', then this parameter specifies the
+                         number of frames from the beginning of the stack that should
+                         be averaged to yield the reference image.
 
         :type axis: int, optional
         :param axis: The axis of the time dimension
 
         :type moving_average: int, optional
         :param moving_average:
-            If moving_average is greater than 1, a moving average of the stack is first created (using
-            a subset size of moving_average) before registration
+            If moving_average is greater than 1, a moving average of the stack is first
+            created (using a subset size of moving_average) before registration
 
         :type verbose: bool, optional
         :param verbose:
@@ -323,8 +354,9 @@ class StackReg:
 
         :type suppress_axis_warning: function, optional
         :param suppress_axis_warning:
-            Pystackreg will automatically try to determine the time axis and raise a warning when the detected
-            time axis is not equal to the supplied axis. Set this option to True to suppress this warning.
+            pystackreg will automatically try to determine the time axis and raise a
+            warning when the detected time axis is not equal to the supplied axis.
+            Set this option to True to suppress this warning.
 
         :rtype:  ndarray(img.shape[axis], 3, 3)
         :return: The transformation matrix for each image in the stack
@@ -332,10 +364,10 @@ class StackReg:
 
         if self._transformation == self.BILINEAR and reference == "previous":
             raise Exception(
-                'Bilinear stack transformation not supported with reference == "previous", '
-                "as a combination of bilinear transformations does not generally result in a "
-                "bilinear transformation. "
-                "Use another reference or manually register/transform images to their previous image."
+                "Bilinear stack transformation not supported with reference "
+                '== "previous" as a combination of bilinear transformations does not '
+                "generally result in a bilinear transformation. Use another reference "
+                "or manually register/transform images to their previous image."
             )
 
         if len(img.shape) != 3:
@@ -345,7 +377,9 @@ class StackReg:
             lowest_var_axis = self._detect_time_axis(img)
             if axis != lowest_var_axis:
                 warnings.warn(
-                    "Detected axis {} as the possible time axis for the stack due to its low variability, but axis {} was supplied for registration. Are you sure you supplied the correct axis?".format(
+                    "Detected axis {} as the possible time axis for the stack due to "
+                    "its low variability, but axis {} was supplied for registration. "
+                    "Are you sure you supplied the correct axis?".format(
                         lowest_var_axis, axis
                     )
                 )
@@ -396,7 +430,7 @@ class StackReg:
 
             if progress_callback is not None:
                 progress_callback(
-                    current_iteration=i - idx_start,
+                    current_iteration=i - idx_start + 1,
                     end_iteration=img.shape[axis] - idx_start,
                 )
 
@@ -421,7 +455,8 @@ class StackReg:
         if tmats is None:
             if self._tmats is None:
                 raise Exception(
-                    "No transformation matrices given. Please register first or pass transformation matrices explicitly."
+                    "No transformation matrices given. Please register first or pass "
+                    "transformation matrices explicitly."
                 )
             tmats = self._tmats
 
@@ -457,21 +492,26 @@ class StackReg:
 
         :type reference: string, one of ['previous', 'first', 'mean']
         :param reference:
-            *  *'previous'*: Aligns each frame (image) to its previous frame in the stack
-            *  *'first:'* Aligns each frame (image) to the first frame in the stack - if n_frames is > 1, then
-               each frame is aligned to the mean of the first n_frames of the stack
-            *  *'mean'*: Aligns each frame (image) to the average of all images in the stack
+            *  *'previous'*: Aligns each frame (image) to its previous frame in the
+               stack
+            *  *'first:'* Aligns each frame (image) to the first frame in the stack -
+               if n_frames is > 1, then each frame is aligned to the
+               mean of the first n_frames of the stack
+            *  *'mean'*: Aligns each frame (image) to the average of all images in the
+               stack
 
         :type n_frames: int, optional
-        :param n_frames: If reference is 'first', then this parameter specifies the number of frames from the
-            beginning of the stack that should be averaged to yield the reference image.
+        :param n_frames: If reference is 'first', then this parameter specifies the
+                         number of frames from the beginning of the stack that
+                         should be averaged to yield the reference image.
 
         :type axis: int, optional
         :param axis: The axis of the time dimension
 
         :type moving_average: int, optional
-        :param moving_average: If moving_average is greater than 1, a moving average of the stack is first created
-            (using a subset size of moving_average) before registration
+        :param moving_average: If moving_average is greater than 1, a moving average of
+                               the stack is first created (using a subset size of
+                               moving_average) before registration
 
         :type verbose: bool, optional
         :param verbose:

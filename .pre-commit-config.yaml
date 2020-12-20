@@ -1,30 +1,42 @@
 exclude: '^docs/'
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.5.0  # Use the ref you want to point at
-    hooks:
-    -   id: trailing-whitespace
-    -   id: end-of-file-fixer
-    -   id: mixed-line-ending
-    -   id: pretty-format-json
--   repo: https://github.com/ambv/black
-    rev: stable
-    hooks:
-    - id: black
-      language_version: python3.7
--   repo: https://github.com/thclark/pre-commit-sphinx
-    rev: 0.0.1
-    hooks:
-    - id: build-docs
-      args: ['--cache-dir', 'docs/doctrees', '--html-dir', 'docs/html', '--source-dir', 'docs/']
-      language_version: python3
-      additional_dependencies: ['numpy', 'tqdm']
-#-   repo: local
-#    hooks:
-#    -   id: tests
-#        name: Run pytest unit tests
-#        entry: pytest -v
-#        language: system
-#        types: [python]
-#        pass_filenames: false
-#        always_run: true
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v2.5.0  # Use the ref you want to point at
+  hooks:
+  -   id: trailing-whitespace
+  -   id: end-of-file-fixer
+  -   id: mixed-line-ending
+  -   id: pretty-format-json
+- repo: https://github.com/ambv/black
+  rev: stable
+  hooks:
+  - id: black
+    language_version: python3.8
+- repo: https://gitlab.com/pycqa/flake8
+  rev: 3.8.4
+  hooks:
+  - id: flake8
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: v0.720
+  hooks:
+  -   id: mypy
+- repo: https://github.com/codespell-project/codespell
+  rev: 'v2.0.0'
+  hooks:
+  -   id: codespell
+      name: codespell
+      description: Checks for common misspellings in text files.
+      entry: codespell
+      language: python
+      types: [text]
+      exclude: '\.ipynb'
+      args: [-I, .codespellignore]
+- repo: local
+  hooks:
+  -   id: tests
+      name: Run pytest unit tests
+      entry: pytest -v
+      language: system
+      types: [python]
+      pass_filenames: false
+      always_run: true

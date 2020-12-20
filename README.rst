@@ -75,7 +75,10 @@ The documentation can be found on readthedocs:
 
 https://pystackreg.readthedocs.io/
 
-
+Tutorial
+--------
+* A tutorial notebook can be found in the `examples/notebooks` folder
+  or statically here: https://pystackreg.readthedocs.io/en/latest/tutorial.html
 
 Usage
 -----
