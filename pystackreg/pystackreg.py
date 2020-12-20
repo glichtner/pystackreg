@@ -345,7 +345,9 @@ class StackReg:
             lowest_var_axis = self._detect_time_axis(img)
             if axis != lowest_var_axis:
                 warnings.warn(
-                    f"Detected axis {lowest_var_axis} as the possible time axis for the stack due to its low variability, but axis {axis} was supplied for registration. Are you sure you supplied the correct axis?"
+                    "Detected axis {} as the possible time axis for the stack due to its low variability, but axis {} was supplied for registration. Are you sure you supplied the correct axis?".format(
+                        lowest_var_axis, axis
+                    )
                 )
 
         idx_start = 1
@@ -370,7 +372,7 @@ class StackReg:
         elif reference == "previous":
             pass
         else:
-            raise ValueError(f'Unknown reference "{reference}"')
+            raise ValueError('Unknown reference "{}"'.format(reference))
 
         iterable = range(idx_start, img.shape[axis])
 

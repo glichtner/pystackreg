@@ -378,7 +378,9 @@
             <span class="n">lowest_var_axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_detect_time_axis</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">axis</span> <span class="o">!=</span> <span class="n">lowest_var_axis</span><span class="p">:</span>
                 <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Detected axis </span><span class="si">{</span><span class="n">lowest_var_axis</span><span class="si">}</span><span class="s2"> as the possible time axis for the stack due to its low variability, but axis </span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2"> was supplied for registration. Are you sure you supplied the correct axis?&quot;</span>
+                    <span class="s2">&quot;Detected axis </span><span class="si">{}</span><span class="s2"> as the possible time axis for the stack due to its low variability, but axis </span><span class="si">{}</span><span class="s2"> was supplied for registration. Are you sure you supplied the correct axis?&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">lowest_var_axis</span><span class="p">,</span> <span class="n">axis</span>
+                    <span class="p">)</span>
                 <span class="p">)</span>
 
         <span class="n">idx_start</span> <span class="o">=</span> <span class="mi">1</span>
@@ -403,7 +405,7 @@
         <span class="k">elif</span> <span class="n">reference</span> <span class="o">==</span> <span class="s2">&quot;previous&quot;</span><span class="p">:</span>
             <span class="k">pass</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Unknown reference &quot;</span><span class="si">{</span><span class="n">reference</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown reference &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">reference</span><span class="p">))</span>
 
         <span class="n">iterable</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">idx_start</span><span class="p">,</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">])</span>
 
