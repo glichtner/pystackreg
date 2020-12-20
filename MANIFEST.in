@@ -1,2 +1,23 @@
 include inc/*.h
+
+graft docs
+
+include .flake8
+include .pre-commit-config.yaml
+include .readthedocs.yml
+include .codespellignore
+include AUTHORS.rst
+include CHANGELOG.rst
+include appveyor.yml
 include LICENSE.txt
+
+
+include inc/*.h
+include src/*TurboReg*.cpp
+include src/pymain.cpp
+
+include examples/data/*.ijm
+include examples/data/pc12-*.tif
+include examples/notebooks/*.ipynb
+include requirements.txt
+include tox.ini
