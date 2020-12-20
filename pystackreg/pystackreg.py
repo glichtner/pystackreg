@@ -253,6 +253,17 @@ class StackReg:
 
         return m.astype(np.double)
 
+    @staticmethod
+    def _detect_time_axis(img):
+        """
+        Detects the time axis of a movie/stack by returning the dimension with the lowest average variability
+
+        :param img:
+        :return:
+        """
+        var = np.array([np.var(img, axis=i).mean() for i in range(img.ndim)])
+        return np.argmin(var)
+
     def get_points(self):
         """
         Returns the pairs of corresponding points from which the
@@ -272,6 +283,7 @@ class StackReg:
         moving_average=1,
         verbose=False,
         progress_callback=None,
+        suppress_axis_warning=False,
     ):
         """
         Register a stack of images (movie).
@@ -309,6 +321,11 @@ class StackReg:
             A function that is called after every iteration. This function should accept
             the keyword arguments current_iteration:int and end_iteration:int.
 
+        :type suppress_axis_warning: function, optional
+        :param suppress_axis_warning:
+            Pystackreg will automatically try to determine the time axis and raise a warning when the detected
+            time axis is not equal to the supplied axis. Set this option to True to suppress this warning.
+
         :rtype:  ndarray(img.shape[axis], 3, 3)
         :return: The transformation matrix for each image in the stack
         """
@@ -323,6 +340,13 @@ class StackReg:
 
         if len(img.shape) != 3:
             raise Exception("Stack must have three dimensions")
+
+        if not suppress_axis_warning:
+            lowest_var_axis = self._detect_time_axis(img)
+            if axis != lowest_var_axis:
+                warnings.warn(
+                    f"Detected axis {lowest_var_axis} as the possible time axis for the stack due to its low variability, but axis {axis} was supplied for registration. Are you sure you supplied the correct axis?"
+                )
 
         idx_start = 1
 
@@ -343,6 +367,10 @@ class StackReg:
         elif reference == "mean":
             ref = img.mean(axis=0)
             idx_start = 0
+        elif reference == "previous":
+            pass
+        else:
+            raise ValueError(f'Unknown reference "{reference}"')
 
         iterable = range(idx_start, img.shape[axis])
 
@@ -352,7 +380,7 @@ class StackReg:
         for i in iterable:
 
             slc = [slice(None)] * len(img.shape)
-            slc[axis] = slice(i, i + 1)
+            slc[axis] = i
 
             if reference == "previous":
                 ref = img.take(i - 1, axis=axis)
@@ -404,7 +432,7 @@ class StackReg:
 
         for i in range(img.shape[axis]):
             slc = [slice(None)] * len(out.shape)
-            slc[axis] = slice(i, i + 1)
+            slc[axis] = i
             out[tuple(slc)] = self.transform(simple_slice(img, i, axis), tmats[i, :, :])
 
         return out
@@ -440,8 +468,8 @@ class StackReg:
         :param axis: The axis of the time dimension
 
         :type moving_average: int, optional
-        :param moving_average: If moving_average is greater than 1, a moving average of the stack is first created (using
-            a subset size of moving_average) before registration
+        :param moving_average: If moving_average is greater than 1, a moving average of the stack is first created
+            (using a subset size of moving_average) before registration
 
         :type verbose: bool, optional
         :param verbose:

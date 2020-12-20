@@ -5,14 +5,13 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>pystackreg API reference &#8212; pystackreg 0.2.2 documentation</title>
+    <title>pystackreg API reference &#8212; pystackreg 0.2.3rc1 documentation</title>
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="Welcome to pystackreg’s documentation!" href="index.html" />
@@ -107,7 +106,7 @@ will be calculated, the image will not be transformed
 
 <dl class="py method">
 <dt id="pystackreg.StackReg.register_stack">
-<code class="sig-name descname">register_stack</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">img</span></em>, <em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">'previous'</span></em>, <em class="sig-param"><span class="n">n_frames</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">axis</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">moving_average</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">progress_callback</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pystackreg/pystackreg.html#StackReg.register_stack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pystackreg.StackReg.register_stack" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">register_stack</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">img</span></em>, <em class="sig-param"><span class="n">reference</span><span class="o">=</span><span class="default_value">'previous'</span></em>, <em class="sig-param"><span class="n">n_frames</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">axis</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">moving_average</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">progress_callback</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">suppress_axis_warning</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pystackreg/pystackreg.html#StackReg.register_stack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pystackreg.StackReg.register_stack" title="Permalink to this definition">¶</a></dt>
 <dd><p>Register a stack of images (movie).
 Note that this function will not transform the image but only calculate the transformation matrices.
 For tranformation use transform_stack() after this function or use register_transform_stack() for a single call.</p>
@@ -130,6 +129,8 @@ a subset size of moving_average) before registration</p></li>
 <li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – Specifies whether a progressbar should be shown using tqdm.</p></li>
 <li><p><strong>progress_callback</strong> (<em>function</em><em>, </em><em>optional</em>) – A function that is called after every iteration. This function should accept
 the keyword arguments current_iteration:int and end_iteration:int.</p></li>
+<li><p><strong>suppress_axis_warning</strong> (<em>function</em><em>, </em><em>optional</em>) – Pystackreg will automatically try to determine the time axis and raise a warning when the detected
+time axis is not equal to the supplied axis. Set this option to True to suppress this warning.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -179,8 +180,8 @@ each frame is aligned to the mean of the first n_frames of the stack</p></li>
 <li><p><strong>n_frames</strong> (<em>int</em><em>, </em><em>optional</em>) – If reference is ‘first’, then this parameter specifies the number of frames from the
 beginning of the stack that should be averaged to yield the reference image.</p></li>
 <li><p><strong>axis</strong> (<em>int</em><em>, </em><em>optional</em>) – The axis of the time dimension</p></li>
-<li><p><strong>moving_average</strong> (<em>int</em><em>, </em><em>optional</em>) – If moving_average is greater than 1, a moving average of the stack is first created (using
-a subset size of moving_average) before registration</p></li>
+<li><p><strong>moving_average</strong> (<em>int</em><em>, </em><em>optional</em>) – If moving_average is greater than 1, a moving average of the stack is first created
+(using a subset size of moving_average) before registration</p></li>
 <li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – Specifies whether a progressbar should be shown using tqdm.</p></li>
 <li><p><strong>progress_callback</strong> (<em>function</em><em>, </em><em>optional</em>) – A function that is called after every iteration. This function should accept
 the keyword arguments current_iteration:int and end_iteration:int.</p></li>
@@ -320,7 +321,7 @@ register() has to be called before calling transform().</p>
       &copy;2018, Gregor Lichtner, Philippe Thevenaz.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.4.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

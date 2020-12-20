@@ -5,14 +5,13 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>pystackreg.pystackreg &#8212; pystackreg 0.2.2 documentation</title>
+    <title>pystackreg.pystackreg &#8212; pystackreg 0.2.3rc1 documentation</title>
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
     <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -287,6 +286,17 @@
 
         <span class="k">return</span> <span class="n">m</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">)</span>
 
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_detect_time_axis</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Detects the time axis of a movie/stack by returning the dimension with the lowest average variability</span>
+
+<span class="sd">        :param img:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">ndim</span><span class="p">)])</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+
 <div class="viewcode-block" id="StackReg.get_points"><a class="viewcode-back" href="../../api.html#pystackreg.StackReg.get_points">[docs]</a>    <span class="k">def</span> <span class="nf">get_points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the pairs of corresponding points from which the</span>
@@ -306,6 +316,7 @@
         <span class="n">moving_average</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">progress_callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">suppress_axis_warning</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Register a stack of images (movie).</span>
@@ -343,6 +354,11 @@
 <span class="sd">            A function that is called after every iteration. This function should accept</span>
 <span class="sd">            the keyword arguments current_iteration:int and end_iteration:int.</span>
 
+<span class="sd">        :type suppress_axis_warning: function, optional</span>
+<span class="sd">        :param suppress_axis_warning:</span>
+<span class="sd">            Pystackreg will automatically try to determine the time axis and raise a warning when the detected</span>
+<span class="sd">            time axis is not equal to the supplied axis. Set this option to True to suppress this warning.</span>
+
 <span class="sd">        :rtype:  ndarray(img.shape[axis], 3, 3)</span>
 <span class="sd">        :return: The transformation matrix for each image in the stack</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -357,6 +373,13 @@
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Stack must have three dimensions&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">suppress_axis_warning</span><span class="p">:</span>
+            <span class="n">lowest_var_axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_detect_time_axis</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">axis</span> <span class="o">!=</span> <span class="n">lowest_var_axis</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Detected axis </span><span class="si">{</span><span class="n">lowest_var_axis</span><span class="si">}</span><span class="s2"> as the possible time axis for the stack due to its low variability, but axis </span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2"> was supplied for registration. Are you sure you supplied the correct axis?&quot;</span>
+                <span class="p">)</span>
 
         <span class="n">idx_start</span> <span class="o">=</span> <span class="mi">1</span>
 
@@ -377,6 +400,10 @@
         <span class="k">elif</span> <span class="n">reference</span> <span class="o">==</span> <span class="s2">&quot;mean&quot;</span><span class="p">:</span>
             <span class="n">ref</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
             <span class="n">idx_start</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="n">reference</span> <span class="o">==</span> <span class="s2">&quot;previous&quot;</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Unknown reference &quot;</span><span class="si">{</span><span class="n">reference</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
 
         <span class="n">iterable</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">idx_start</span><span class="p">,</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">])</span>
 
@@ -386,7 +413,7 @@
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">iterable</span><span class="p">:</span>
 
             <span class="n">slc</span> <span class="o">=</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-            <span class="n">slc</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">slc</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
 
             <span class="k">if</span> <span class="n">reference</span> <span class="o">==</span> <span class="s2">&quot;previous&quot;</span><span class="p">:</span>
                 <span class="n">ref</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
@@ -438,7 +465,7 @@
 
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]):</span>
             <span class="n">slc</span> <span class="o">=</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-            <span class="n">slc</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">slc</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
             <span class="n">out</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">slc</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">simple_slice</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">axis</span><span class="p">),</span> <span class="n">tmats</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:])</span>
 
         <span class="k">return</span> <span class="n">out</span></div>
@@ -474,8 +501,8 @@
 <span class="sd">        :param axis: The axis of the time dimension</span>
 
 <span class="sd">        :type moving_average: int, optional</span>
-<span class="sd">        :param moving_average: If moving_average is greater than 1, a moving average of the stack is first created (using</span>
-<span class="sd">            a subset size of moving_average) before registration</span>
+<span class="sd">        :param moving_average: If moving_average is greater than 1, a moving average of the stack is first created</span>
+<span class="sd">            (using a subset size of moving_average) before registration</span>
 
 <span class="sd">        :type verbose: bool, optional</span>
 <span class="sd">        :param verbose:</span>
@@ -553,7 +580,7 @@
       &copy;2018, Gregor Lichtner, Philippe Thevenaz.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.4.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
