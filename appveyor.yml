@@ -1,9 +1,5 @@
 version: '{branch}-{build}'
 image: Visual Studio 2019
-branches:
-  only:
-    - wheel
-    - /v\d*\.\d*\.\d*/
 environment:
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
