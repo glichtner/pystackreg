@@ -14,9 +14,11 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
-def get_numpy_include():
-    import numpy
-    return numpy.get_include()
+class get_numpy_include(object):
+
+    def __str__(self):
+        import numpy
+        return numpy.get_include()
 
 
 if __name__ == "__main__":
