@@ -57,7 +57,6 @@ build_script:
   - sh: |
       python setup.py build
       python setup.py sdist
-      python setup.py bdist
   - cmd: |
       "%PYTHON%/python.exe" setup.py build
       "%PYTHON%/python.exe" setup.py bdist_wheel
@@ -69,8 +68,8 @@ test_script:
 artifacts:
   - path: "dist/*"
 
-deploy_script:
-  - ps: |
+after_deploy:
+  - cmd: |
       if($env:APPVEYOR_REPO_TAG -eq 'true') {
         Write-Output ("Deploying " + $env:APPVEYOR_REPO_TAG_NAME + " to PyPI...")
         &"${Env:PYTHON}/python.exe" -m pip install twine
@@ -78,23 +77,24 @@ deploy_script:
       } else {
         Write-Output "No tag for deployment"
       }
-  - sh: |
-      if($env:APPVEYOR_REPO_TAG -eq 'true') {
-        Write-Output ("Deploying " + $env:APPVEYOR_REPO_TAG_NAME + " to PyPI...")
-        &python -m pip install twine
-        &python -m twine upload -u ${Env:PYPI_USER} -p ${Env:PYPI_PASS} --skip-existing dist/*.tar.gz dist/*.whl
-      } else {
-        Write-Output "No tag for deployment"
+  - ps: |
+      if ($env:CI_WINDOWS -eq 'false') {
+        if($env:APPVEYOR_REPO_TAG -eq 'true') {
+          Write-Output ("Deploying " + $env:APPVEYOR_REPO_TAG_NAME + " to PyPI...")
+          &python -m pip install twine
+          &python -m twine upload -u ${Env:PYPI_USER} -p ${Env:PYPI_PASS} --skip-existing dist/*.tar.gz
+        } else {
+          Write-Output "No tag for deployment"
+        }
       }
 
 deploy:
   release: $(APPVEYOR_REPO_TAG_NAME)
   description: 'pystackreg $(APPVEYOR_REPO_TAG_NAME)'
   provider: GitHub
-  auth_token: ${Env:GITHUB_AUTH_TOKEN}
+  auth_token: $(GITHUB_AUTH_TOKEN)
   artifact: /.*\.(tar\.gz|whl)/
   draft: false
   prerelease: false
   on:
-    branch: master                 # release from master branch only
     APPVEYOR_REPO_TAG: true        # deploy on tag push only
