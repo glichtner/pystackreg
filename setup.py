@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from setuptools import setup, Extension, find_packages
-import numpy
 import os
+
+from setuptools import setup, Extension, find_packages
 
 # cannot directly import because __init__.py imports pystackreg which imports the
 # compiled plugin, which is not available before setup.py is run
@@ -12,6 +12,11 @@ exec(open("pystackreg/version.py").read())
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
+
+def get_numpy_include():
+    import numpy
+    return numpy.get_include()
 
 
 if __name__ == "__main__":
@@ -41,7 +46,7 @@ if __name__ == "__main__":
                     "src/TurboRegPointHandler.cpp",
                 ],
                 extra_compile_args=["-std=c++11"],
-                include_dirs=["inc/", numpy.get_include()],
+                include_dirs=["inc/", get_numpy_include()],
             )
         ],
         setup_requires=["numpy"],
