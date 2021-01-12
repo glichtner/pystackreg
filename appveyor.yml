@@ -3,16 +3,6 @@ image: Visual Studio 2019
 stack: python 3.6
 environment:
   matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: macos
-      TOXENV: py36
-    - APPVEYOR_BUILD_WORKER_IMAGE: macos-mojave
-      TOXENV: py36
-    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
-      TOXENV: py36
-    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu1604
-      TOXENV: py36
-    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu2004
-      TOXENV: py36
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       PYTHON: "C:/Python27-x64"
       TOXENV: py27
@@ -39,6 +29,16 @@ environment:
       TOXENV: py38
     - PYTHON: "C:/Python39"
       TOXENV: py39
+    - APPVEYOR_BUILD_WORKER_IMAGE: macos
+      TOXENV: py36
+    - APPVEYOR_BUILD_WORKER_IMAGE: macos-mojave
+      TOXENV: py36
+    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+      TOXENV: py36
+    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu1604
+      TOXENV: py36
+    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu2004
+      TOXENV: py36
 
 install:
   - sh: |
@@ -69,20 +69,20 @@ artifacts:
   - path: "dist/*"
 
 after_deploy:
-  - cmd: |
-      if($env:APPVEYOR_REPO_TAG -eq 'true') {
-        Write-Output ("Deploying " + $env:APPVEYOR_REPO_TAG_NAME + " to PyPI...")
-        &"${Env:PYTHON}/python.exe" -m pip install twine
-        &"${Env:PYTHON}/python.exe" -m twine upload -u ${Env:PYPI_USER} -p ${Env:PYPI_PASS} --skip-existing dist/*.whl
-      } else {
-        Write-Output "No tag for deployment"
-      }
   - ps: |
       if ($env:CI_WINDOWS -eq 'false') {
         if($env:APPVEYOR_REPO_TAG -eq 'true') {
           Write-Output ("Deploying " + $env:APPVEYOR_REPO_TAG_NAME + " to PyPI...")
           &python -m pip install twine
           &python -m twine upload -u ${Env:PYPI_USER} -p ${Env:PYPI_PASS} --skip-existing dist/*.tar.gz
+        } else {
+          Write-Output "No tag for deployment"
+        }
+      } else {
+        if($env:APPVEYOR_REPO_TAG -eq 'true') {
+          Write-Output ("Deploying " + $env:APPVEYOR_REPO_TAG_NAME + " to PyPI...")
+          &"${Env:PYTHON}/python.exe" -m pip install twine
+          &"${Env:PYTHON}/python.exe" -m twine upload -u ${Env:PYPI_USER} -p ${Env:PYPI_PASS} --skip-existing dist/*.whl
         } else {
           Write-Output "No tag for deployment"
         }
