@@ -2,6 +2,13 @@
 Changelog
 #########
 
+0.2.4
+=====
+
+fixed
+-----
+- Compilation in environment without numpy
+
 0.2.3
 =====
 

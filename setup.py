@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-
 from setuptools import setup, Extension, find_packages
 
 # cannot directly import because __init__.py imports pystackreg which imports the
@@ -15,9 +14,9 @@ def read(fname):
 
 
 class get_numpy_include(object):
-
     def __str__(self):
         import numpy
+
         return numpy.get_include()
 
 
@@ -28,12 +27,12 @@ if __name__ == "__main__":
     setup(
         name="pystackreg",
         description="Image registration tool (python implementation of the ImageJ/FIJI "
-                    "Plugin TurboReg/StackReg)",
+        "Plugin TurboReg/StackReg)",
         long_description="\n\n".join([readme, change]),
         version=__version__,
         author="Gregor Lichtner (python/C++ port);"
-               "TurboReg Author: Philippe Thévenaz, Biomedical Imaging Group,"
-               "Swiss Federal Institute of Technology Lausanne",
+        "TurboReg Author: Philippe Thévenaz, Biomedical Imaging Group,"
+        "Swiss Federal Institute of Technology Lausanne",
         url="https://github.com/glichtner/pystackreg",
         packages=find_packages("."),
         ext_modules=[

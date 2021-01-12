@@ -204,8 +204,14 @@ PyObject *turbogreg_register(PyObject *self, PyObject *args) {
     Py_XDECREF(ref_array);
     Py_XDECREF(mov_array);
 
-    npy_intp dims_mat[2] = {rm.mat.nrows(), rm.mat.ncols()};
-    npy_intp dims_pts[2] = {rm.refPts.nrows(), rm.refPts.ncols()};
+    npy_intp dims_mat[2];
+    npy_intp dims_pts[2];
+
+    dims_mat[0] = rm.mat.nrows();
+    dims_mat[1] = rm.mat.ncols();
+    dims_pts[0] = rm.refPts.nrows();
+    dims_pts[1] = rm.refPts.ncols();
+
 	PyObject *retMat = PyArray_SimpleNew(2, (npy_intp*) &dims_mat, NPY_DOUBLE);
 	PyObject *retPtsRef = PyArray_SimpleNew(2, (npy_intp*) &dims_pts, NPY_DOUBLE);
 	PyObject *retPtsMov = PyArray_SimpleNew(2, (npy_intp*) &dims_pts, NPY_DOUBLE);
