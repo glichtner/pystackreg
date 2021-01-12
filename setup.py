@@ -44,6 +44,7 @@ if __name__ == "__main__":
                 include_dirs=["inc/", numpy.get_include()],
             )
         ],
+        setup_requires=["numpy"],
         install_requires=["numpy", "tqdm"],
         classifiers=[
             # complete list: http://pypi.python.org/pypi?%3Aaction=list_classifiers
