@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from setuptools import setup, Extension, find_packages
-import numpy.distutils.misc_util
 import os
+from setuptools import setup, Extension, find_packages
 
 # cannot directly import because __init__.py imports pystackreg which imports the
 # compiled plugin, which is not available before setup.py is run
@@ -12,6 +11,13 @@ exec(open("pystackreg/version.py").read())
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
+
+class get_numpy_include(object):
+    def __str__(self):
+        import numpy
+
+        return numpy.get_include()
 
 
 if __name__ == "__main__":
@@ -24,8 +30,8 @@ if __name__ == "__main__":
         "Plugin TurboReg/StackReg)",
         long_description="\n\n".join([readme, change]),
         version=__version__,
-        author="Gregor Lichtner (python/C++ port); "
-        "TurboReg Author: Philippe Thévenaz, Biomedical Imaging Group, "
+        author="Gregor Lichtner (python/C++ port);"
+        "TurboReg Author: Philippe Thévenaz, Biomedical Imaging Group,"
         "Swiss Federal Institute of Technology Lausanne",
         url="https://github.com/glichtner/pystackreg",
         packages=find_packages("."),
@@ -41,9 +47,10 @@ if __name__ == "__main__":
                     "src/TurboRegPointHandler.cpp",
                 ],
                 extra_compile_args=["-std=c++11"],
+                include_dirs=["inc/", get_numpy_include()],
             )
         ],
-        include_dirs=["inc/"] + numpy.distutils.misc_util.get_numpy_include_dirs(),
+        setup_requires=["numpy"],
         install_requires=["numpy", "tqdm"],
         classifiers=[
             # complete list: http://pypi.python.org/pypi?%3Aaction=list_classifiers
