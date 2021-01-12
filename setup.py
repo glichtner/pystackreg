@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import setup, Extension, find_packages
-import numpy.distutils.misc_util
+import numpy
 import os
 
 # cannot directly import because __init__.py imports pystackreg which imports the
@@ -21,12 +21,12 @@ if __name__ == "__main__":
     setup(
         name="pystackreg",
         description="Image registration tool (python implementation of the ImageJ/FIJI "
-        "Plugin TurboReg/StackReg)",
+                    "Plugin TurboReg/StackReg)",
         long_description="\n\n".join([readme, change]),
         version=__version__,
-        author="Gregor Lichtner (python/C++ port); "
-        "TurboReg Author: Philippe Thévenaz, Biomedical Imaging Group, "
-        "Swiss Federal Institute of Technology Lausanne",
+        author="Gregor Lichtner (python/C++ port);"
+               "TurboReg Author: Philippe Thévenaz, Biomedical Imaging Group"
+               "Swiss Federal Institute of Technology Lausanne",
         url="https://github.com/glichtner/pystackreg",
         packages=find_packages("."),
         ext_modules=[
@@ -41,9 +41,9 @@ if __name__ == "__main__":
                     "src/TurboRegPointHandler.cpp",
                 ],
                 extra_compile_args=["-std=c++11"],
+                include_dirs=["inc/", numpy.get_include()],
             )
         ],
-        include_dirs=["inc/"] + numpy.distutils.misc_util.get_numpy_include_dirs(),
         install_requires=["numpy", "tqdm"],
         classifiers=[
             # complete list: http://pypi.python.org/pypi?%3Aaction=list_classifiers
