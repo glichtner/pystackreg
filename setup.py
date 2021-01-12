@@ -32,7 +32,7 @@ if __name__ == "__main__":
         long_description="\n\n".join([readme, change]),
         version=__version__,
         author="Gregor Lichtner (python/C++ port);"
-               "TurboReg Author: Philippe Thévenaz, Biomedical Imaging Group"
+               "TurboReg Author: Philippe Thévenaz, Biomedical Imaging Group,"
                "Swiss Federal Institute of Technology Lausanne",
         url="https://github.com/glichtner/pystackreg",
         packages=find_packages("."),
