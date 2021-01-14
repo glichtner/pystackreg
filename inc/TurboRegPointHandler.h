@@ -4,7 +4,6 @@
  * Porting by Gregor Lichtner
  */
 
-
 /*====================================================================
 | Philippe Thevenaz
 | EPFL/STI/IMT/LIB/BM.4.137
@@ -43,49 +42,36 @@
 | publish results that are based on it.
 \===================================================================*/
 
+#include <cmath>
+
 #include "TurboReg.h"
 #include "TurboRegImage.h"
-#include <cmath>
 #include "matrix.h"
 
 #ifndef TURBOREGPOINTHANDLER_H_
 #define TURBOREGPOINTHANDLER_H_
 
-class TurboRegPointHandler
-{ /* class TurboRegPointHandler */
+class TurboRegPointHandler { /* class TurboRegPointHandler */
 public:
+  TurboRegPointHandler(TurboRegImage &img, Transformation transformation);
 
-    TurboRegPointHandler (
-        TurboRegImage &img,
-		Transformation transformation
-    );
+  TurboRegPointHandler(matrix<double> &precisionPoint);
 
-    TurboRegPointHandler (
-    	matrix<double> &precisionPoint
-    );
+  matrix<double> &getPoints();
 
-    matrix<double> &getPoints();
+  void setPoints(matrix<double> &precisionPoint);
 
-    void setPoints (
-        matrix<double> &precisionPoint
-    );
-
-    void setPointsByTransformation(
-		int width,
-		int height,
-    	Transformation transformation
-	);
+  void setPointsByTransformation(int width, int height,
+                                 Transformation transformation);
 
 private:
-    /*********************************************************************
-     The golden ratio mathematical constant determines where to put the
-    initial landmarks.
-    ********************************************************************/
-    static double GOLDEN_RATIO;
+  /*********************************************************************
+   The golden ratio mathematical constant determines where to put the
+  initial landmarks.
+  ********************************************************************/
+  static double GOLDEN_RATIO;
 
-
-    matrix<double> precisionPoint; // = new double[NUM_POINTS * 2];
+  matrix<double> precisionPoint; // = new double[NUM_POINTS * 2];
 };
-
 
 #endif
