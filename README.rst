@@ -47,7 +47,7 @@ pyStackReg provides the following five types of distortion:
 - affine (translation + rotation + scaling + shearing)
 - bilinear (non-linear transformation; does not preserve straight lines)
 
-pyStackReg supports the full functionality of StackReg plus some additional options, e.g., using different reference images and having access to the actual transformation matrices (please see the examples below). Note that pyStackReg only provides the high quality (i.e. high accuracy) mode of TurboReg.
+pyStackReg supports the full functionality of StackReg plus some additional options, e.g., using different reference images and having access to the actual transformation matrices (please see the examples below). Note that pyStackReg uses the high quality (i.e. high accuracy) mode of TurboReg that uses cubic spline interpolation for transformation.
 
 Please note: The bilinear transformation cannot be propagated, as a combination of bilinear transformations does not generally result in a bilinear transformation. Therefore, stack registration/transform functions won't work with bilinear transformation when using "previous" image as reference image. You can either use another reference ("first" or "mean" for first or mean image, respectively), or try to register/transform each image of the stack separately to its respective previous image (and use the already transformed previous image as reference for the next image).
 
