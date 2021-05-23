@@ -202,8 +202,7 @@ The next example shows how to separate registration from transformation for a st
     out = np.zeros(img0.shape).astype(np.float)
 
     for i in range(tmats.shape[0]):
-        tform = tf.AffineTransform(matrix=tmats[i, :, :])
-        out[i, :, :] = tf.warp(img1[i, :, :], tform)
+        out[i, :, :] = tf.warp(img1[i, :, :], tmats[i, :, :], order=3)
 
 
 Author information
