@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from . import turboreg  # type: ignore
 import numpy as np
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import warnings
 
 
