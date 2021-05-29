@@ -373,7 +373,7 @@ class StackReg:
         :type processes: int, optional
         :param processes:
             Set the number of processes that will be used when transforming the
-            stack, only used in the case were reference == 'mean'
+            stack, only used in the case were reference is 'mean' or 'first'
 
         :rtype:  ndarray(img.shape[axis], 3, 3)
         :return: The transformation matrix for each image in the stack
@@ -427,7 +427,7 @@ class StackReg:
 
         iterable = range(idx_start, img.shape[axis])
 
-        if reference == 'mean' and processes>1:
+        if reference in ['mean','first'] and processes>1:
             with Pool(processes=processes) as pool:
                 pool_iter = pool.imap_unordered(self.reg_help, [[ref, simple_slice(img, i , axis),i] for i in iterable])
                 if verbose:
@@ -553,7 +553,7 @@ class StackReg:
         :type processes: int, optional
         :param processes:
             Set the number of processes that will be used when transforming the
-            stack, only used in the case were reference == 'mean'
+            stack, only used in the case were reference is 'mean' or 'first'
 
         :rtype:  ndarray(Ni..., Nj..., Nk...)
         :return: The transformed stack
