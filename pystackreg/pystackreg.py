@@ -413,7 +413,7 @@ class StackReg:
                 "Number of saved transformation matrices does not match stack length"
             )
 
-        out = img.copy().astype(np.float)
+        out = img.copy().astype(float)
 
         for i in range(img.shape[axis]):
             slc = [slice(None)] * len(out.shape)
