@@ -5,4 +5,3 @@ requires = ["setuptools", "wheel", "numpy"]
 test-requires = ["pytest", "tqdm", "tifffile"]
 test-command = "pytest {project}/tests"
 skip="pp37-macos*"
-

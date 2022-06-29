@@ -5,6 +5,7 @@ from tqdm import tqdm
 import warnings
 from .util import simple_slice, running_mean
 
+
 class StackReg:
     """
     Python implementation of the ImageJ/Fiji StackReg plugin
