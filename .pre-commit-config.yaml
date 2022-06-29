@@ -8,7 +8,7 @@ repos:
   -   id: mixed-line-ending
   -   id: pretty-format-json
 - repo: https://github.com/ambv/black
-  rev: stable
+  rev: 22.6.0
   hooks:
   - id: black
 - repo: https://gitlab.com/pycqa/flake8
