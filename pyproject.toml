@@ -1,2 +1,8 @@
 [build-system]
 requires = ["setuptools", "wheel", "numpy"]
+
+[tool.cibuildwheel]
+test-requires = ["pytest", "tqdm", "tifffile"]
+test-command = "pytest {project}/tests"
+skip="pp37-macos*"
+
