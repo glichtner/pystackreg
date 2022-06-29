@@ -3,59 +3,7 @@ from . import turboreg  # type: ignore
 import numpy as np
 from tqdm import tqdm
 import warnings
-
-
-def simple_slice(arr, inds, axis):
-    """
-    Take elements from an array along an axis.
-
-    This does the same as np.take() except only supports simple slicing, not
-    advanced indexing, and thus is much faster
-
-    :type arr: array_like (Ni..., M, Nk...)
-    :param arr: The source array to slice from
-
-    :type inds: int or array_like (Nj...)
-    :param inds:
-        The indices of the values to extract
-
-    :type axis: int
-    :param axis: The axis over which to select values
-
-    :rtype:  ndarray(Ni..., Nj..., Nk...)
-    :return: The returned array has the same type as arr
-    """
-
-    sl = [slice(None)] * arr.ndim
-    sl[axis] = inds
-    return arr[tuple(sl)]
-
-
-def running_mean(x, N, axis=0):
-    """
-    Calculate running mean (=moving average) across a given axis.
-
-    The array is padded with the first and last value such that
-    the resulting running mean has the same dimensions as the input array.
-
-    :type x: array_like (Ni..., Nj..., Nk...)
-    :param x: The source array
-
-    :type N: int
-    :param N:
-        Number of elements to average over
-
-    :type axis: int, optional
-    :param axis: The axis across which the running mean is calculated
-
-    :rtype:  ndarray(Ni..., Nj..., Nk...)
-    :return: The returned array has the same shape and type as x
-    """
-    pad_width = [[0, 0]] * len(x.shape)
-    pad_width[axis] = [int(np.ceil(N / 2)), int(np.floor(N / 2))]
-    cumsum = np.cumsum(np.pad(x, pad_width, "edge"), axis=axis)
-    return (cumsum[N:] - cumsum[:-N]) / float(N)
-
+from .util import simple_slice, running_mean
 
 class StackReg:
     """
