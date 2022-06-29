@@ -4,7 +4,7 @@ import numpy as np
 from pystackreg import StackReg
 import tifffile as tif
 
-BASE_PATH = "tests/data/"
+BASE_PATH = os.path.dirname(__file__) + "/data/"
 prefix = "pc12"
 
 
