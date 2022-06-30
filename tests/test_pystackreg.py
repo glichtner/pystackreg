@@ -4,7 +4,7 @@ import numpy as np
 from pystackreg import StackReg
 import tifffile as tif
 
-BASE_PATH = "tests/data/"
+BASE_PATH = os.path.dirname(__file__) + "/data/"
 prefix = "pc12"
 
 
@@ -122,5 +122,8 @@ def test_different_axis(stack, stack_unregistered, frame_axis):
 
     assert out.shape == stack["registered"].shape
     np.testing.assert_allclose(
-        to_uint16(out), to_uint16(stack["registered"]), rtol=1e-7, atol=1,
+        to_uint16(out),
+        to_uint16(stack["registered"]),
+        rtol=1e-7,
+        atol=1,
     )
