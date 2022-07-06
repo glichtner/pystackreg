@@ -21,10 +21,37 @@ def to_uint16(arr):
     :rtype:  ndarray(Ni..., Nj..., Nk...)
     :return: Input array clipped & rounded to unsigned 16 bit integer
     """
+    return to_int_dtype(arr, np.uint16)
 
+
+def to_int_dtype(arr: np.ndarray, dtype: type):
+    """
+    Converts image data array to an integer array of the given dtype.
+
+    .. warning:: Data loss may occur as data points outside of the datatypes min/max are
+       clipped.
+
+    StackReg generally output float arrays. This utility function can be used to convert
+    such an output array to integer data by clipping to the bounds of the integer dtype
+    and rounding the floats.
+
+    :type arr: array_like (Ni..., M, Nk...)
+    :param arr: Source array (usually float)
+
+    :type dtype: type
+    :param dtype: Integer datatype (e.g. np.uint16)
+
+    :rtype:  ndarray(Ni..., Nj..., Nk...)
+    :return: Input array clipped & rounded to integer dtype
+    """
     assert type(arr) == np.ndarray, "Input must be a numpy array"
 
-    return np.round(arr.clip(min=0, max=65535)).astype(np.uint16)
+    if not np.issubdtype(dtype, np.integer):
+        return arr
+
+    ii = np.iinfo(dtype)
+
+    return np.round(arr.clip(min=ii.min, max=ii.max)).astype(dtype)
 
 
 def simple_slice(arr, inds, axis):

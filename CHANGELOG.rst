@@ -2,6 +2,14 @@
 Changelog
 #########
 
+0.2.6
+=====
+
+added
+-----
+- exposing simple_slice and running_mean functions in util package
+- added conversion function to any integer dtype
+
 0.2.5
 =====
 
