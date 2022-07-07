@@ -3,9 +3,9 @@ pyStackReg
 
 .. start-badges
 
-.. image:: https://ci.appveyor.com/api/projects/status/3kqq8qyc9b7o1coe?svg=true
-    :target: https://ci.appveyor.com/api/projects/status/3kqq8qyc9b7o1coe?svg=true
-    :alt: Build status
+.. image:: https://github.com/glichtner/pystackreg/actions/workflows/wheels-deploy.yml/badge.svg
+    :target: https://github.com/glichtner/pystackreg/actions/workflows/wheels-deploy.yml
+    :alt: Build & Test
 
 .. image:: https://readthedocs.org/projects/pystackreg/badge/?version=latest
     :target: https://pystackreg.readthedocs.io/en/latest/?badge=latest
