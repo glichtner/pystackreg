@@ -57,6 +57,11 @@ jobs:
           name: artifact
           path: dist
 
+      - uses: ncipollo/release-action@v1
+          with:
+            artifacts: "dist/*.whl,dist/*.tar.gz"
+            token: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: pypa/gh-action-pypi-publish@v1.5.0
         with:
           user: __token__
