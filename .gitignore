@@ -19,3 +19,4 @@ MANIFEST
 .coverage
 .coverage/
 .mypy_cache/
+notebooks/
