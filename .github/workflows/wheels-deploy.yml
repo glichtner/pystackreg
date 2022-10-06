@@ -1,10 +1,9 @@
-name: Build wheels
+name: Build and deploy wheels
 
 on:
   push:
-    branches:
-      - master
-      - main
+    tags:
+      - v*
 
 jobs:
   build_wheels:
