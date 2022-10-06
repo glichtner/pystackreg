@@ -2,6 +2,13 @@
 Changelog
 #########
 
+0.2.7
+=====
+
+fixed
+------
+- Axis argument not used for method "mean" in register_stack() (`PR #26 <https://github.com/glichtner/pystackreg/pull/26>`_)
+
 0.2.6
 =====
 
