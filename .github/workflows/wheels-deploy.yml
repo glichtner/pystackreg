@@ -1,14 +1,10 @@
-name: Build and upload to PyPI
+name: Build wheels
 
-# Build on every branch push, tag push, and pull request change:
-on: [push, pull_request]
-# Alternatively, to publish when a (published) GitHub Release is created, use the following:
-# on:
-#   push:
-#   pull_request:
-#   release:
-#     types:
-#       - published
+on:
+  push:
+    branches:
+      - master
+      - main
 
 jobs:
   build_wheels:
@@ -23,7 +19,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.7.0
+        uses: pypa/cibuildwheel@v2.10.2
 
       - uses: actions/upload-artifact@v3
         with:
