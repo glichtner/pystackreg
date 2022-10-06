@@ -17,8 +17,9 @@ setup(
     name="pystackreg",
     description="Python implementation of the ImageJ/FIJI Plugin TurboReg/StackReg",
     long_description=read("README.rst"),
-    version=__version__,
-    author="Gregor Lichtner (python/C++ port); TurboReg Author: Philippe Thévenaz, Biomedical Imaging Group, Swiss Federal Institute of Technology Lausanne",
+    version=__version__,  # type: ignore # noqa: F821
+    author="Gregor Lichtner (python/C++ port); TurboReg Author: Philippe Thévenaz, "
+    "Biomedical Imaging Group, Swiss Federal Institute of Technology Lausanne",
     url="https://bitbucket.org/glichtner/pystackreg",
     packages=["pystackreg"],
     ext_modules=[
