@@ -350,7 +350,7 @@ class StackReg:
         if reference == "first":
             ref = np.mean(img.take(range(n_frames), axis=axis), axis=axis)
         elif reference == "mean":
-            ref = img.mean(axis=0)
+            ref = img.mean(axis=axis)
             idx_start = 0
         elif reference == "previous":
             pass
