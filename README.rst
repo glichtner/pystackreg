@@ -51,6 +51,10 @@ pyStackReg supports the full functionality of StackReg plus some additional opti
 
 Please note: The bilinear transformation cannot be propagated, as a combination of bilinear transformations does not generally result in a bilinear transformation. Therefore, stack registration/transform functions won't work with bilinear transformation when using "previous" image as reference image. You can either use another reference ("first" or "mean" for first or mean image, respectively), or try to register/transform each image of the stack separately to its respective previous image (and use the already transformed previous image as reference for the next image).
 
+Known issues
+............
+- pystackreg (and StackReg/TurboReg) have known issues with processing strongly rotated images (e.g. by ~90°; see https://github.com/glichtner/pystackreg/issues/30 for a workaround).
+
 
 Installation
 ------------
