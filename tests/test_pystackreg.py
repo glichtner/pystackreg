@@ -62,7 +62,6 @@ def stack_bilinear():
 
 
 def load_file(transformation):
-
     if transformation == "unregistered":
         fname = prefix + "-unreg"
     else:
