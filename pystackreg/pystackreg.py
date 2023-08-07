@@ -363,7 +363,6 @@ class StackReg:
             iterable = tqdm(iterable)
 
         for i in iterable:
-
             slc = [slice(None)] * len(img.shape)
             slc[axis] = i
 
