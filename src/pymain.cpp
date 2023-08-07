@@ -267,8 +267,10 @@ PyObject *turbogreg_transform(PyObject *self, PyObject *args) {
   matrix<double> m(Nx_mat, Ny_mat);
   memcpy(m.begin(), tmat, (Nx_mat * Ny_mat * sizeof(double)));
 
+  std::vector<double> imgout;
+
   Py_BEGIN_ALLOW_THREADS
-  std::vector<double> imgout =
+  imgout =
       transformImg(m, img_mov, Ny_mov,
                    Nx_mov); // width and height (Nx/Ny) have to be swapped!
   Py_END_ALLOW_THREADS
