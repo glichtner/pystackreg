@@ -3,8 +3,6 @@
 import os
 from setuptools import setup, Extension, find_packages
 
-# cannot directly import because __init__.py imports pystackreg which imports the
-# compiled plugin, which is not available before setup.py is run
 __version__ = ""  # placeholder for linters
 exec(open("pystackreg/version.py").read())
 
@@ -16,7 +14,6 @@ def read(fname):
 class get_numpy_include(object):
     def __str__(self):
         import numpy
-
         return numpy.get_include()
 
 
@@ -26,13 +23,17 @@ if __name__ == "__main__":
 
     setup(
         name="pystackreg",
-        description="Image registration tool (python implementation of the ImageJ/FIJI "
-        "Plugin TurboReg/StackReg)",
+        description=(
+            "Image registration tool (python implementation of the ImageJ/FIJI "
+            "Plugin TurboReg/StackReg)"
+        ),
         long_description="\n\n".join([readme, change]),
         version=__version__,
-        author="Gregor Lichtner (python/C++ port);"
-        "TurboReg Author: Philippe Thévenaz, Biomedical Imaging Group,"
-        "Swiss Federal Institute of Technology Lausanne",
+        author=(
+            "Gregor Lichtner (python/C++ port);"
+            "TurboReg Author: Philippe Thévenaz, Biomedical Imaging Group,"
+            "Swiss Federal Institute of Technology Lausanne"
+        ),
         url="https://github.com/glichtner/pystackreg",
         packages=find_packages("."),
         ext_modules=[
@@ -51,7 +52,7 @@ if __name__ == "__main__":
             )
         ],
         setup_requires=["numpy"],
-        install_requires=["numpy", "tqdm"],
+        install_requires=["numpy<2", "tqdm"],
         classifiers=[
             # complete list: http://pypi.python.org/pypi?%3Aaction=list_classifiers
             "Development Status :: 5 - Production/Stable",
@@ -62,12 +63,12 @@ if __name__ == "__main__":
             "Operating System :: POSIX",
             "Programming Language :: C++",
             "Programming Language :: Python",
-            "Programming Language :: Python :: 2.7",
-            "Programming Language :: Python :: 3.5",
-            "Programming Language :: Python :: 3.6",
             "Programming Language :: Python :: 3.7",
             "Programming Language :: Python :: 3.8",
             "Programming Language :: Python :: 3.9",
+            "Programming Language :: Python :: 3.10",
+            "Programming Language :: Python :: 3.11",
+            "Programming Language :: Python :: 3.12",
             "Topic :: Scientific/Engineering :: Image Processing",
             "Topic :: Utilities",
         ],
