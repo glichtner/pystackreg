@@ -1,6 +1,7 @@
 """
 Collection of utility functions for pystackreg
 """
+
 import numpy as np
 
 
