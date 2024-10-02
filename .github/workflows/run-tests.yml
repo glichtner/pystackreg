@@ -6,31 +6,53 @@ on:
       - main
   pull_request:
 
-
 jobs:
   test:
-    name: test ${{ matrix.python-version }} - ${{ matrix.os }}
+    name: test py==${{ matrix.python-version }} - numpy==${{ matrix.numpy-version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
-        exclude:
-          - os: macos-latest
-            python-version: "3.7"
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        numpy-version: ["1.26", "2.0"]
+        include:
 
+          - python-version: "3.7"
+            os: windows-latest
+            numpy-version: "1.21"
+
+          - python-version: "3.7"
+            os: ubuntu-latest
+            numpy-version: "1.21"
+
+          - python-version: "3.8"
+            os: windows-latest
+            numpy-version: "1.24"
+
+          - python-version: "3.8"
+            os: macos-latest
+            numpy-version: "1.24"
+
+          - python-version: "3.8"
+            os: ubuntu-latest
+            numpy-version: "1.24"
 
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+
       - name: Install tox and dependencies
         run: |
-          python -m pip install --upgrade pip
+          python -m pip install --upgrade pip setuptools wheel
           pip install tox
-      - name: Test with tox
+
+      - name: Run tests with numpy ${{ matrix.numpy-version }}
+        env:
+          NUMPY_VERSION: ${{ matrix.numpy-version }}  # Pass numpy version to tox
         run: |
           tox -e py

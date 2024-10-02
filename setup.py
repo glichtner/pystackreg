@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import os
-from setuptools import setup, Extension, find_packages
+
+from setuptools import Extension, find_packages, setup
 
 __version__ = ""  # placeholder for linters
 exec(open("pystackreg/version.py").read())
@@ -53,7 +54,7 @@ if __name__ == "__main__":
             )
         ],
         setup_requires=["numpy"],
-        install_requires=["numpy<2", "tqdm"],
+        install_requires=["numpy", "tqdm"],
         classifiers=[
             # complete list: http://pypi.python.org/pypi?%3Aaction=list_classifiers
             "Development Status :: 5 - Production/Stable",

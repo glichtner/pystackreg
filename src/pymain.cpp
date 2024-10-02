@@ -7,6 +7,7 @@
  *      Author: Gregor Lichtner
  */
 
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <Python.h>
 #include <numpy/arrayobject.h>
 
@@ -31,7 +32,7 @@ typedef struct regMat {
 } regMat;
 
 static PyObject *turbogreg_register(PyObject *self, PyObject *args);
-static PyObject *turbogreg_transform(PyObject *self, PyObject *args);
+static PyArrayObject *turbogreg_transform(PyObject *self, PyObject *args);
 
 static char pystackreg_docs[] = "PyStackReg\n";
 static PyMethodDef module_methods[] = {
@@ -147,8 +148,16 @@ PyObject *turbogreg_register(PyObject *self, PyObject *args) {
   }
 
   /* Interpret the input objects as numpy arrays. */
-  PyObject *ref_array = PyArray_FROM_OTF(ref, NPY_DOUBLE, NPY_IN_ARRAY);
-  PyObject *mov_array = PyArray_FROM_OTF(mov, NPY_DOUBLE, NPY_IN_ARRAY);
+  PyObject *po_ref_array = PyArray_FROM_OTF(ref, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+  PyObject *po_mov_array = PyArray_FROM_OTF(mov, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+
+  if (!PyArray_Check(po_ref_array) || !PyArray_Check(po_mov_array)) {
+    PyErr_SetString(PyExc_TypeError, "Expected a numpy array");
+    return NULL;
+  }
+
+  PyArrayObject *ref_array = (PyArrayObject *)po_ref_array;
+  PyArrayObject *mov_array = (PyArrayObject *)po_mov_array;
 
   /* If that didn't work, throw an exception. */
   if (ref_array == NULL || mov_array == NULL) {
@@ -199,9 +208,9 @@ PyObject *turbogreg_register(PyObject *self, PyObject *args) {
   dims_pts[0] = rm.refPts.nrows();
   dims_pts[1] = rm.refPts.ncols();
 
-  PyObject *retMat = PyArray_SimpleNew(2, (npy_intp *)&dims_mat, NPY_DOUBLE);
-  PyObject *retPtsRef = PyArray_SimpleNew(2, (npy_intp *)&dims_pts, NPY_DOUBLE);
-  PyObject *retPtsMov = PyArray_SimpleNew(2, (npy_intp *)&dims_pts, NPY_DOUBLE);
+  PyArrayObject *retMat = (PyArrayObject*)PyArray_SimpleNew(2, (npy_intp *)&dims_mat, NPY_DOUBLE);
+  PyArrayObject *retPtsRef = (PyArrayObject*)PyArray_SimpleNew(2, (npy_intp *)&dims_pts, NPY_DOUBLE);
+  PyArrayObject *retPtsMov = (PyArrayObject*)PyArray_SimpleNew(2, (npy_intp *)&dims_pts, NPY_DOUBLE);
 
   memcpy((void *)PyArray_DATA(retMat), rm.mat.begin(),
          (dims_mat[0] * dims_mat[1] * sizeof(double)));
@@ -213,7 +222,7 @@ PyObject *turbogreg_register(PyObject *self, PyObject *args) {
   return Py_BuildValue("OOO", retMat, retPtsRef, retPtsMov);
 }
 
-PyObject *turbogreg_transform(PyObject *self, PyObject *args) {
+PyArrayObject *turbogreg_transform(PyObject *self, PyObject *args) {
   PyObject *mov;
   PyObject *mat;
 
@@ -223,15 +232,23 @@ PyObject *turbogreg_transform(PyObject *self, PyObject *args) {
   }
 
   /* Interpret the input objects as numpy arrays. */
-  PyObject *mov_array = PyArray_FROM_OTF(mov, NPY_DOUBLE, NPY_IN_ARRAY);
-  PyObject *mat_array = PyArray_FROM_OTF(mat, NPY_DOUBLE, NPY_IN_ARRAY);
+  PyObject *po_mov_array = PyArray_FROM_OTF(mov, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+  PyObject *po_mat_array = PyArray_FROM_OTF(mat, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
 
   /* If that didn't work, throw an exception. */
-  if (mov_array == NULL || mat_array == NULL) {
-    Py_XDECREF(mat_array);
-    Py_XDECREF(mov_array);
+  if (po_mov_array == NULL || po_mat_array == NULL) {
+    Py_XDECREF(po_mat_array);
+    Py_XDECREF(po_mov_array);
     return NULL;
   }
+
+  if (!PyArray_Check(po_mat_array) || !PyArray_Check(po_mov_array)) {
+    PyErr_SetString(PyExc_TypeError, "Expected a numpy array");
+    return NULL;
+  }
+
+  PyArrayObject *mov_array = (PyArrayObject *)po_mov_array;
+  PyArrayObject *mat_array = (PyArrayObject *)po_mat_array;
 
   int ndim_mov = (int)PyArray_NDIM(mov_array);
   int ndim_mat = (int)PyArray_NDIM(mat_array);
@@ -275,7 +292,7 @@ PyObject *turbogreg_transform(PyObject *self, PyObject *args) {
 
   npy_intp dims[2] = {Nx_mov, Ny_mov};
 
-  PyObject *ret = PyArray_SimpleNew(2, (npy_intp *)&dims, NPY_DOUBLE);
+  PyArrayObject *ret = (PyArrayObject*)PyArray_SimpleNew(2, (npy_intp *)&dims, NPY_DOUBLE);
 
   memcpy((void *)PyArray_DATA(ret), &imgout[0],
          (Nx_mov * Ny_mov * sizeof(double)));
