@@ -1,6 +1,7 @@
 """
 Collection of utility functions for pystackreg
 """
+
 import numpy as np
 
 
@@ -44,7 +45,7 @@ def to_int_dtype(arr: np.ndarray, dtype: type):
     :rtype:  ndarray(Ni..., Nj..., Nk...)
     :return: Input array clipped & rounded to integer dtype
     """
-    assert type(arr) == np.ndarray, "Input must be a numpy array"
+    assert isinstance(arr, np.ndarray), "Input must be a numpy array"
 
     if not np.issubdtype(dtype, np.integer):
         return arr
