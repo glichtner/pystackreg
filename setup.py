@@ -14,6 +14,7 @@ def read(fname):
 class get_numpy_include(object):
     def __str__(self):
         import numpy
+
         return numpy.get_include()
 
 
