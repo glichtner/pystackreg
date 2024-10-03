@@ -30,6 +30,7 @@ if __name__ == "__main__":
             "Plugin TurboReg/StackReg)"
         ),
         long_description="\n\n".join([readme, change]),
+        long_description_content_type="text/x-rst",
         version=__version__,
         author=(
             "Gregor Lichtner (python/C++ port);"

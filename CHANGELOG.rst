@@ -1,70 +1,74 @@
-#########
 Changelog
-#########
+=========
+
+0.2.8
+-----
+
+Fixed
+.....
+- Add NumPy 2 support
 
 0.2.7
-=====
+-----
 
-fixed
-------
+Fixed
+.....
 - Axis argument not used for method "mean" in register_stack() (`PR #26 <https://github.com/glichtner/pystackreg/pull/26>`_)
 
 0.2.6
-=====
-
-added
 -----
-- exposing simple_slice and running_mean functions in util package
-- added conversion function to any integer dtype
+
+Added
+.....
+- Exposing `simple_slice` and `running_mean` functions in the util package
+- Added conversion function to any integer dtype
 
 0.2.5
-=====
-
-fixed
 -----
-- Compilation in environment without numpy
+
+Fixed
+.....
+- Compilation in environments without NumPy
 
 0.2.3
-=====
-
-added
 -----
+
+Added
+.....
 - Added example data and tutorial notebook
 - Added unit tests
 - Additional documentation
-- Detection of time series axis in stacks - will raise a warning if supplied axis in
-  stack registration does not correspond to the detected axis
+- Detection of time series axis in stacks – will raise a warning if supplied axis in stack registration does not correspond to the detected axis
 
-changed
--------
-- `progress_callback` function now gets called with the iteration number, not
-  iteration index (iteration number = iteration index + 1)
+Changed
+.....~~
+- `progress_callback` function now gets called with the iteration number, not the iteration index (iteration number = iteration index + 1)
 
-fixed
------
+Fixed
+.....
 - Fixed exception when using a different axis than 0 for registering stacks
 
 0.2.2
-=====
+-----
 
-changed
--------
-- License changed to allow distribution on python package repositories
+Changed
+.....~~
+- License changed to allow distribution on Python package repositories
 
 0.2.1
-=====
-
-added
 -----
-- progress callback function can be supplied to `register_stack()` and `register_transform_stack()` functions via the `progress_callback` that is then called after every iteration (i.e. after each image registration)
 
-changed
--------
-- progress bar output not shown by default, has to be enabled by using the `verbose=True` parameter in the `register_stack()` and `register_transform_stack()` functions
+Added
+.....
+- Progress callback function can be supplied to `register_stack()` and `register_transform_stack()` functions via the `progress_callback` parameter. It is called after every iteration (i.e., after each image registration).
+
+Changed
+.....~~
+- Progress bar output is not shown by default, has to be enabled by using the `verbose=True` parameter in the `register_stack()` and `register_transform_stack()` functions
 
 0.2.0
-=====
-
-added
 -----
-- bilinear transformation
+
+Added
+.....
+- Bilinear transformation
