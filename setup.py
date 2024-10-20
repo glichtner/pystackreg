@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import os
-from setuptools import setup, Extension, find_packages
 
-# cannot directly import because __init__.py imports pystackreg which imports the
-# compiled plugin, which is not available before setup.py is run
+from setuptools import Extension, find_packages, setup
+
 __version__ = ""  # placeholder for linters
 exec(open("pystackreg/version.py").read())
 
@@ -26,13 +25,18 @@ if __name__ == "__main__":
 
     setup(
         name="pystackreg",
-        description="Image registration tool (python implementation of the ImageJ/FIJI "
-        "Plugin TurboReg/StackReg)",
+        description=(
+            "Image registration tool (python implementation of the ImageJ/FIJI "
+            "Plugin TurboReg/StackReg)"
+        ),
         long_description="\n\n".join([readme, change]),
+        long_description_content_type="text/x-rst",
         version=__version__,
-        author="Gregor Lichtner (python/C++ port);"
-        "TurboReg Author: Philippe Thévenaz, Biomedical Imaging Group,"
-        "Swiss Federal Institute of Technology Lausanne",
+        author=(
+            "Gregor Lichtner (python/C++ port);"
+            "TurboReg Author: Philippe Thévenaz, Biomedical Imaging Group,"
+            "Swiss Federal Institute of Technology Lausanne"
+        ),
         url="https://github.com/glichtner/pystackreg",
         packages=find_packages("."),
         ext_modules=[
@@ -62,12 +66,12 @@ if __name__ == "__main__":
             "Operating System :: POSIX",
             "Programming Language :: C++",
             "Programming Language :: Python",
-            "Programming Language :: Python :: 2.7",
-            "Programming Language :: Python :: 3.5",
-            "Programming Language :: Python :: 3.6",
             "Programming Language :: Python :: 3.7",
             "Programming Language :: Python :: 3.8",
             "Programming Language :: Python :: 3.9",
+            "Programming Language :: Python :: 3.10",
+            "Programming Language :: Python :: 3.11",
+            "Programming Language :: Python :: 3.12",
             "Topic :: Scientific/Engineering :: Image Processing",
             "Topic :: Utilities",
         ],

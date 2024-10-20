@@ -1,7 +1,13 @@
 exclude: '^docs/'
 repos:
+- repo: https://github.com/pycqa/isort
+  rev: 5.13.2
+  hooks:
+    - id: isort
+      name: isort (python)
+      args: ["--profile", "black", "--filter-files"]
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.4.0
+  rev: v4.6.0
   hooks:
   -   id: trailing-whitespace
       exclude: '^.bumpversion.cfg$'
@@ -10,19 +16,19 @@ repos:
   -   id: pretty-format-json
       args: ['--autofix', '--no-sort-keys']
 - repo: https://github.com/ambv/black
-  rev: 23.7.0
+  rev: 24.8.0
   hooks:
   - id: black
 - repo: https://github.com/PyCQA/flake8
-  rev: '6.1.0'
+  rev: '7.1.1'
   hooks:
-  - id: flake8
+  -   id: flake8
 - repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.4.1
+  rev: v1.11.2
   hooks:
   -   id: mypy
 - repo: https://github.com/codespell-project/codespell
-  rev: 'v2.2.5'
+  rev: 'v2.3.0'
   hooks:
   -   id: codespell
       name: codespell

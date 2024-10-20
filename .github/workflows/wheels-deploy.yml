@@ -5,59 +5,223 @@ on:
     tags:
       - v*
 
-jobs:
-  build_wheels:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
+  workflow_dispatch:
+    inputs:
+      os_choice:
+        description: 'Choose what to build'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - sdist-only
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
 
+jobs:
+  build_wheels_ubuntu:
+    name: Build wheels on ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Check if build is needed
+        id: check_build
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "build_needed=true" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event.inputs.os_choice }}" = "all" ] || [ "${{ github.event.inputs.os_choice }}" = "ubuntu-latest" ]; then
+            echo "build_needed=true" >> $GITHUB_OUTPUT
+          else
+            echo "build_needed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: actions/checkout@v4
+        if: ${{ steps.check_build.outputs.build_needed == 'true' }}
+
+      - name: Set up Python 3.11
+        if: ${{ steps.check_build.outputs.build_needed == 'true' }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.10.2
-
-      - uses: actions/upload-artifact@v3
+        if: ${{ steps.check_build.outputs.build_needed == 'true' }}
+        uses: pypa/cibuildwheel@v2.21.1
         with:
+          output-dir: ./wheelhouse
+
+      - name: Upload wheels
+        if: ${{ steps.check_build.outputs.build_needed == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-ubuntu-latest
           path: ./wheelhouse/*.whl
+          overwrite: true
+
+  build_wheels_windows:
+    name: Build wheels on windows-latest
+    runs-on: windows-latest
+    steps:
+      - name: Check if build is needed
+        id: check_build
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "build_needed=true" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && { [ "${{ github.event.inputs.os_choice }}" = "all" ] || [ "${{ github.event.inputs.os_choice }}" = "windows-latest" ]; }; then
+            echo "build_needed=true" >> $GITHUB_OUTPUT
+          else
+            echo "build_needed=false" >> $GITHUB_OUTPUT
+          fi
+
+
+      - uses: actions/checkout@v4
+        if: ${{ steps.check_build.outputs.build_needed == 'true' }}
+
+      - name: Set up Python 3.11
+        if: ${{ steps.check_build.outputs.build_needed == 'true' }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Build wheels
+        if: ${{ steps.check_build.outputs.build_needed == 'true' }}
+        uses: pypa/cibuildwheel@v2.21.1
+        with:
+          output-dir: ./wheelhouse
+
+      - name: Upload wheels
+        if: ${{ steps.check_build.outputs.build_needed == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-windows-latest
+          path: ./wheelhouse/*.whl
+          overwrite: true
+
+  build_wheels_macos:
+    name: Build wheels on macos-latest
+    runs-on: macos-latest
+    steps:
+      - name: Check if build is needed
+        id: check_build
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "build_needed=true" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event.inputs.os_choice }}" = "all" ] || [ "${{ github.event.inputs.os_choice }}" = "macos-latest" ]; then
+            echo "build_needed=true" >> $GITHUB_OUTPUT
+          else
+            echo "build_needed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: actions/checkout@v4
+        if: ${{ steps.check_build.outputs.build_needed == 'true' }}
+
+      - name: Set up Python 3.11
+        if: ${{ steps.check_build.outputs.build_needed == 'true' }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Build wheels
+        if: ${{ steps.check_build.outputs.build_needed == 'true' }}
+        uses: pypa/cibuildwheel@v2.21.1
+        with:
+          output-dir: ./wheelhouse
+
+      - name: Upload wheels
+        if: ${{ steps.check_build.outputs.build_needed == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-macos-latest
+          path: ./wheelhouse/*.whl
+          overwrite: true
 
   build_sdist:
     name: Build source distribution
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Check if build is needed
+        id: check_build
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "build_needed=true" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event.inputs.os_choice }}" = "all" ] || [ "${{ github.event.inputs.os_choice }}" = "sdist-only" ]; then
+            echo "build_needed=true" >> $GITHUB_OUTPUT
+          else
+            echo "build_needed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: actions/checkout@v4
+        if: ${{ steps.check_build.outputs.build_needed == 'true' }}
+
+      - name: Set up Python 3.11
+        if: ${{ steps.check_build.outputs.build_needed == 'true' }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Install build dependencies
+        if: ${{ steps.check_build.outputs.build_needed == 'true' }}
+        run: python -m pip install --upgrade pip build
 
       - name: Build sdist
-        run: pipx run build --sdist
+        if: ${{ steps.check_build.outputs.build_needed == 'true' }}
+        run: python -m build --sdist
 
-      - uses: actions/upload-artifact@v3
+      - name: Upload sdist
+        if: ${{ steps.check_build.outputs.build_needed == 'true' }}
+        uses: actions/upload-artifact@v4
         with:
+          name: sdist
           path: dist/*.tar.gz
+          overwrite: true
 
   upload_pypi:
-    needs: [build_wheels, build_sdist]
+    name: Upload to PyPI
+    needs:
+      - build_wheels_ubuntu
+      - build_wheels_windows
+      - build_wheels_macos
+      - build_sdist
     runs-on: ubuntu-latest
-    # upload to PyPI on every tag starting with 'v'
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    # alternatively, to publish when a GitHub Release is created, use the following rule:
-    # if: github.event_name == 'release' && github.event.action == 'published'
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
     steps:
-      - uses: actions/download-artifact@v3
+      - name: Download Ubuntu wheels
+        uses: actions/download-artifact@v4
         with:
-          # unpacks default artifact into dist/
-          # if `name: artifact` is omitted, the action will create extra parent dir
-          name: artifact
-          path: dist
+          name: wheels-ubuntu-latest
+          path: dist/
+        continue-on-error: true
 
-      - uses: ncipollo/release-action@v1
+      - name: Download Windows wheels
+        uses: actions/download-artifact@v4
         with:
-          artifacts: "dist/*.whl,dist/*.tar.gz"
-          token: ${{ secrets.GITHUB_TOKEN }}
+          name: wheels-windows-latest
+          path: dist/
+        continue-on-error: true
 
-      - uses: pypa/gh-action-pypi-publish@v1.5.0
+      - name: Download macOS wheels
+        uses: actions/download-artifact@v4
         with:
-          user: __token__
-          password: ${{ secrets.PYPI_PASSWORD }}
+          name: wheels-macos-latest
+          path: dist/
+        continue-on-error: true
+
+      - name: Download sdist
+        uses: actions/download-artifact@v4
+        with:
+          name: sdist
+          path: dist/
+        continue-on-error: true
+
+      - name: List artifacts (debug)
+        run: ls dist || echo "No artifacts found."
+
+      - name: Upload to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: |
+          pip install twine
+          twine upload dist/*

@@ -1,5 +1,7 @@
 [build-system]
-requires = ["setuptools", "wheel", "oldest-supported-numpy"]
+requires = ["setuptools", "wheel", "numpy"]
+build-backend = "setuptools.build_meta"
+
 
 [tool.cibuildwheel]
 test-requires = ["pytest", "tqdm", "tifffile"]
