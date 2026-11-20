@@ -171,17 +171,21 @@ def test_native_functions_validate_their_arguments(pair):
 
 def test_register_returns_new_references(pair):
     """Guards against the reference leak fixed in 0.3.0: the returned arrays
-    must be owned by the caller alone."""
+    must be owned by the result tuple alone. The expected count is taken from
+    a tuple of freshly created arrays handled in exactly the same way, because
+    what ``sys.getrefcount`` reports for such an object differs between Python
+    versions."""
     import sys
+
+    def counts(items):
+        return [sys.getrefcount(item) for item in items]
 
     ref, mov = pair
     result = turboreg._register(ref[:-1, :-1], mov[:-1, :-1], StackReg.AFFINE)
     assert isinstance(result, tuple)
     assert len(result) == 3
-    for item in result:
-        # one reference from the tuple, one from the loop variable, one from
-        # the argument of getrefcount
-        assert sys.getrefcount(item) == 3
+    expected = counts(tuple(np.zeros((2, 3)) for _ in range(3)))
+    assert counts(result) == expected
 
 
 # -- stack functions ---------------------------------------------------------
