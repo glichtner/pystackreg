@@ -91,7 +91,8 @@ ignore = [
 "tests/*" = ["B011"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["pystackreg", "helpers"]
+known-first-party = ["pystackreg"]
+known-local-folder = ["conftest", "generate_baseline", "helpers"]
 
 [tool.mypy]
 python_version = "3.10"

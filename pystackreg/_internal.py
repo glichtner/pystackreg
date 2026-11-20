@@ -219,21 +219,24 @@ def detect_time_axis(img: np.ndarray) -> int:
     # Variance along axis 0 from running sums of values shifted by the first
     # plane (the shift keeps the sums well conditioned for data with a large
     # offset). Variances along axes 1 and 2 are local to a chunk.
-    first = img[0].astype(np.float64)
-    sum0 = np.zeros_like(first)
-    sumsq0 = np.zeros_like(first)
-    var1_total = 0.0
-    var2_total = 0.0
-    for start in range(0, n0, step):
-        chunk = img[start : start + step].astype(np.float64)
-        var1_total += float(np.var(chunk, axis=1).sum())
-        var2_total += float(np.var(chunk, axis=2).sum())
-        chunk -= first
-        sum0 += chunk.sum(axis=0)
-        sumsq0 += np.square(chunk, out=chunk).sum(axis=0)
-    var0 = float((sumsq0 / n0 - np.square(sum0 / n0)).mean())
-    var1 = var1_total / (n0 * img.shape[2])
-    var2 = var2_total / (n0 * img.shape[1])
+    # Non-finite pixels make the statistics meaningless but must not emit
+    # floating-point warnings here; the registration reports them clearly.
+    with np.errstate(invalid="ignore", over="ignore"):
+        first = img[0].astype(np.float64)
+        sum0 = np.zeros_like(first)
+        sumsq0 = np.zeros_like(first)
+        var1_total = 0.0
+        var2_total = 0.0
+        for start in range(0, n0, step):
+            chunk = img[start : start + step].astype(np.float64)
+            var1_total += float(np.var(chunk, axis=1).sum())
+            var2_total += float(np.var(chunk, axis=2).sum())
+            chunk -= first
+            sum0 += chunk.sum(axis=0)
+            sumsq0 += np.square(chunk, out=chunk).sum(axis=0)
+        var0 = float((sumsq0 / n0 - np.square(sum0 / n0)).mean())
+        var1 = var1_total / (n0 * img.shape[2])
+        var2 = var2_total / (n0 * img.shape[1])
     return int(np.argmin([var0, var1, var2]))
 
 

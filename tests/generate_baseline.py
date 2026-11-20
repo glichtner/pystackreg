@@ -24,7 +24,7 @@ from pystackreg import StackReg
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from helpers import (  # noqa: E402
+from helpers import (
     TRANSFORMATIONS,
     Scene,
     drifting_stack,
@@ -83,7 +83,7 @@ def generate() -> dict:
         scene = Scene(shape)
         ref = scene.render()
         for name, tmat in known_transformations(shape).items():
-            key = "pair/%dx%d/%s" % (shape[0], shape[1], name)
+            key = f"pair/{shape[0]}x{shape[1]}/{name}"
             mov = scene.render(tmat)
             sr = StackReg(TRANSFORMATIONS[name])
             out[key + "/matrix"] = sr.register(ref, mov)
@@ -107,7 +107,7 @@ def generate() -> dict:
             if name == "bilinear" and reference == "previous":
                 continue
             sr = StackReg(code)
-            out["pc12/%s/%s" % (name, reference)] = sr.register_stack(
+            out[f"pc12/{name}/{reference}"] = sr.register_stack(
                 pc12, reference=reference
             )
     sr = StackReg(StackReg.RIGID_BODY)
@@ -116,7 +116,7 @@ def generate() -> dict:
     )
     for reference in ("first", "mean"):
         sr = StackReg(StackReg.RIGID_BODY)
-        out["pc12/rigid_body/%s_ma3" % reference] = sr.register_stack(
+        out[f"pc12/rigid_body/{reference}_ma3"] = sr.register_stack(
             pc12, reference=reference, moving_average=3
         )
     # -- dtypes ---------------------------------------------------------------
@@ -137,6 +137,6 @@ if __name__ == "__main__":
     result["meta/numpy_version"] = np.array(np.__version__)
     np.savez_compressed(target, **result)
     print(
-        "wrote %d arrays to %s using pystackreg %s from %s"
-        % (len(result), target, pystackreg.__version__, pystackreg.__file__)
+        f"wrote {len(result)} arrays to {target} using pystackreg "
+        f"{pystackreg.__version__} from {pystackreg.__file__}"
     )

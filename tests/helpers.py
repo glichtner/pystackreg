@@ -59,7 +59,9 @@ class Scene:
         """Evaluate the scene at coordinates ``x`` (column) and ``y`` (row)."""
         height, width = self.shape
         out = 100.0 + 20.0 * x / width + 10.0 * y / height
-        for cx, cy, sigma, amp in zip(self._cx, self._cy, self._sigma, self._amp):
+        for cx, cy, sigma, amp in zip(
+            self._cx, self._cy, self._sigma, self._amp, strict=True
+        ):
             out = out + amp * np.exp(
                 -((x - cx) ** 2 + (y - cy) ** 2) / (2.0 * sigma**2)
             )
@@ -112,6 +114,20 @@ def inverse_map(tmat: np.ndarray, x: np.ndarray, y: np.ndarray):
     return u, v
 
 
+def corner_error(tmat, expected, shape):
+    """Largest distance (px) between the images of the four image corners
+    under two transformation matrices of the same kind."""
+    height, width = shape
+    x = np.array([0.0, width - 1.0, 0.0, width - 1.0])
+    y = np.array([0.0, 0.0, height - 1.0, height - 1.0])
+    if np.shape(tmat)[0] == 4:
+        vec = np.stack([x, y, x * y, np.ones(4)])
+    else:
+        vec = np.stack([x, y, np.ones(4)])
+    delta = (np.asarray(tmat) @ vec)[:2] - (np.asarray(expected) @ vec)[:2]
+    return float(np.hypot(delta[0], delta[1]).max())
+
+
 def rotation_about_center(angle_deg, shape, scale=1.0, shift=(0.0, 0.0)):
     """3x3 matrix: rotation and isotropic scaling about the image centre
     followed by a shift ``(dx, dy)``."""
@@ -130,7 +146,6 @@ def rotation_about_center(angle_deg, shape, scale=1.0, shift=(0.0, 0.0)):
 
 def known_transformations(shape):
     """Ground-truth matrices, one per transformation type, of moderate size."""
-    height, width = shape
     affine = rotation_about_center(3.0, shape, scale=1.02, shift=(2.4, -1.7))
     affine[0, 1] += 0.015  # shear
     affine[1, 0] -= 0.01
