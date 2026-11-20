@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2018-2026 Gregor Lichtner and PyStackReg contributors
 """pystackreg: image registration with a Python/C++ port of TurboReg/StackReg.
 
 The registration algorithm is the one of the ImageJ plugin TurboReg by

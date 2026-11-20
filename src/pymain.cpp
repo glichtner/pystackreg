@@ -1,4 +1,19 @@
 /*
+ * This file is part of PyStackReg.
+ *
+ * Copyright (C) 2018-2026 Gregor Lichtner and PyStackReg contributors
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version. It is distributed WITHOUT ANY
+ * WARRANTY; see the GNU General Public License for more details
+ * (file LICENSE or <https://www.gnu.org/licenses/>).
+ */
+
+/*
  * pymain.cpp
  *
  * C++/Python Interface functions for the PyStackReg package.

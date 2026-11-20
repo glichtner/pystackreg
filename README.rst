@@ -209,50 +209,33 @@ The next example shows how to separate registration from transformation for a st
         out[i, :, :] = tf.warp(img1[i, :, :], tmats[i, :, :], order=3)
 
 
-Author information
--------------------
-This is a port of the original Java code by Philippe Thevenaz to C++ with a Python wrapper around it. All credit goes to the original author:
-::
+Attribution and citation
+------------------------
+pyStackReg is a port of existing software, not a new registration algorithm:
 
-    /*====================================================================
-    | Philippe Thevenaz
-    | EPFL/STI/IMT/LIB/BM.4.137
-    | Station 17
-    | CH-1015 Lausanne VD
-    | Switzerland
-    |
-    | phone (CET): +41(21)693.51.61
-    | fax: +41(21)693.37.01
-    | RFC-822: philippe.thevenaz@epfl.ch
-    | X-400: /C=ch/A=400net/P=switch/O=epfl/S=thevenaz/G=philippe/
-    | URL: http://bigwww.epfl.ch/
-    \===================================================================*/
+- **Method:** P. Thévenaz, U.E. Ruttimann, M. Unser: *A Pyramid Approach to
+  Subpixel Registration Based on Intensity*, IEEE Transactions on Image
+  Processing, vol. 7, no. 1, pp. 27-41, January 1998,
+  `doi:10.1109/83.650848 <https://doi.org/10.1109/83.650848>`_.
+- **Original software:** the ImageJ plugins
+  `TurboReg <https://bigwww.epfl.ch/thevenaz/turboreg/>`_ and
+  `StackReg <https://bigwww.epfl.ch/thevenaz/stackreg/>`_ by Philippe Thévenaz,
+  Biomedical Imaging Group, École polytechnique fédérale de Lausanne (EPFL).
+- **pyStackReg** (translation of TurboReg from Java to C++, Python/NumPy
+  interface, stack registration with several reference modes, parallel
+  processing): Gregor Lichtner and contributors (see ``AUTHORS.rst``).
 
-    /*====================================================================
-    | This work is based on the following paper:
-    |
-    | P. Thevenaz, U.E. Ruttimann, M. Unser
-    | A Pyramid Approach to Subpixel Registration Based on Intensity
-    | IEEE Transactions on Image Processing
-    | vol. 7, no. 1, pp. 27-41, January 1998.
-    |
-    | This paper is available on-line at
-    | http://bigwww.epfl.ch/publications/thevenaz9801.html
-    |
-    | Other relevant on-line publications are available at
-    | http://bigwww.epfl.ch/publications/
-    \===================================================================*/
+If you present or publish results obtained with pyStackReg, please cite the
+paper by Thévenaz et al. (1998) - the authors of TurboReg ask for this - and
+pyStackReg itself (see ``CITATION.cff``).
 
 License
 -------
+pyStackReg is free software, distributed under the terms of the
+`GNU General Public License <https://www.gnu.org/licenses/gpl-3.0.html>`_,
+version 3 or (at your option) any later version; see ``LICENSE``. This is the
+license under which TurboReg and StackReg are distributed by their author.
 
-::
-
-    You are free to use this software for commercial and non-commercial
-    purposes. However, we expect you to include a citation or acknowledgement
-    whenever you present or publish research results that are based
-    on this software. You are free to modify this software or derive
-    works from it, but you are only allowed to distribute it under the
-    same terms as this license specifies. Additionally, you must include
-    a reference to the research paper above in all software and works
-    derived from this software.
+Copyright notices, the conditions of use of the original software and the
+license notices of earlier pyStackReg versions (up to 0.2.8, which were
+published under different terms) are in ``NOTICE``.

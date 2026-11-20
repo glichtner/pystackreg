@@ -1,0 +1,109 @@
+PyStackReg
+==========
+
+PyStackReg is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version. PyStackReg is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the file LICENSE for the full text.
+
+SPDX-License-Identifier: GPL-3.0-or-later
+
+
+Authorship and copyright
+------------------------
+
+PyStackReg is a derivative work. It is not an independently developed
+registration algorithm.
+
+1. Registration method
+
+   P. Thévenaz, U.E. Ruttimann, M. Unser,
+   "A Pyramid Approach to Subpixel Registration Based on Intensity",
+   IEEE Transactions on Image Processing, vol. 7, no. 1, pp. 27-41,
+   January 1998. https://doi.org/10.1109/83.650848
+
+2. Original software: TurboReg and StackReg (ImageJ plugins, Java)
+
+   Copyright (C) 2011 Philippe Thévenaz
+   Biomedical Imaging Group, École polytechnique fédérale de Lausanne (EPFL)
+   https://bigwww.epfl.ch/thevenaz/turboreg/
+   https://bigwww.epfl.ch/thevenaz/stackreg/
+
+   The files inc/TurboReg*.h and src/TurboReg*.cpp are a C++ translation of
+   the classes turboRegImage, turboRegMask, turboRegPointHandler and
+   turboRegTransform of TurboReg_.java (version "July 7, 2011"), with
+   modifications. The stack-registration logic in pystackreg/pystackreg.py
+   re-implements the behaviour of StackReg (including the positions of its
+   initial landmarks) in Python; it is not a translation of StackReg_.java.
+
+   TurboReg and StackReg are distributed by their author under the GNU
+   General Public License, version 3 or (at your option) any later version.
+   The conditions of use published with them read (retrieved 2026-11-20):
+
+       This program is free software: you can redistribute it and/or modify
+       it under the terms of the GNU General Public License as published by
+       the Free Software Foundation, either version 3 of the License, or (at
+       your option) any later version.
+
+       This program is distributed in the hope that it will be useful, but
+       WITHOUT ANY WARRANTY; without even the implied warranty of
+       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+       General Public License for more details.
+
+       You should have received a copy of the GNU General Public License
+       along with this program. If not, see https://www.gnu.org/licenses/.
+
+       You undertake to include a citation or acknowledgment whenever you
+       present or publish results that are based on this program.
+
+       EPFL makes no warranties of any kind on this software and shall in no
+       event be liable for damages of any kind in connection with the use
+       and exploitation of this technology.
+
+3. PyStackReg: C++ translation, CPython/NumPy binding, Python interface,
+   stack registration and all further functionality
+
+   Copyright (C) 2018-2026 Gregor Lichtner and PyStackReg contributors
+   https://github.com/glichtner/pystackreg
+
+   Contributors are listed in AUTHORS.rst and in the Git history.
+
+
+Citation
+--------
+
+If you present or publish results that are based on PyStackReg, please cite
+the methods paper by Thévenaz, Ruttimann and Unser (1998) given above, as
+requested by the authors of TurboReg, and the PyStackReg software (see
+CITATION.cff).
+
+
+Historical license notices
+--------------------------
+
+The following notices applied to earlier versions and are reproduced for the
+record. They do not describe the terms of the current version.
+
+a) Notice in TurboReg_.java and StackReg_.java, version "July 7, 2011", from
+   which PyStackReg was translated in 2018; it was also the license notice of
+   PyStackReg 0.1.x - 0.2.1:
+
+       You'll be free to use this software for research purposes, but you
+       should not redistribute it without our consent. In addition, we expect
+       you to include a citation or acknowledgment whenever you present or
+       publish results that are based on it.
+
+b) License text of PyStackReg 0.2.2 - 0.2.8 (2019 - 2024):
+
+       You are free to use this software for commercial and non-commercial
+       purposes. However, we expect you to include a citation or
+       acknowledgement whenever you present or publish research results that
+       are based on this software. You are free to modify this software or
+       derive works from it, but you are only allowed to distribute it under
+       the same terms as this license specifies. Additionally, you must
+       include a reference to the research paper above in all software and
+       works derived from this software.
+
+   Releases published under these terms remain available under them.

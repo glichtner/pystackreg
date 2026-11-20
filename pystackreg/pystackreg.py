@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2018-2026 Gregor Lichtner and PyStackReg contributors
 """Image and image-stack registration: the :class:`StackReg` class."""
 
 from __future__ import annotations

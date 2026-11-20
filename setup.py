@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2018-2026 Gregor Lichtner and PyStackReg contributors
 """Build script for the native ``pystackreg.turboreg`` extension.
 
 All project metadata lives in ``pyproject.toml``; this file only describes the

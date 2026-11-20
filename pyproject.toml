@@ -9,8 +9,8 @@ dynamic = ["version"]
 description = "Image registration (Python/C++ port of the ImageJ/Fiji plugins TurboReg and StackReg)"
 readme = "README.rst"
 requires-python = ">=3.10"
-license = "LicenseRef-PyStackReg-TurboReg"
-license-files = ["LICENSE.txt"]
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE", "NOTICE"]
 authors = [{ name = "Gregor Lichtner" }]
 maintainers = [{ name = "Gregor Lichtner" }]
 keywords = [

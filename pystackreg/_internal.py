@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2018-2026 Gregor Lichtner and PyStackReg contributors
 """Internal helpers of pystackreg.
 
 Nothing in this module is part of the public API; it may change without notice.
