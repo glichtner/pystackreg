@@ -42,6 +42,7 @@
 | publish results that are based on it.
 \===================================================================*/
 
+#include <climits>
 #include <string>
 
 #include "TurboReg.h"
@@ -49,6 +50,31 @@
 #include "TurboRegMask.h"
 #include "TurboRegPointHandler.h"
 #include "matrix.h"
+
+/*********************************************************************
+ Convert a floating-point coordinate to int with the semantics of the
+ Java (int) cast used by the original implementation: truncation toward
+ zero, saturation at the limits of int, and NaN mapped to 0.
+
+ A plain C++ cast has undefined behavior for NaN and for values outside
+ the range of int. Such coordinates do occur: the optimizer produces
+ non-finite landmark updates when the Hessian is singular (e.g. for
+ constant images). With this conversion those cases follow the same
+ well-defined path as in the Java code on every platform. For values
+ inside the range of int the result is identical to a plain cast.
+ ********************************************************************/
+static inline int toInt(double v) {
+  if (v >= 2147483647.0) {
+    return INT_MAX;
+  }
+  if (v <= -2147483648.0) {
+    return INT_MIN;
+  }
+  if (v != v) {
+    return 0;
+  }
+  return (int)v;
+}
 
 class TurboRegTransform {
 public:

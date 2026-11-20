@@ -642,8 +642,8 @@ void TurboRegTransform::affineTransform(matrix<double> &m) {
     for (int u = 0; (u < outNx); u++) {
       x = x0;
       y = y0;
-      xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-      yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+      xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+      yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
       if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
         xMsk += yMsk * inNx;
         if (accelerated) {
@@ -651,8 +651,8 @@ void TurboRegTransform::affineTransform(matrix<double> &m) {
         } else {
           xIndexes();
           yIndexes();
-          x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-          y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+          x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+          y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
           xWeights();
           yWeights();
           outImg[k++] = (float)interpolate();
@@ -687,8 +687,8 @@ void TurboRegTransform::affineTransform(matrix<double> &m,
     for (int u = 0; (u < outNx); u++) {
       x = x0;
       y = y0;
-      xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-      yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+      xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+      yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
       if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
         xMsk += yMsk * inNx;
         if (accelerated) {
@@ -696,8 +696,8 @@ void TurboRegTransform::affineTransform(matrix<double> &m,
         } else {
           xIndexes();
           yIndexes();
-          x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-          y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+          x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+          y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
           xWeights();
           yWeights();
           outImg[k] = (float)interpolate();
@@ -737,8 +737,8 @@ void TurboRegTransform::bilinearTransform(matrix<double> &m) {
     for (int u = 0; (u < outNx); u++) {
       x = x0;
       y = y0;
-      xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-      yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+      xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+      yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
       if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
         xMsk += yMsk * inNx;
         if (accelerated) {
@@ -746,8 +746,8 @@ void TurboRegTransform::bilinearTransform(matrix<double> &m) {
         } else {
           xIndexes();
           yIndexes();
-          x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-          y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+          x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+          y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
           xWeights();
           yWeights();
           outImg[k++] = (float)interpolate();
@@ -789,8 +789,8 @@ void TurboRegTransform::bilinearTransform(matrix<double> &m,
     for (int u = 0; (u < outNx); u++) {
       x = x0;
       y = y0;
-      xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-      yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+      xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+      yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
       if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
         xMsk += yMsk * inNx;
         if (accelerated) {
@@ -798,8 +798,8 @@ void TurboRegTransform::bilinearTransform(matrix<double> &m,
         } else {
           xIndexes();
           yIndexes();
-          x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-          y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+          x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+          y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
           xWeights();
           yWeights();
           outImg[k] = (float)interpolate();
@@ -894,15 +894,15 @@ double TurboRegTransform::getAffineMeanSquares(matrix<double> &sourcePoint,
       for (int u = 0; (u < outNx); u++, k++) {
         x = x0;
         y = y0;
-        xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-        yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+        xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+        yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
         if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
           if (inMsk[yMsk * inNx + xMsk] != 0.0F) {
             area++;
             xIndexes();
             yIndexes();
-            x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-            y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+            x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+            y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
             xWeights();
             yWeights();
             difference = (double)outImg[k] - interpolate();
@@ -924,15 +924,15 @@ double TurboRegTransform::getAffineMeanSquares(matrix<double> &sourcePoint,
       for (int u = 0; (u < outNx); u++, k++) {
         x = x0;
         y = y0;
-        xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-        yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+        xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+        yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
         if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
           if ((outMsk[k] * inMsk[yMsk * inNx + xMsk]) != 0.0F) {
             area++;
             xIndexes();
             yIndexes();
-            x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-            y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+            x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+            y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
             xWeights();
             yWeights();
             difference = (double)outImg[k] - interpolate();
@@ -1003,15 +1003,15 @@ double TurboRegTransform::getAffineMeanSquares(matrix<double> &sourcePoint,
       for (int u = 0; (u < outNx); u++, k++) {
         x = x0;
         y = y0;
-        xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-        yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+        xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+        yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
         if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
           if (inMsk[yMsk * inNx + xMsk] != 0.0F) {
             area++;
             xIndexes();
             yIndexes();
-            x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-            y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+            x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+            y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
             xWeights();
             yWeights();
             difference = (double)outImg[k] - interpolate();
@@ -1048,15 +1048,15 @@ double TurboRegTransform::getAffineMeanSquares(matrix<double> &sourcePoint,
       for (int u = 0; (u < outNx); u++, k++) {
         x = x0;
         y = y0;
-        xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-        yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+        xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+        yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
         if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
           if ((outMsk[k] * inMsk[yMsk * inNx + xMsk]) != 0.0F) {
             area++;
             xIndexes();
             yIndexes();
-            x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-            y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+            x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+            y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
             xWeights();
             yWeights();
             difference = (double)outImg[k] - interpolate();
@@ -1146,15 +1146,15 @@ double TurboRegTransform::getAffineMeanSquares(matrix<double> &sourcePoint,
       for (int u = 0; (u < outNx); u++, k++) {
         x = x0;
         y = y0;
-        xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-        yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+        xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+        yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
         if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
           if (inMsk[yMsk * inNx + xMsk] != 0.0F) {
             area++;
             xIndexes();
             yIndexes();
-            x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-            y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+            x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+            y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
             xWeights();
             yWeights();
             difference = (double)outImg[k] - interpolate();
@@ -1212,15 +1212,15 @@ double TurboRegTransform::getAffineMeanSquares(matrix<double> &sourcePoint,
       for (int u = 0; (u < outNx); u++, k++) {
         x = x0;
         y = y0;
-        xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-        yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+        xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+        yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
         if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
           if ((outMsk[k] * inMsk[yMsk * inNx + xMsk]) != 0.0F) {
             area++;
             xIndexes();
             yIndexes();
-            x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-            y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+            x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+            y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
             xWeights();
             yWeights();
             difference = (double)outImg[k] - interpolate();
@@ -1304,14 +1304,14 @@ double TurboRegTransform::getBilinearMeanSquares(matrix<double> &m) {
         if (outMsk[k] != 0.0F) {
           x = x0;
           y = y0;
-          xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-          yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+          xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+          yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
           if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
             xIndexes();
             yIndexes();
             area++;
-            x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-            y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+            x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+            y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
             xWeights();
             yWeights();
             difference = interpolate() - (double)outImg[k];
@@ -1337,16 +1337,16 @@ double TurboRegTransform::getBilinearMeanSquares(matrix<double> &m) {
       for (int u = 0; (u < outNx); u++, k++) {
         x = x0;
         y = y0;
-        xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-        yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+        xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+        yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
         if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
           xMsk += yMsk * inNx;
           if ((outMsk[k] * inMsk[xMsk]) != 0.0F) {
             xIndexes();
             yIndexes();
             area++;
-            x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-            y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+            x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+            y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
             xWeights();
             yWeights();
             difference = interpolate() - (double)outImg[k];
@@ -1414,14 +1414,14 @@ double TurboRegTransform::getBilinearMeanSquares(
         if (outMsk[k] != 0.0F) {
           x = x0;
           y = y0;
-          xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-          yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+          xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+          yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
           if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
             area++;
             xIndexes();
             yIndexes();
-            x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-            y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+            x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+            y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
             xDxWeights();
             yDyWeights();
             difference = interpolate() - (double)outImg[k];
@@ -1506,16 +1506,16 @@ double TurboRegTransform::getBilinearMeanSquares(
       for (int u = 0; (u < outNx); u++, k++) {
         x = x0;
         y = y0;
-        xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-        yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+        xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+        yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
         if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
           xMsk += yMsk * inNx;
           if ((outMsk[k] * inMsk[xMsk]) != 0.0F) {
             area++;
             xIndexes();
             yIndexes();
-            x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-            y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+            x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+            y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
             xDxWeights();
             yDyWeights();
             difference = interpolate() - (double)outImg[k];
@@ -1619,15 +1619,15 @@ double TurboRegTransform::getRigidBodyMeanSquares(matrix<double> &m) {
       for (int u = 0; (u < outNx); u++, k++) {
         x = x0;
         y = y0;
-        xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-        yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+        xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+        yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
         if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
           if (inMsk[yMsk * inNx + xMsk] != 0.0F) {
             area++;
             xIndexes();
             yIndexes();
-            x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-            y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+            x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+            y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
             xWeights();
             yWeights();
             difference = (double)outImg[k] - interpolate();
@@ -1649,15 +1649,15 @@ double TurboRegTransform::getRigidBodyMeanSquares(matrix<double> &m) {
       for (int u = 0; (u < outNx); u++, k++) {
         x = x0;
         y = y0;
-        xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-        yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+        xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+        yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
         if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
           if ((outMsk[k] * inMsk[yMsk * inNx + xMsk]) != 0.0F) {
             area++;
             xIndexes();
             yIndexes();
-            x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-            y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+            x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+            y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
             xWeights();
             yWeights();
             difference = (double)outImg[k] - interpolate();
@@ -1701,15 +1701,15 @@ double TurboRegTransform::getRigidBodyMeanSquares(matrix<double> &m,
       for (int u = 0; (u < outNx); u++, k++) {
         x = x0;
         y = y0;
-        xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-        yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+        xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+        yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
         if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
           if (inMsk[yMsk * inNx + xMsk] != 0.0F) {
             area++;
             xIndexes();
             yIndexes();
-            x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-            y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+            x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+            y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
             xWeights();
             yWeights();
             difference = (double)outImg[k] - interpolate();
@@ -1735,15 +1735,15 @@ double TurboRegTransform::getRigidBodyMeanSquares(matrix<double> &m,
       for (int u = 0; (u < outNx); u++, k++) {
         x = x0;
         y = y0;
-        xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-        yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+        xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+        yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
         if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
           if ((outMsk[k] * inMsk[yMsk * inNx + xMsk]) != 0.0F) {
             area++;
             xIndexes();
             yIndexes();
-            x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-            y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+            x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+            y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
             xWeights();
             yWeights();
             difference = (double)outImg[k] - interpolate();
@@ -1793,15 +1793,15 @@ double TurboRegTransform::getRigidBodyMeanSquares(
       for (int u = 0; (u < outNx); u++, k++) {
         x = x0;
         y = y0;
-        xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-        yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+        xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+        yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
         if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
           if (inMsk[yMsk * inNx + xMsk] != 0.0F) {
             area++;
             xIndexes();
             yIndexes();
-            x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-            y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+            x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+            y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
             xWeights();
             yWeights();
             difference = (double)outImg[k] - interpolate();
@@ -1833,15 +1833,15 @@ double TurboRegTransform::getRigidBodyMeanSquares(
       for (int u = 0; (u < outNx); u++, k++) {
         x = x0;
         y = y0;
-        xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-        yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+        xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+        yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
         if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
           if ((outMsk[k] * inMsk[yMsk * inNx + xMsk]) != 0.0F) {
             area++;
             xIndexes();
             yIndexes();
-            x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-            y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+            x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+            y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
             xWeights();
             yWeights();
             difference = (double)outImg[k] - interpolate();
@@ -1903,15 +1903,15 @@ TurboRegTransform::getScaledRotationMeanSquares(matrix<double> &sourcePoint,
       for (int u = 0; (u < outNx); u++, k++) {
         x = x0;
         y = y0;
-        xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-        yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+        xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+        yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
         if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
           if (inMsk[yMsk * inNx + xMsk] != 0.0F) {
             area++;
             xIndexes();
             yIndexes();
-            x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-            y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+            x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+            y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
             xWeights();
             yWeights();
             difference = (double)outImg[k] - interpolate();
@@ -1933,15 +1933,15 @@ TurboRegTransform::getScaledRotationMeanSquares(matrix<double> &sourcePoint,
       for (int u = 0; (u < outNx); u++, k++) {
         x = x0;
         y = y0;
-        xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-        yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+        xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+        yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
         if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
           if ((outMsk[k] * inMsk[yMsk * inNx + xMsk]) != 0.0F) {
             area++;
             xIndexes();
             yIndexes();
-            x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-            y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+            x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+            y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
             xWeights();
             yWeights();
             difference = (double)outImg[k] - interpolate();
@@ -2019,15 +2019,15 @@ TurboRegTransform::getScaledRotationMeanSquares(matrix<double> &sourcePoint,
       for (int u = 0; (u < outNx); u++, k++) {
         x = x0;
         y = y0;
-        xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-        yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+        xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+        yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
         if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
           if (inMsk[yMsk * inNx + xMsk] != 0.0F) {
             area++;
             xIndexes();
             yIndexes();
-            x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-            y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+            x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+            y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
             xWeights();
             yWeights();
             difference = (double)outImg[k] - interpolate();
@@ -2065,15 +2065,15 @@ TurboRegTransform::getScaledRotationMeanSquares(matrix<double> &sourcePoint,
       for (int u = 0; (u < outNx); u++, k++) {
         x = x0;
         y = y0;
-        xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-        yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+        xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+        yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
         if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
           if ((outMsk[k] * inMsk[yMsk * inNx + xMsk]) != 0.0F) {
             area++;
             xIndexes();
             yIndexes();
-            x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-            y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+            x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+            y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
             xWeights();
             yWeights();
             difference = (double)outImg[k] - interpolate();
@@ -2169,15 +2169,15 @@ double TurboRegTransform::getScaledRotationMeanSquares(
       for (int u = 0; (u < outNx); u++, k++) {
         x = x0;
         y = y0;
-        xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-        yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+        xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+        yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
         if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
           if (inMsk[yMsk * inNx + xMsk] != 0.0F) {
             area++;
             xIndexes();
             yIndexes();
-            x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-            y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+            x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+            y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
             xWeights();
             yWeights();
             difference = (double)outImg[k] - interpolate();
@@ -2225,15 +2225,15 @@ double TurboRegTransform::getScaledRotationMeanSquares(
       for (int u = 0; (u < outNx); u++, k++) {
         x = x0;
         y = y0;
-        xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
-        yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+        xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
+        yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
         if ((0 <= xMsk) && (xMsk < inNx) && (0 <= yMsk) && (yMsk < inNy)) {
           if ((outMsk[k] * inMsk[yMsk * inNx + xMsk]) != 0.0F) {
             area++;
             xIndexes();
             yIndexes();
-            x -= (0.0 <= x) ? ((int)x) : ((int)x - 1);
-            y -= (0.0 <= y) ? ((int)y) : ((int)y - 1);
+            x -= (0.0 <= x) ? (toInt(x)) : (toInt(x) - 1);
+            y -= (0.0 <= y) ? (toInt(y)) : (toInt(y) - 1);
             xWeights();
             yWeights();
             difference = (double)outImg[k] - interpolate();
@@ -2449,14 +2449,14 @@ double TurboRegTransform::getTranslationMeanSquares(matrix<double> &m) {
   if (outMsk == nullptr) {
     for (int v = 0; (v < outNy); v++) {
       y = dy++;
-      yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+      yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
       if ((0 <= yMsk) && (yMsk < inNy)) {
         yMsk *= inNx;
         yIndexes();
         dx = dx0;
         for (int u = 0; (u < outNx); u++, k++) {
           x = dx++;
-          xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
+          xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
           if ((0 <= xMsk) && (xMsk < inNx)) {
             if (inMsk[yMsk + xMsk] != 0.0F) {
               xIndexes();
@@ -2473,14 +2473,14 @@ double TurboRegTransform::getTranslationMeanSquares(matrix<double> &m) {
   } else {
     for (int v = 0; (v < outNy); v++) {
       y = dy++;
-      yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+      yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
       if ((0 <= yMsk) && (yMsk < inNy)) {
         yMsk *= inNx;
         yIndexes();
         dx = dx0;
         for (int u = 0; (u < outNx); u++, k++) {
           x = dx++;
-          xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
+          xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
           if ((0 <= xMsk) && (xMsk < inNx)) {
             if ((outMsk[k] * inMsk[yMsk + xMsk]) != 0.0F) {
               xIndexes();
@@ -2521,14 +2521,14 @@ TurboRegTransform::getTranslationMeanSquares(matrix<double> &m,
   if (outMsk == nullptr) {
     for (int v = 0; (v < outNy); v++) {
       y = dy++;
-      yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+      yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
       if ((0 <= yMsk) && (yMsk < inNy)) {
         yMsk *= inNx;
         yIndexes();
         dx = dx0;
         for (int u = 0; (u < outNx); u++, k++) {
           x = dx++;
-          xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
+          xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
           if ((0 <= xMsk) && (xMsk < inNx)) {
             if (inMsk[yMsk + xMsk] != 0.0F) {
               area++;
@@ -2547,14 +2547,14 @@ TurboRegTransform::getTranslationMeanSquares(matrix<double> &m,
   } else {
     for (int v = 0; (v < outNy); v++) {
       y = dy++;
-      yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+      yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
       if ((0 <= yMsk) && (yMsk < inNy)) {
         yMsk *= inNx;
         yIndexes();
         dx = dx0;
         for (int u = 0; (u < outNx); u++, k++) {
           x = dx++;
-          xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
+          xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
           if ((0 <= xMsk) && (xMsk < inNx)) {
             if ((outMsk[k] * inMsk[yMsk + xMsk]) != 0.0F) {
               area++;
@@ -2599,14 +2599,14 @@ double TurboRegTransform::getTranslationMeanSquares(
   if (outMsk == nullptr) {
     for (int v = 0; (v < outNy); v++) {
       y = dy++;
-      yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+      yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
       if ((0 <= yMsk) && (yMsk < inNy)) {
         yMsk *= inNx;
         yIndexes();
         dx = dx0;
         for (int u = 0; (u < outNx); u++, k++) {
           x = dx++;
-          xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
+          xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
           if ((0 <= xMsk) && (xMsk < inNx)) {
             if (inMsk[yMsk + xMsk] != 0.0F) {
               area++;
@@ -2628,14 +2628,14 @@ double TurboRegTransform::getTranslationMeanSquares(
   } else {
     for (int v = 0; (v < outNy); v++) {
       y = dy++;
-      yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+      yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
       if ((0 <= yMsk) && (yMsk < inNy)) {
         yMsk *= inNx;
         yIndexes();
         dx = dx0;
         for (int u = 0; (u < outNx); u++, k++) {
           x = dx++;
-          xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
+          xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
           if ((0 <= xMsk) && (xMsk < inNx)) {
             if ((outMsk[k] * inMsk[yMsk + xMsk]) != 0.0F) {
               area++;
@@ -3170,7 +3170,7 @@ void TurboRegTransform::translationTransform(matrix<double> &m) {
 
   for (int v = 0; (v < outNy); v++) {
     y = dy++;
-    yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+    yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
     if ((0 <= yMsk) && (yMsk < inNy)) {
       yMsk *= inNx;
       if (!accelerated) {
@@ -3179,7 +3179,7 @@ void TurboRegTransform::translationTransform(matrix<double> &m) {
       dx = dx0;
       for (int u = 0; (u < outNx); u++) {
         x = dx++;
-        xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
+        xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
         if ((0 <= xMsk) && (xMsk < inNx)) {
           xMsk += yMsk;
           if (accelerated) {
@@ -3219,7 +3219,7 @@ void TurboRegTransform::translationTransform(matrix<double> &m,
 
   for (int v = 0; (v < outNy); v++) {
     y = dy++;
-    yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
+    yMsk = (0.0 <= y) ? (toInt(y + 0.5)) : (toInt(y - 0.5));
     if ((0 <= yMsk) && (yMsk < inNy)) {
       yMsk *= inNx;
       if (!accelerated) {
@@ -3228,7 +3228,7 @@ void TurboRegTransform::translationTransform(matrix<double> &m,
       dx = dx0;
       for (int u = 0; (u < outNx); u++, k++) {
         x = dx++;
-        xMsk = (0.0 <= x) ? ((int)(x + 0.5)) : ((int)(x - 0.5));
+        xMsk = (0.0 <= x) ? (toInt(x + 0.5)) : (toInt(x - 0.5));
         if ((0 <= xMsk) && (xMsk < inNx)) {
           xMsk += yMsk;
           if (accelerated) {
@@ -3268,7 +3268,7 @@ void TurboRegTransform::xDxWeights() {
 
 /*------------------------------------------------------------------*/
 void TurboRegTransform::xIndexes() {
-  p = (0.0 <= x) ? ((int)x + 2) : ((int)x + 1);
+  p = (0.0 <= x) ? (toInt(x) + 2) : (toInt(x) + 1);
   for (int k = 0; (k < 4); p--, k++) {
     q = (p < 0) ? (-1 - p) : (p);
     if (twiceInNx <= q) {
@@ -3303,7 +3303,7 @@ void TurboRegTransform::yDyWeights() {
 
 /*------------------------------------------------------------------*/
 void TurboRegTransform::yIndexes() {
-  p = (0.0 <= y) ? ((int)y + 2) : ((int)y + 1);
+  p = (0.0 <= y) ? (toInt(y) + 2) : (toInt(y) + 1);
   for (int k = 0; (k < 4); p--, k++) {
     q = (p < 0) ? (-1 - p) : (p);
     if (twiceInNy <= q) {
