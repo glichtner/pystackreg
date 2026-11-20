@@ -1,49 +1,31 @@
-exclude: '^docs/'
+exclude: '^docs/tutorial_files/'
 repos:
-- repo: https://github.com/pycqa/isort
-  rev: 5.13.2
-  hooks:
-    - id: isort
-      name: isort (python)
-      args: ["--profile", "black", "--filter-files"]
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.6.0
+  rev: v6.0.0
   hooks:
   -   id: trailing-whitespace
-      exclude: '^.bumpversion.cfg$'
+      exclude: '^(\.bumpversion\.cfg|docs/tutorial\.rst)$'
   -   id: end-of-file-fixer
+      exclude: '^docs/tutorial\.rst$'
   -   id: mixed-line-ending
-  -   id: pretty-format-json
-      args: ['--autofix', '--no-sort-keys']
-- repo: https://github.com/ambv/black
-  rev: 24.8.0
+  -   id: check-yaml
+  -   id: check-toml
+  -   id: check-added-large-files
+      args: ['--maxkb=2500']
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.17.6
   hooks:
-  - id: black
-- repo: https://github.com/PyCQA/flake8
-  rev: '7.1.1'
-  hooks:
-  -   id: flake8
+  -   id: ruff
+      args: [--fix]
+  -   id: ruff-format
 - repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.11.2
+  rev: v2.4.1
   hooks:
   -   id: mypy
+      files: '^pystackreg/'
+      additional_dependencies: [numpy]
 - repo: https://github.com/codespell-project/codespell
-  rev: 'v2.3.0'
+  rev: v2.4.3
   hooks:
   -   id: codespell
-      name: codespell
-      description: Checks for common misspellings in text files.
-      entry: codespell
-      language: python
-      types: [text]
-      exclude: '\.ipynb'
-      args: [-I, .codespellignore]
-- repo: local
-  hooks:
-  -   id: tests
-      name: Run pytest unit tests
-      entry: pytest -v
-      language: system
-      types: [python]
-      pass_filenames: false
-      always_run: true
+      additional_dependencies: [tomli]

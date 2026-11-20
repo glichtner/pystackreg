@@ -43,9 +43,9 @@ classifiers = [
 dependencies = ["numpy>=1.22", "tqdm"]
 
 [project.optional-dependencies]
-test = ["pytest>=7", "tifffile"]
-docs = ["sphinx>=7", "sphinx-rtd-theme", "sphinx-autodoc-typehints"]
-dev = ["pystackreg[test]", "ruff", "mypy", "build", "twine"]
+test = ["pytest>=7", "tifffile", "scipy"]
+docs = ["sphinx>=7", "sphinx-rtd-theme", "myst-parser"]
+dev = ["pystackreg[test]", "ruff", "mypy", "codespell", "build", "twine", "pre-commit"]
 
 [project.urls]
 Homepage = "https://github.com/glichtner/pystackreg"
@@ -78,7 +78,7 @@ markers = [
 [tool.ruff]
 line-length = 88
 target-version = "py310"
-extend-exclude = ["docs/conf.py"]
+extend-exclude = ["docs/conf.py", "docs/_build", "build", "examples/notebooks"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "NPY", "RUF", "SIM", "C4", "PT"]
@@ -111,19 +111,11 @@ skip = "*.ipynb,*.bib,*.tif,*.npz,docs/_build,build,dist"
 ignore-words = ".codespellignore"
 
 [tool.cibuildwheel]
-build = "cp310-* cp311-* cp312-* cp313-* cp314-*"
-skip = "*-musllinux_i686 *-win32 *-manylinux_i686"
+# CPython versions follow requires-python. Only the native 64-bit architecture
+# of each CI runner is built; 32-bit wheels are not provided.
+archs = ["auto64"]
 test-requires = ["pytest>=7", "tifffile"]
-# Run from outside the project so that the installed wheel is imported and
-# not the source tree; PYSTACKREG_TEST_INSTALLED makes the test suite verify it.
-test-command = "pytest {project}/tests"
-environment = { PYSTACKREG_TEST_INSTALLED = "1" }
-
-[tool.cibuildwheel.linux]
-archs = ["x86_64", "aarch64"]
-
-[tool.cibuildwheel.macos]
-archs = ["x86_64", "arm64"]
-
-[tool.cibuildwheel.windows]
-archs = ["AMD64"]
+# The tests run from a temporary directory against the installed wheel;
+# PYSTACKREG_TEST_INSTALLED makes the suite fail if it imports the source tree.
+test-command = "pytest {project}/tests -p no:cacheprovider"
+test-environment = { PYSTACKREG_TEST_INSTALLED = "1" }

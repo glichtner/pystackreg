@@ -3,6 +3,7 @@ include LICENSE* NOTICE* AUTHORS.rst CHANGELOG.rst CITATION.cff
 include inc/*.h
 include src/*.cpp
 recursive-include tests *.py *.tif *.npz *.json
+recursive-include tools *.py *.sh
 recursive-include docs *.rst *.md *.py *.png *.txt Makefile make.bat
 recursive-include examples *.ijm *.tif *.ipynb
 prune docs/_build

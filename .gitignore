@@ -20,3 +20,16 @@ MANIFEST
 .coverage/
 .mypy_cache/
 notebooks/
+
+# build, test and tool artefacts
+*.pyd
+*.o
+wheelhouse/
+docs/_build/
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# the tutorial notebook is tracked although other notebook folders are ignored
+!examples/notebooks/
