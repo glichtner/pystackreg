@@ -193,8 +193,10 @@ PyObject *turbogreg_register(PyObject *self, PyObject *args) {
   double *img_ref = (double *)PyArray_DATA(ref_array);
   double *img_mov = (double *)PyArray_DATA(mov_array);
 
+  Py_BEGIN_ALLOW_THREADS
   registerImg(img_ref, img_mov, (Transformation)tf, Ny_ref, Nx_ref,
               rm); // width and height (Nx/Ny) have to be swapped!
+  Py_END_ALLOW_THREADS
 
   /* clean up */
   Py_XDECREF(ref_array);
@@ -282,9 +284,13 @@ PyArrayObject *turbogreg_transform(PyObject *self, PyObject *args) {
   matrix<double> m(Nx_mat, Ny_mat);
   memcpy(m.begin(), tmat, (Nx_mat * Ny_mat * sizeof(double)));
 
-  std::vector<double> imgout =
+  std::vector<double> imgout;
+
+  Py_BEGIN_ALLOW_THREADS
+  imgout =
       transformImg(m, img_mov, Ny_mov,
                    Nx_mov); // width and height (Nx/Ny) have to be swapped!
+  Py_END_ALLOW_THREADS
 
   /* clean up */
   Py_XDECREF(mat_array);
