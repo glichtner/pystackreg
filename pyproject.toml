@@ -1,10 +1,128 @@
 [build-system]
-requires = ["setuptools", "wheel", "numpy"]
+# The extension is built against NumPy 2; such builds also run on NumPy 1.x.
+requires = ["setuptools>=77", "numpy>=2.0"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "pystackreg"
+dynamic = ["version"]
+description = "Image registration (Python/C++ port of the ImageJ/Fiji plugins TurboReg and StackReg)"
+readme = "README.rst"
+requires-python = ">=3.10"
+license = "LicenseRef-PyStackReg-TurboReg"
+license-files = ["LICENSE.txt"]
+authors = [{ name = "Gregor Lichtner" }]
+maintainers = [{ name = "Gregor Lichtner" }]
+keywords = [
+    "image registration",
+    "image alignment",
+    "motion correction",
+    "microscopy",
+    "TurboReg",
+    "StackReg",
+    "ImageJ",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Image Processing",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Typing :: Typed",
+]
+dependencies = ["numpy>=1.22", "tqdm"]
+
+[project.optional-dependencies]
+test = ["pytest>=7", "tifffile"]
+docs = ["sphinx>=7", "sphinx-rtd-theme", "sphinx-autodoc-typehints"]
+dev = ["pystackreg[test]", "ruff", "mypy", "build", "twine"]
+
+[project.urls]
+Homepage = "https://github.com/glichtner/pystackreg"
+Documentation = "https://pystackreg.readthedocs.io/"
+Repository = "https://github.com/glichtner/pystackreg"
+Issues = "https://github.com/glichtner/pystackreg/issues"
+Changelog = "https://github.com/glichtner/pystackreg/blob/master/CHANGELOG.rst"
+
+[tool.setuptools]
+packages = ["pystackreg", "pystackreg.util"]
+include-package-data = false
+
+[tool.setuptools.package-data]
+pystackreg = ["py.typed"]
+
+[tool.setuptools.dynamic]
+version = { attr = "pystackreg.version.__version__" }
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+addopts = ["-ra", "--strict-markers", "--strict-config"]
+xfail_strict = true
+filterwarnings = ["error"]
+markers = [
+    "slow: tests that take more than a few seconds",
+    "reference: comparison with outputs of the original Java TurboReg/StackReg",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+extend-exclude = ["docs/conf.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "NPY", "RUF", "SIM", "C4", "PT"]
+ignore = [
+    "PT011", # pytest.raises(ValueError) without match is fine for simple checks
+    "SIM108",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["pystackreg", "helpers"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["pystackreg"]
+warn_unused_ignores = true
+warn_redundant_casts = true
+check_untyped_defs = true
+disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = ["tqdm.*"]
+ignore_missing_imports = true
+
+[tool.codespell]
+skip = "*.ipynb,*.bib,*.tif,*.npz,docs/_build,build,dist"
+ignore-words = ".codespellignore"
 
 [tool.cibuildwheel]
-test-requires = ["pytest", "tqdm", "tifffile"]
+build = "cp310-* cp311-* cp312-* cp313-* cp314-*"
+skip = "*-musllinux_i686 *-win32 *-manylinux_i686"
+test-requires = ["pytest>=7", "tifffile"]
+# Run from outside the project so that the installed wheel is imported and
+# not the source tree; PYSTACKREG_TEST_INSTALLED makes the test suite verify it.
 test-command = "pytest {project}/tests"
-#skip="pp37-macos*"
-skip="pp*"
+environment = { PYSTACKREG_TEST_INSTALLED = "1" }
+
+[tool.cibuildwheel.linux]
+archs = ["x86_64", "aarch64"]
+
+[tool.cibuildwheel.macos]
+archs = ["x86_64", "arm64"]
+
+[tool.cibuildwheel.windows]
+archs = ["AMD64"]

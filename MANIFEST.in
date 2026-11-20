@@ -1,23 +1,9 @@
+# Files added to the source distribution in addition to the package itself.
+include LICENSE* NOTICE* AUTHORS.rst CHANGELOG.rst CITATION.cff
 include inc/*.h
-
-graft docs
-
-include .flake8
-include .pre-commit-config.yaml
-include .readthedocs.yml
-include .codespellignore
-include AUTHORS.rst
-include CHANGELOG.rst
-include appveyor.yml
-include LICENSE.txt
-
-
-include inc/*.h
-include src/*TurboReg*.cpp
-include src/pymain.cpp
-
-include examples/data/*.ijm
-include examples/data/pc12-*.tif
-include examples/notebooks/*.ipynb
-include requirements.txt
-include tox.ini
+include src/*.cpp
+recursive-include tests *.py *.tif *.npz *.json
+recursive-include docs *.rst *.md *.py *.png *.txt Makefile make.bat
+recursive-include examples *.ijm *.tif *.ipynb
+prune docs/_build
+global-exclude *.py[cod] __pycache__ *.so *.pyd .DS_Store
