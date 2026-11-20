@@ -45,7 +45,7 @@ dependencies = ["numpy>=1.22", "tqdm"]
 
 [project.optional-dependencies]
 test = ["pytest>=7", "tifffile", "scipy"]
-docs = ["sphinx>=7", "sphinx-rtd-theme", "myst-parser"]
+docs = ["sphinx>=7", "sphinx-rtd-theme"]
 dev = ["pystackreg[test]", "ruff", "mypy", "codespell", "build", "twine", "pre-commit"]
 
 [project.urls]
