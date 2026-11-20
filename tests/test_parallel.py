@@ -119,9 +119,15 @@ def test_concurrent_calls_from_independent_threads():
 
 def test_native_code_releases_the_gil():
     """While one thread is inside the extension, another thread must be able
-    to execute Python code. With the GIL held, the counter thread below would
-    not advance at all during a native call."""
-    scene = Scene((384, 384), n_blobs=120, seed=9)
+    to execute Python code.
+
+    A background thread appends a timestamp about every half millisecond, but
+    only while the main thread is inside a *single* native call. If the
+    extension held the GIL, the background thread could not run during the
+    call at all (at most once, right after the call returns); with the GIL
+    released it runs hundreds of times.
+    """
+    scene = Scene((640, 640), n_blobs=200, seed=9)
     ref = scene.render()
     mov = scene.render(known_transformations(scene.shape)["affine"])
 
@@ -135,23 +141,34 @@ def test_native_code_releases_the_gil():
                 ticks.append(time.perf_counter())
             time.sleep(0.0005)
 
+    def ticks_during(call):
+        del ticks[:]
+        inside.set()
+        start = time.perf_counter()
+        call()
+        elapsed = time.perf_counter() - start
+        inside.clear()
+        return len(ticks), elapsed
+
     thread = threading.Thread(target=ticker)
     thread.start()
     try:
         time.sleep(0.01)
-        inside.set()
-        start = time.perf_counter()
-        for _ in range(3):
-            turboreg._register(ref[:-1, :-1], mov[:-1, :-1], StackReg.AFFINE)
-            turboreg._transform(mov, np.array([[0.5, 1.0, 0.01], [-0.5, -0.01, 1.0]]))
-        elapsed = time.perf_counter() - start
-        inside.clear()
+        matrix = np.array([[0.5, 1.0, 0.01], [-0.5, -0.01, 1.0]])
+        results = {
+            "_register": ticks_during(
+                lambda: turboreg._register(
+                    ref[:-1, :-1], mov[:-1, :-1], StackReg.AFFINE
+                )
+            ),
+            "_transform": ticks_during(lambda: turboreg._transform(mov, matrix)),
+        }
     finally:
         stop.set()
         thread.join()
-    assert elapsed > 0.02, "workload too small to be meaningful"
-    # the ticker wakes up about every millisecond; require a small fraction
-    assert len(ticks) >= 5, f"only {len(ticks)} ticks in {elapsed * 1e3:.0f} ms"
+    for name, (count, elapsed) in results.items():
+        assert elapsed > 0.005, f"{name}: workload too small to be meaningful"
+        assert count >= 5, f"{name}: only {count} ticks in {elapsed * 1e3:.0f} ms"
 
 
 # -- errors and cancellation ---------------------------------------------------

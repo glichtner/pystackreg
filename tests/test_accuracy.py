@@ -188,6 +188,22 @@ def test_registered_stack_is_aligned(reference):
     assert spread_after < spread_before / 30
 
 
+@pytest.mark.slow
+@pytest.mark.parametrize("name", ["rigid_body", "affine"])
+def test_large_image(name):
+    """A large, non-square image (six pyramid levels)."""
+    shape = (768, 1152)
+    scene = Scene(shape, n_blobs=120, seed=11)
+    truth = known_transformations(shape)[name]
+    mov = scene.render(truth)
+    sr = StackReg(TRANSFORMATIONS[name])
+    tmat = sr.register(scene.render(), mov)
+    assert corner_error(tmat, truth, shape) < 0.01
+    out = sr.transform(mov)
+    assert out.shape == shape
+    assert np.isfinite(out).all()
+
+
 def test_capture_range_is_limited():
     """Documented limitation: like TurboReg, the optimiser is local.
 
