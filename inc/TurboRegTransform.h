@@ -180,12 +180,20 @@ private:
   std::vector<double> yWeight;
   std::vector<int> xIndex;
   std::vector<int> yIndex;
-  std::vector<double> inImg;
-  std::vector<double> inMsk;
-  std::vector<double> outImg;
-  std::vector<double> outMsk;
-  std::vector<double> xGradient;
-  std::vector<double> yGradient;
+  /* The image, mask and gradient members below are non-owning views into
+     buffers held by the TurboRegImage/TurboRegMask objects (or by outBuf).
+     The Java original stores array references here; copying the buffers
+     instead costs several full-frame allocations per registration. A null
+     mask pointer means "no mask" (an empty array in the original). */
+  const double *inImg;
+  const double *inMsk;
+  double *outImg;
+  const double *outMsk;
+  const double *xGradient;
+  const double *yGradient;
+  /* Storage for the result of the final transformation. */
+  std::vector<double> outBuf;
+  std::vector<double> outMskBuf;
   int inNx;
   int inNy;
   int iterationCost;

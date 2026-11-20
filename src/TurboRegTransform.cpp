@@ -47,6 +47,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 #include "matrix.h"
 
@@ -86,7 +87,9 @@ TurboRegTransform::TurboRegTransform(
     TurboRegMask *targetMsk, TurboRegPointHandler *targetPh,
     Transformation transformation, bool accelerated)
     : accelerated(accelerated), dxWeight(4), dyWeight(4), xWeight(4),
-      yWeight(4), xIndex(4), yIndex(4), transformation(transformation),
+      yWeight(4), xIndex(4), yIndex(4), inImg(nullptr), inMsk(nullptr),
+      outImg(nullptr), outMsk(nullptr), xGradient(nullptr),
+      yGradient(nullptr), transformation(transformation),
       sourceImg(sourceImg), targetImg(targetImg), sourceMsk(sourceMsk),
       targetMsk(targetMsk), sourcePh(sourcePh), bHasSourceMask(true) {
   sourcePoint = sourcePh->getPoints();
@@ -107,7 +110,9 @@ TurboRegTransform::TurboRegTransform(TurboRegImage *sourceImg,
                                      Transformation transformation,
                                      bool accelerated)
     : accelerated(accelerated), dxWeight(4), dyWeight(4), xWeight(4),
-      yWeight(4), xIndex(4), yIndex(4), transformation(transformation),
+      yWeight(4), xIndex(4), yIndex(4), inImg(nullptr), inMsk(nullptr),
+      outImg(nullptr), outMsk(nullptr), xGradient(nullptr),
+      yGradient(nullptr), transformation(transformation),
       sourceImg(sourceImg), sourceMsk(sourceMsk), sourcePh(sourcePh),
       bHasSourceMask(true) {
   pixelPrecision = PIXEL_HIGH_PRECISION;
@@ -195,15 +200,15 @@ void TurboRegTransform::appendTransformation(std::string pathAndFilename) {
     ********************************************************************/
 void TurboRegTransform::doBatchFinalTransform(std::vector<double> &pixels) {
   if (accelerated) {
-    inImg = sourceImg->getImage();
+    inImg = sourceImg->getImage().data();
   } else {
-    inImg = sourceImg->getCoefficient();
+    inImg = sourceImg->getCoefficient().data();
   }
   inNx = sourceImg->getWidth();
   inNy = sourceImg->getHeight();
   twiceInNx = 2 * inNx;
   twiceInNy = 2 * inNy;
-  outImg = pixels;
+  outImg = pixels.data();
   outNx = targetImg->getWidth();
   outNy = targetImg->getHeight();
   matrix<double> m = getTransformationMatrix(targetPoint, sourcePoint);
@@ -230,18 +235,19 @@ void TurboRegTransform::doBatchFinalTransform(std::vector<double> &pixels) {
     ********************************************************************/
 std::vector<double> TurboRegTransform::doFinalTransform(int width, int height) {
   if (accelerated) {
-    inImg = sourceImg->getImage();
+    inImg = sourceImg->getImage().data();
   } else {
-    inImg = sourceImg->getCoefficient();
+    inImg = sourceImg->getCoefficient().data();
   }
-  inMsk = sourceMsk->getMask();
+  inMsk = sourceMsk->getMask().data();
   inNx = sourceImg->getWidth();
   inNy = sourceImg->getHeight();
   twiceInNx = 2 * inNx;
   twiceInNy = 2 * inNy;
 
-  outImg.resize(width * height, 0);
-  outMsk.resize(width * height, 1);
+  outBuf.assign((size_t)width * (size_t)height, 0);
+  outMskBuf.assign((size_t)width * (size_t)height, 1);
+  outImg = outBuf.data();
 
   outNx = width;
   outNy = height;
@@ -250,22 +256,23 @@ std::vector<double> TurboRegTransform::doFinalTransform(int width, int height) {
 
   switch (transformation) {
   case TRANSLATION: {
-    translationTransform(m, outMsk);
+    translationTransform(m, outMskBuf);
     break;
   }
   case RIGID_BODY:
   case SCALED_ROTATION:
   case AFFINE: {
-    affineTransform(m, outMsk);
+    affineTransform(m, outMskBuf);
     break;
   }
   case BILINEAR: {
-    bilinearTransform(m, outMsk);
+    bilinearTransform(m, outMskBuf);
     break;
   }
   }
 
-  return (outImg);
+  outImg = nullptr;
+  return (std::move(outBuf));
 } /* end doFinalTransform */
 
 /*********************************************************************
@@ -283,9 +290,9 @@ std::vector<double> TurboRegTransform::doFinalTransform(
   sourcePoint = sourcePh->getPoints();
   targetPoint = targetPh->getPoints();
   if (accelerated) {
-    inImg = sourceImg->getImage();
+    inImg = sourceImg->getImage().data();
   } else {
-    inImg = sourceImg->getCoefficient();
+    inImg = sourceImg->getCoefficient().data();
   }
   inNx = sourceImg->getWidth();
   inNy = sourceImg->getHeight();
@@ -293,7 +300,8 @@ std::vector<double> TurboRegTransform::doFinalTransform(
   twiceInNy = 2 * inNy;
   outNx = targetImg->getWidth();
   outNy = targetImg->getHeight();
-  outImg.resize(outNx * outNy);
+  outBuf.resize((size_t)outNx * (size_t)outNy);
+  outImg = outBuf.data();
 
   matrix<double> m = getTransformationMatrix(targetPoint, sourcePoint);
 
@@ -313,7 +321,8 @@ std::vector<double> TurboRegTransform::doFinalTransform(
     break;
   }
   }
-  return (outImg);
+  outImg = nullptr;
+  return (std::move(outBuf));
 } /* end doFinalTransform */
 
 std::vector<double>
@@ -321,9 +330,9 @@ TurboRegTransform::doFinalTransform(TurboRegImage *sourceImg,
                                     matrix<double> &m) {
   this->sourceImg = sourceImg;
   if (accelerated) {
-    inImg = sourceImg->getImage();
+    inImg = sourceImg->getImage().data();
   } else {
-    inImg = sourceImg->getCoefficient();
+    inImg = sourceImg->getCoefficient().data();
   }
   inNx = sourceImg->getWidth();
   inNy = sourceImg->getHeight();
@@ -332,7 +341,8 @@ TurboRegTransform::doFinalTransform(TurboRegImage *sourceImg,
 
   outNx = sourceImg->getWidth();
   outNy = sourceImg->getHeight();
-  outImg.resize(outNx * outNy);
+  outBuf.resize((size_t)outNx * (size_t)outNy);
+  outImg = outBuf.data();
 
   switch (transformation) {
   case TRANSLATION: {
@@ -350,7 +360,8 @@ TurboRegTransform::doFinalTransform(TurboRegImage *sourceImg,
     break;
   }
   }
-  return (outImg);
+  outImg = nullptr;
+  return (std::move(outBuf));
 } /* end doFinalTransform */
 
 matrix<double> TurboRegTransform::getTransformationMatrix() {
@@ -361,21 +372,14 @@ matrix<double> TurboRegTransform::getTransformationMatrix() {
  Refine the landmarks.
     ********************************************************************/
 void TurboRegTransform::doRegistration() {
-  std::stack<ImageStackItem> sourceImgPyramid;
-  std::stack<MaskStackItem> sourceMskPyramid;
-  std::stack<ImageStackItem> targetImgPyramid;
-  std::stack<MaskStackItem> targetMskPyramid;
-  if (!hasSourceMask()) {
-    sourceImgPyramid = sourceImg->getPyramid();
-    // sourceMskPyramid = null;
-    targetImgPyramid = targetImg->getPyramid();
-    targetMskPyramid = targetMsk->getPyramid();
-  } else {
-    sourceImgPyramid = sourceImg->getPyramid();
-    sourceMskPyramid = sourceMsk->getPyramid();
-    targetImgPyramid = targetImg->getPyramid();
-    targetMskPyramid = targetMsk->getPyramid();
-  }
+  /* The pyramids are walked from the coarsest level (back of the vector) to
+     the finest one, exactly as the Java original pops them from a stack.
+     Levels are referenced in place rather than copied. */
+  std::vector<ImageStackItem> &sourceImgPyramid = sourceImg->getPyramid();
+  std::vector<MaskStackItem> &sourceMskPyramid = sourceMsk->getPyramid();
+  std::vector<ImageStackItem> &targetImgPyramid = targetImg->getPyramid();
+  std::vector<MaskStackItem> &targetMskPyramid = targetMsk->getPyramid();
+
   pyramidDepth = targetImg->getPyramidDepth();
   iterationPower =
       (int)pow((double)ITERATION_PROGRESSION, (double)pyramidDepth);
@@ -384,18 +388,11 @@ void TurboRegTransform::doRegistration() {
 
   scaleBottomDownLandmarks();
   /* 1 *****************/
-  while (!targetImgPyramid.empty()) {
-    ImageStackItem srcImgItem = sourceImgPyramid.top();
-    sourceImgPyramid.pop();
-
-    MaskStackItem srcMskItem = sourceMskPyramid.top();
-    sourceMskPyramid.pop();
-
-    ImageStackItem tarImgItem = targetImgPyramid.top();
-    targetImgPyramid.pop();
-
-    MaskStackItem tarMskItem = targetMskPyramid.top();
-    targetMskPyramid.pop();
+  for (size_t level = targetImgPyramid.size(); level-- > 0;) {
+    ImageStackItem &srcImgItem = sourceImgPyramid[level];
+    MaskStackItem &srcMskItem = sourceMskPyramid[level];
+    ImageStackItem &tarImgItem = targetImgPyramid[level];
+    MaskStackItem &tarMskItem = targetMskPyramid[level];
 
     iterationPower /= ITERATION_PROGRESSION;
 
@@ -404,36 +401,36 @@ void TurboRegTransform::doRegistration() {
           srcImgItem.halfWidth; //((Integer)sourceImgPyramid.pop()).intValue();
       inNy =
           srcImgItem.halfHeight; //((Integer)sourceImgPyramid.pop()).intValue();
-      inImg = srcImgItem.halfImg; //(float[])sourceImgPyramid.pop();
+      inImg = srcImgItem.halfImg.data(); //(float[])sourceImgPyramid.pop();
       if (!hasSourceMask()) {
-        inMsk.clear();
+        inMsk = nullptr;
       } else {
-        inMsk = srcMskItem.halfMask; //(float[])sourceMskPyramid.pop();
+        inMsk = srcMskItem.halfMask.data(); //(float[])sourceMskPyramid.pop();
       }
       outNx =
           tarImgItem.halfWidth; //((Integer)targetImgPyramid.pop()).intValue();
       outNy =
           tarImgItem.halfHeight; //((Integer)targetImgPyramid.pop()).intValue();
-      outImg = tarImgItem.halfImg;  //(float[])targetImgPyramid.pop();
-      outMsk = tarMskItem.halfMask; //(float[])targetMskPyramid.pop();
+      outImg = tarImgItem.halfImg.data();  //(float[])targetImgPyramid.pop();
+      outMsk = tarMskItem.halfMask.data(); //(float[])targetMskPyramid.pop();
     } else {
       inNx =
           tarImgItem.halfWidth; //((Integer)targetImgPyramid.pop()).intValue();
       inNy =
           tarImgItem.halfHeight; //((Integer)targetImgPyramid.pop()).intValue();
-      inImg = tarImgItem.halfImg;  //(float[])targetImgPyramid.pop();
-      inMsk = tarMskItem.halfMask; //(float[])targetMskPyramid.pop();
+      inImg = tarImgItem.halfImg.data();  //(float[])targetImgPyramid.pop();
+      inMsk = tarMskItem.halfMask.data(); //(float[])targetMskPyramid.pop();
       outNx =
           srcImgItem.halfWidth; //((Integer)sourceImgPyramid.pop()).intValue();
       outNy = srcImgItem
                   .halfHeight; //(((Integer)sourceImgPyramid.pop()).intValue();
-      outImg = srcImgItem.halfImg;      //(float[])sourceImgPyramid.pop();
-      xGradient = srcImgItem.xGradient; //(float[])sourceImgPyramid.pop();
-      yGradient = srcImgItem.yGradient; //(float[])sourceImgPyramid.pop();
+      outImg = srcImgItem.halfImg.data();      //(float[])sourceImgPyramid.pop();
+      xGradient = srcImgItem.xGradient.data(); //(float[])sourceImgPyramid.pop();
+      yGradient = srcImgItem.yGradient.data(); //(float[])sourceImgPyramid.pop();
       if (!hasSourceMask()) {
-        outMsk.clear();
+        outMsk = nullptr;
       } else {
-        outMsk = srcMskItem.halfMask; //(float[])sourceMskPyramid.pop();
+        outMsk = srcMskItem.halfMask.data(); //(float[])sourceMskPyramid.pop();
       }
     }
     /* 2 *****************/
@@ -481,30 +478,30 @@ void TurboRegTransform::doRegistration() {
   if (transformation == BILINEAR) {
     inNx = sourceImg->getWidth();
     inNy = sourceImg->getHeight();
-    inImg = sourceImg->getCoefficient();
+    inImg = sourceImg->getCoefficient().data();
     if (!hasSourceMask()) {
-      inMsk.clear();
+      inMsk = nullptr;
     } else {
-      inMsk = sourceMsk->getMask();
+      inMsk = sourceMsk->getMask().data();
     }
     outNx = targetImg->getWidth();
     outNy = targetImg->getHeight();
-    outImg = targetImg->getImage();
-    outMsk = targetMsk->getMask();
+    outImg = targetImg->getImage().data();
+    outMsk = targetMsk->getMask().data();
   } else {
     inNx = targetImg->getWidth();
     inNy = targetImg->getHeight();
-    inImg = targetImg->getCoefficient();
-    inMsk = targetMsk->getMask();
+    inImg = targetImg->getCoefficient().data();
+    inMsk = targetMsk->getMask().data();
     outNx = sourceImg->getWidth();
     outNy = sourceImg->getHeight();
-    outImg = sourceImg->getImage();
-    xGradient = sourceImg->getXGradient();
-    yGradient = sourceImg->getYGradient();
+    outImg = sourceImg->getImage().data();
+    xGradient = sourceImg->getXGradient().data();
+    yGradient = sourceImg->getYGradient().data();
     if (!hasSourceMask()) {
-      outMsk.clear();
+      outMsk = nullptr;
     } else {
-      outMsk = sourceMsk->getMask();
+      outMsk = sourceMsk->getMask().data();
     }
   }
   twiceInNx = 2 * inNx;
@@ -888,7 +885,7 @@ double TurboRegTransform::getAffineMeanSquares(matrix<double> &sourcePoint,
   int xMsk;
   int yMsk;
   int k = 0;
-  if (outMsk.empty()) {
+  if (outMsk == nullptr) {
     yx = m(0, 0);
     yy = m(1, 0);
     for (int v = 0; (v < outNy); v++) {
@@ -997,7 +994,7 @@ double TurboRegTransform::getAffineMeanSquares(matrix<double> &sourcePoint,
   for (int i = 0; (i < transformation); i++) {
     gradient[i] = 0.0;
   }
-  if (outMsk.empty()) {
+  if (outMsk == nullptr) {
     yx = m(0, 0);
     yy = m(1, 0);
     for (int v = 0; (v < outNy); v++) {
@@ -1140,7 +1137,7 @@ double TurboRegTransform::getAffineMeanSquares(matrix<double> &sourcePoint,
       hessian(i, j) = 0.0;
     }
   }
-  if (outMsk.empty()) {
+  if (outMsk == nullptr) {
     yx = m(0, 0);
     yy = m(1, 0);
     for (int v = 0; (v < outNy); v++) {
@@ -1295,7 +1292,7 @@ double TurboRegTransform::getBilinearMeanSquares(matrix<double> &m) {
   int xMsk;
   int yMsk;
   int k = 0;
-  if (inMsk.empty()) {
+  if (inMsk == nullptr) {
     yx = m(0, 0);
     yy = m(1, 0);
     yxy = 0.0;
@@ -1405,7 +1402,7 @@ double TurboRegTransform::getBilinearMeanSquares(
       hessian(i, j) = 0.0;
     }
   }
-  if (inMsk.empty()) {
+  if (inMsk == nullptr) {
     yx = m(0, 0);
     yy = m(1, 0);
     yxy = 0.0;
@@ -1613,7 +1610,7 @@ double TurboRegTransform::getRigidBodyMeanSquares(matrix<double> &m) {
   int xMsk;
   int yMsk;
   int k = 0;
-  if (outMsk.empty()) {
+  if (outMsk == nullptr) {
     yx = m(0, 0);
     yy = m(1, 0);
     for (int v = 0; (v < outNy); v++) {
@@ -1695,7 +1692,7 @@ double TurboRegTransform::getRigidBodyMeanSquares(matrix<double> &m,
   for (int i = 0; (i < transformation); i++) {
     gradient[i] = 0.0;
   }
-  if (outMsk.empty()) {
+  if (outMsk == nullptr) {
     yx = m(0, 0);
     yy = m(1, 0);
     for (int v = 0; (v < outNy); v++) {
@@ -1787,7 +1784,7 @@ double TurboRegTransform::getRigidBodyMeanSquares(
       hessian(i, j) = 0.0;
     }
   }
-  if (outMsk.empty()) {
+  if (outMsk == nullptr) {
     yx = m(0, 0);
     yy = m(1, 0);
     for (int v = 0; (v < outNy); v++) {
@@ -1897,7 +1894,7 @@ TurboRegTransform::getScaledRotationMeanSquares(matrix<double> &sourcePoint,
   int xMsk;
   int yMsk;
   int k = 0;
-  if (outMsk.empty()) {
+  if (outMsk == nullptr) {
     yx = m(0, 0);
     yy = m(1, 0);
     for (int v = 0; (v < outNy); v++) {
@@ -2013,7 +2010,7 @@ TurboRegTransform::getScaledRotationMeanSquares(matrix<double> &sourcePoint,
   for (int i = 0; (i < transformation); i++) {
     gradient[i] = 0.0;
   }
-  if (outMsk.empty()) {
+  if (outMsk == nullptr) {
     yx = m(0, 0);
     yy = m(1, 0);
     for (int v = 0; (v < outNy); v++) {
@@ -2163,7 +2160,7 @@ double TurboRegTransform::getScaledRotationMeanSquares(
       hessian(i, j) = 0.0;
     }
   }
-  if (outMsk.empty()) {
+  if (outMsk == nullptr) {
     yx = m(0, 0);
     yy = m(1, 0);
     for (int v = 0; (v < outNy); v++) {
@@ -2449,7 +2446,7 @@ double TurboRegTransform::getTranslationMeanSquares(matrix<double> &m) {
   y = dy - floor(dy);
   xWeights();
   yWeights();
-  if (outMsk.empty()) {
+  if (outMsk == nullptr) {
     for (int v = 0; (v < outNy); v++) {
       y = dy++;
       yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
@@ -2521,7 +2518,7 @@ TurboRegTransform::getTranslationMeanSquares(matrix<double> &m,
   y = dy - floor(dy);
   xWeights();
   yWeights();
-  if (outMsk.empty()) {
+  if (outMsk == nullptr) {
     for (int v = 0; (v < outNy); v++) {
       y = dy++;
       yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));
@@ -2599,7 +2596,7 @@ double TurboRegTransform::getTranslationMeanSquares(
   y = dy - floor(dy);
   xWeights();
   yWeights();
-  if (outMsk.empty()) {
+  if (outMsk == nullptr) {
     for (int v = 0; (v < outNy); v++) {
       y = dy++;
       yMsk = (0.0 <= y) ? ((int)(y + 0.5)) : ((int)(y - 0.5));

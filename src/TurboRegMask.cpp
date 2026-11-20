@@ -45,6 +45,7 @@
 #include "TurboRegMask.h"
 
 #include <cmath>
+#include <utility>
 
 /*====================================================================
 |	turboRegMask
@@ -166,7 +167,7 @@ std::vector<double> &TurboRegMask::getMask() {
     </table>
     @see turboRegImage#getPyramid()
     ********************************************************************/
-std::stack<MaskStackItem> TurboRegMask::getPyramid() {
+std::vector<MaskStackItem> &TurboRegMask::getPyramid() {
   return (this->pyramid);
 } /* end getPyramid */
 
@@ -200,8 +201,8 @@ void TurboRegMask::buildPyramid() {
     // fullHeight);
     getHalfMask2D(pFullMask, fullWidth, fullHeight, stackItem.halfMask);
 
-    pyramid.push(stackItem);
-    pFullMask = &pyramid.top().halfMask[0];
+    pyramid.push_back(std::move(stackItem));
+    pFullMask = &pyramid.back().halfMask[0];
   }
 } /* end buildPyramid */
 

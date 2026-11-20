@@ -46,6 +46,7 @@
 
 #include <cmath>
 #include <cstring>
+#include <utility>
 #include <vector>
 
 #include "TurboReg.h"
@@ -99,6 +100,10 @@ void TurboRegImage::init() {
   }
   }
 } /* end run */
+
+void TurboRegImage::initCoefficients() {
+  coefficient = getBasicFromCardinal2D();
+} /* end initCoefficients */
 
 /*....................................................................
 constructors
@@ -259,12 +264,12 @@ void TurboRegImage::buildCoefficientPyramid() {
     // std::vector<double> halfCoefficient =
     getBasicFromCardinal2D(halfDual, halfWidth, halfHeight, 7,
                            stackItem.halfImg);
-    pyramid.push(stackItem);
+    pyramid.push_back(std::move(stackItem));
     /*pyramid.push(halfCoefficient);
     pyramid.push(new Integer(halfHeight));
     pyramid.push(new Integer(halfWidth));*/
 
-    fullDual = halfDual;
+    fullDual = std::move(halfDual);
   }
 } /* end buildCoefficientPyramid */
 
@@ -298,14 +303,14 @@ void TurboRegImage::buildImageAndGradientPyramid() {
     basicToCardinal2D(stackItem.halfImg, stackItem.halfImg, halfWidth,
                       halfHeight, 3);
 
-    pyramid.push(stackItem);
+    pyramid.push_back(std::move(stackItem));
 
     /*pyramid.push(halfYGradient);
     pyramid.push(halfXGradient);
     pyramid.push(halfImage);
     pyramid.push(new Integer(halfHeight));
     pyramid.push(new Integer(halfWidth));*/
-    fullDual = halfDual;
+    fullDual = std::move(halfDual);
   }
 } /* end buildImageAndGradientPyramid */
 
@@ -335,9 +340,9 @@ void TurboRegImage::buildImagePyramid() {
     pyramid.push(new Integer(halfHeight));
     pyramid.push(new Integer(halfWidth));*/
 
-    pyramid.push(stackItem);
+    pyramid.push_back(std::move(stackItem));
 
-    fullDual = halfDual;
+    fullDual = std::move(halfDual);
   }
 } /* end buildImagePyramid */
 

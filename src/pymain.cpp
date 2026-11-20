@@ -11,8 +11,13 @@
 #include <Python.h>
 #include <numpy/arrayobject.h>
 
+#include <climits>
+#include <cmath>
+#include <exception>
 #include <iterator>
+#include <new>
 #include <numeric>
+#include <string>
 #include <vector>
 
 #include "TurboReg.h"
@@ -30,6 +35,47 @@ typedef struct regMat {
   matrix<double> refPts;
   matrix<double> movPts;
 } regMat;
+
+/* Outcome of a native computation that ran without the interpreter lock. */
+enum NativeStatus { NATIVE_OK, NATIVE_NO_MEMORY, NATIVE_ERROR };
+
+/*
+ * Largest coordinate magnitude (in pixels) that a transformation may produce.
+ * The resampling code converts coordinates to int; staying well inside the
+ * int range keeps those conversions defined.
+ */
+static const double MAX_COORDINATE = 1.0e9;
+
+/* Set a Python exception for a failed native computation. */
+static void setNativeError(NativeStatus status, const std::string &message) {
+  if (status == NATIVE_NO_MEMORY) {
+    PyErr_NoMemory();
+  } else {
+    PyErr_SetString(PyExc_RuntimeError, message.empty()
+                                            ? "Unknown error in TurboReg"
+                                            : message.c_str());
+  }
+}
+
+/* Check that an image shape can be handled by the int-indexed native code. */
+static bool checkImageSize(npy_intp rows, npy_intp cols, npy_intp minSize,
+                           const char *what) {
+  if (rows < minSize || cols < minSize) {
+    PyErr_Format(PyExc_ValueError,
+                 "%s must be at least %d x %d pixels, got %zd x %zd", what,
+                 (int)minSize, (int)minSize, (Py_ssize_t)rows,
+                 (Py_ssize_t)cols);
+    return false;
+  }
+  if (rows > INT_MAX / 2 || cols > INT_MAX / 2 || rows > INT_MAX / cols) {
+    PyErr_Format(PyExc_ValueError,
+                 "%s is too large (%zd x %zd pixels); the number of pixels "
+                 "must not exceed %d",
+                 what, (Py_ssize_t)rows, (Py_ssize_t)cols, INT_MAX);
+    return false;
+  }
+  return true;
+}
 
 static PyObject *turbogreg_register(PyObject *self, PyObject *args);
 static PyArrayObject *turbogreg_transform(PyObject *self, PyObject *args);
@@ -54,7 +100,15 @@ PyMODINIT_FUNC PyInit_turboreg(void) {
   /* Load `numpy` functionality. */
   import_array();
 
-  return PyModule_Create(&pystackreg);
+  PyObject *module = PyModule_Create(&pystackreg);
+#ifdef Py_GIL_DISABLED
+  /* The native code keeps all of its state in objects local to one call, so
+     the module does not need the GIL on free-threaded builds. */
+  if (module != NULL) {
+    PyUnstable_Module_SetGIL(module, Py_MOD_GIL_NOT_USED);
+  }
+#endif
+  return module;
 }
 #else
 
@@ -109,23 +163,13 @@ std::vector<double> transformImg(matrix<double> m, double *pDataMov, int width,
                                  int height) {
   Transformation transformation = getTransformationFromMatrix(m);
 
+  /* Resampling with a known transformation only needs the B-spline
+     coefficients of the image; masks, gradients and pyramids are used
+     exclusively by the registration and are not built here. */
   TurboRegImage movImg(pDataMov, width, height, transformation, false);
+  movImg.initCoefficients();
 
-  TurboRegPointHandler movPH(movImg, transformation);
-
-  TurboRegMask movMsk(movImg);
-
-  movMsk.clearMask();
-
-  int pyramidDepth = getPyramidDepth(movImg.getWidth(), movImg.getHeight(),
-                                     movImg.getWidth(), movImg.getHeight());
-  movImg.setPyramidDepth(pyramidDepth);
-  movMsk.setPyramidDepth(pyramidDepth);
-
-  movImg.init();
-  movMsk.init();
-
-  TurboRegTransform tform(&movImg, &movMsk, &movPH, transformation, false);
+  TurboRegTransform tform(&movImg, NULL, NULL, transformation, false);
 
   std::vector<double> imgout = tform.doFinalTransform(&movImg, m);
   return imgout;
@@ -149,12 +193,10 @@ PyObject *turbogreg_register(PyObject *self, PyObject *args) {
 
   /* Interpret the input objects as numpy arrays. */
   PyObject *po_ref_array = PyArray_FROM_OTF(ref, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
-  PyObject *po_mov_array = PyArray_FROM_OTF(mov, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
-
-  if (!PyArray_Check(po_ref_array) || !PyArray_Check(po_mov_array)) {
-    PyErr_SetString(PyExc_TypeError, "Expected a numpy array");
+  if (po_ref_array == NULL) {
     return NULL;
   }
+  PyObject *po_mov_array = PyArray_FROM_OTF(mov, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
 
   PyArrayObject *ref_array = (PyArrayObject *)po_ref_array;
   PyArrayObject *mov_array = (PyArrayObject *)po_mov_array;
@@ -176,6 +218,16 @@ PyObject *turbogreg_register(PyObject *self, PyObject *args) {
     return NULL;
   }
 
+  /* the gradient filters read two samples per image line */
+  if (!checkImageSize(PyArray_DIM(ref_array, 0), PyArray_DIM(ref_array, 1), 2,
+                      "Images passed to the registration") ||
+      !checkImageSize(PyArray_DIM(mov_array, 0), PyArray_DIM(mov_array, 1), 2,
+                      "Images passed to the registration")) {
+    Py_XDECREF(ref_array);
+    Py_XDECREF(mov_array);
+    return NULL;
+  }
+
   /* How many data points are there? */
   int Nx_ref = (int)PyArray_DIM(ref_array, 0);
   int Ny_ref = (int)PyArray_DIM(ref_array, 1);
@@ -193,14 +245,34 @@ PyObject *turbogreg_register(PyObject *self, PyObject *args) {
   double *img_ref = (double *)PyArray_DATA(ref_array);
   double *img_mov = (double *)PyArray_DATA(mov_array);
 
+  NativeStatus status = NATIVE_OK;
+  std::string message;
+
   Py_BEGIN_ALLOW_THREADS
-  registerImg(img_ref, img_mov, (Transformation)tf, Ny_ref, Nx_ref,
-              rm); // width and height (Nx/Ny) have to be swapped!
+  try {
+    registerImg(img_ref, img_mov, (Transformation)tf, Ny_ref, Nx_ref,
+                rm); // width and height (Nx/Ny) have to be swapped!
+  } catch (const std::bad_alloc &) {
+    status = NATIVE_NO_MEMORY;
+  } catch (const std::exception &e) {
+    status = NATIVE_ERROR;
+    try {
+      message = e.what();
+    } catch (...) {
+    }
+  } catch (...) {
+    status = NATIVE_ERROR;
+  }
   Py_END_ALLOW_THREADS
 
   /* clean up */
   Py_XDECREF(ref_array);
   Py_XDECREF(mov_array);
+
+  if (status != NATIVE_OK) {
+    setNativeError(status, message);
+    return NULL;
+  }
 
   npy_intp dims_mat[2];
   npy_intp dims_pts[2];
@@ -214,6 +286,13 @@ PyObject *turbogreg_register(PyObject *self, PyObject *args) {
   PyArrayObject *retPtsRef = (PyArrayObject*)PyArray_SimpleNew(2, (npy_intp *)&dims_pts, NPY_DOUBLE);
   PyArrayObject *retPtsMov = (PyArrayObject*)PyArray_SimpleNew(2, (npy_intp *)&dims_pts, NPY_DOUBLE);
 
+  if (retMat == NULL || retPtsRef == NULL || retPtsMov == NULL) {
+    Py_XDECREF(retMat);
+    Py_XDECREF(retPtsRef);
+    Py_XDECREF(retPtsMov);
+    return NULL;
+  }
+
   memcpy((void *)PyArray_DATA(retMat), rm.mat.begin(),
          (dims_mat[0] * dims_mat[1] * sizeof(double)));
   memcpy((void *)PyArray_DATA(retPtsRef), rm.refPts.begin(),
@@ -221,7 +300,8 @@ PyObject *turbogreg_register(PyObject *self, PyObject *args) {
   memcpy((void *)PyArray_DATA(retPtsMov), rm.movPts.begin(),
          (dims_pts[0] * dims_pts[1] * sizeof(double)));
 
-  return Py_BuildValue("OOO", retMat, retPtsRef, retPtsMov);
+  /* "N" passes our references on to the tuple */
+  return Py_BuildValue("NNN", retMat, retPtsRef, retPtsMov);
 }
 
 PyArrayObject *turbogreg_transform(PyObject *self, PyObject *args) {
@@ -235,6 +315,9 @@ PyArrayObject *turbogreg_transform(PyObject *self, PyObject *args) {
 
   /* Interpret the input objects as numpy arrays. */
   PyObject *po_mov_array = PyArray_FROM_OTF(mov, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+  if (po_mov_array == NULL) {
+    return NULL;
+  }
   PyObject *po_mat_array = PyArray_FROM_OTF(mat, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
 
   /* If that didn't work, throw an exception. */
@@ -262,6 +345,13 @@ PyArrayObject *turbogreg_transform(PyObject *self, PyObject *args) {
     return NULL;
   }
 
+  if (!checkImageSize(PyArray_DIM(mov_array, 0), PyArray_DIM(mov_array, 1), 1,
+                      "The image to transform")) {
+    Py_XDECREF(mat_array);
+    Py_XDECREF(mov_array);
+    return NULL;
+  }
+
   /* How many data points are there? */
   int Nx_mov = (int)PyArray_DIM(mov_array, 0);
   int Ny_mov = (int)PyArray_DIM(mov_array, 1);
@@ -281,24 +371,72 @@ PyArrayObject *turbogreg_transform(PyObject *self, PyObject *args) {
   double *img_mov = (double *)PyArray_DATA(mov_array);
   double *tmat = (double *)PyArray_DATA(mat_array);
 
+  /* Reject matrices that are not finite or that map the image so far away
+     that source coordinates would not fit into an int. */
+  double bound[2];
+  for (int i = 0; i < 2; i++) {
+    const double *row = tmat + i * Ny_mat;
+    bound[i] = std::abs(row[0]);
+    if (Ny_mat >= 3) {
+      bound[i] += std::abs(row[1]) * (double)Ny_mov +
+                  std::abs(row[2]) * (double)Nx_mov;
+    } else {
+      bound[i] += (double)(i == 0 ? Ny_mov : Nx_mov);
+    }
+    if (Ny_mat == 4) {
+      bound[i] += std::abs(row[3]) * (double)Ny_mov * (double)Nx_mov;
+    }
+  }
+  /* the negated comparison also catches NaN */
+  if (!(bound[0] < MAX_COORDINATE) || !(bound[1] < MAX_COORDINATE)) {
+    Py_XDECREF(mov_array);
+    Py_XDECREF(mat_array);
+    PyErr_SetString(PyExc_ValueError,
+                    "Transformation matrix must be finite and must not map "
+                    "the image more than 1e9 pixels away");
+    return NULL;
+  }
+
   matrix<double> m(Nx_mat, Ny_mat);
   memcpy(m.begin(), tmat, (Nx_mat * Ny_mat * sizeof(double)));
 
   std::vector<double> imgout;
+  NativeStatus status = NATIVE_OK;
+  std::string message;
 
   Py_BEGIN_ALLOW_THREADS
-  imgout =
-      transformImg(m, img_mov, Ny_mov,
-                   Nx_mov); // width and height (Nx/Ny) have to be swapped!
+  try {
+    imgout =
+        transformImg(m, img_mov, Ny_mov,
+                     Nx_mov); // width and height (Nx/Ny) have to be swapped!
+  } catch (const std::bad_alloc &) {
+    status = NATIVE_NO_MEMORY;
+  } catch (const std::exception &e) {
+    status = NATIVE_ERROR;
+    try {
+      message = e.what();
+    } catch (...) {
+    }
+  } catch (...) {
+    status = NATIVE_ERROR;
+  }
   Py_END_ALLOW_THREADS
 
   /* clean up */
   Py_XDECREF(mat_array);
   Py_XDECREF(mov_array);
 
+  if (status != NATIVE_OK) {
+    setNativeError(status, message);
+    return NULL;
+  }
+
   npy_intp dims[2] = {Nx_mov, Ny_mov};
 
   PyArrayObject *ret = (PyArrayObject*)PyArray_SimpleNew(2, (npy_intp *)&dims, NPY_DOUBLE);
+  if (ret == NULL) {
+    return NULL;
+  }
 
   memcpy((void *)PyArray_DATA(ret), &imgout[0],
          (Nx_mov * Ny_mov * sizeof(double)));

@@ -42,7 +42,7 @@
 | publish results that are based on it.
 \===================================================================*/
 
-#include <stack>
+#include <vector>
 
 #include "TurboRegImage.h"
 #include "matrix.h"
@@ -65,13 +65,13 @@ public:
   void clearMask();
   std::vector<double> &getMask();
 
-  std::stack<MaskStackItem> getPyramid();
+  std::vector<MaskStackItem> &getPyramid();
 
   void setPyramidDepth(int pyramidDepth);
   void init();
 
 private:
-  std::stack<MaskStackItem> pyramid;
+  std::vector<MaskStackItem> pyramid;
 
   std::vector<double> mask;
   int width;

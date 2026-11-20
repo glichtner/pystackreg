@@ -42,7 +42,6 @@
 | publish results that are based on it.
 \===================================================================*/
 
-#include <stack>
 #include <vector>
 
 #include "TurboReg.h"
@@ -92,7 +91,10 @@ public:
 
   std::vector<double> &getImage() { return (this->image); };
 
-  std::stack<ImageStackItem> &getPyramid() { return (this->pyramid); };
+  /* Pyramid levels in the order in which they were built (finest first);
+     the registration walks them from the back (coarsest first), which is
+     the pop order of the stack used by the Java original. */
+  std::vector<ImageStackItem> &getPyramid() { return (this->pyramid); };
 
   int getPyramidDepth() { return (this->pyramidDepth); };
 
@@ -110,8 +112,14 @@ public:
 
   void init();
 
+  /* Compute only the B-spline coefficients of the full-size image. This is
+     all that is needed to resample an image with a known transformation;
+     the gradients and pyramids built by init() are only used during
+     registration. */
+  void initCoefficients();
+
 private:
-  std::stack<ImageStackItem> pyramid;
+  std::vector<ImageStackItem> pyramid;
 
   std::vector<double> image;
   std::vector<double> coefficient;
