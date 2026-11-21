@@ -8,6 +8,14 @@ On the platform the baseline was generated on (Linux x86-64, GCC) the current
 code reproduces it bit for bit; set ``PYSTACKREG_EXACT_BASELINE=1`` to enforce
 that. Elsewhere, differences in the math library (``atan2``, ``sin``, ``cos``,
 ``exp``) can change the last bits, and the tests use tight tolerances instead.
+
+Bit-identity also requires bit-identical input images. The synthetic scenes of
+``helpers.py`` are computed with NumPy, whose ``exp`` can differ in the last
+bit between processors (NumPy selects vectorized implementations at run time),
+so the cases built from them are exact only on a machine like the one that
+generated the baseline. The cases with the recorded ``pc12`` stack
+(``test_stack_registration*`` except ``_dtypes``) do not depend on this; the
+CI checks those in exact mode.
 """
 
 from __future__ import annotations

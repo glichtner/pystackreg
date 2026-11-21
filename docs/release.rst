@@ -39,6 +39,10 @@ Steps
 
          PYSTACKREG_EXACT_BASELINE=1 pytest tests/test_regression.py
 
+     All cases are bit-identical only on a machine like the one that
+     generated the baseline; elsewhere the cases with synthetic images can
+     differ in the last bits (see the validation page).
+
 2. **Build and check locally** in a clean clone::
 
        git clone https://github.com/glichtner/pystackreg && cd pystackreg

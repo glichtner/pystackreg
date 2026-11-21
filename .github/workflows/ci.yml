@@ -115,14 +115,17 @@ jobs:
           python-version: "3.12"
       - name: Install
         run: python -m pip install . pytest tifffile
-      - name: Regression tests, exact mode
+      # Only the cases with the recorded pc12 stack: the synthetic test images
+      # are computed with numpy.exp, whose last bit depends on the CPU of the
+      # runner. The synthetic cases run with tolerances in the test jobs.
+      - name: Regression tests on recorded data, exact mode
         env:
           PYSTACKREG_EXACT_BASELINE: "1"
           PYSTACKREG_TEST_INSTALLED: "1"
         run: |
           mkdir -p "$RUNNER_TEMP/run" && cd "$RUNNER_TEMP/run"
           python -m pytest "$GITHUB_WORKSPACE/tests/test_regression.py" \
-            -p no:cacheprovider \
+            -k "stack_registration and not dtypes" -p no:cacheprovider \
             --rootdir "$GITHUB_WORKSPACE" -c "$GITHUB_WORKSPACE/pyproject.toml"
 
   sanitizers:

@@ -144,6 +144,15 @@ otherwise they allow 10\ :sup:`-6` pixel for landmarks and matrices and
 10\ :sup:`-5` relative for image intensities, to accommodate other compilers
 and math libraries.
 
+Bit-identity also requires bit-identical input images. Most test images are
+computed with NumPy, whose ``exp`` can differ in the last bit between
+processors because NumPy selects vectorized implementations at run time; a
+difference of one bit in some pixels changes some results by about
+10\ :sup:`-14`. The continuous integration therefore requires bit-identity
+for the cases with recorded image data (a time-lapse recording, all
+transformation types and reference modes) and the tolerances above for the
+others.
+
 Two deliberate exceptions are documented in the changelog: the registration
 of floating-point stacks with ``moving_average`` > 1 (now averaged in double
 precision), and the cases that were defects in 0.2.8.
