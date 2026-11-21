@@ -121,15 +121,26 @@ def test_native_code_releases_the_gil():
     """While one thread is inside the extension, another thread must be able
     to execute Python code.
 
-    A background thread appends a timestamp about every half millisecond, but
-    only while the main thread is inside a *single* native call. If the
-    extension held the GIL, the background thread could not run during the
-    call at all (at most once, right after the call returns); with the GIL
-    released it runs hundreds of times.
+    A background thread appends a timestamp in a loop, but only while the main
+    thread is inside a *single* native call. If the extension held the GIL,
+    the background thread could not run during the call at all (at most once,
+    right before or after it); with the GIL released it runs thousands of
+    times.
+
+    The loop yields with ``time.sleep(0)``, which releases the GIL without
+    waiting for a timer: on Windows before Python 3.11 a timed sleep lasts at
+    least about 15 ms, which leaves too few iterations for the check. The
+    images are passed as contiguous float64 arrays, so that NumPy does not copy
+    them inside the call; NumPy releases the GIL itself while it copies large
+    arrays, which would let the background thread run even if the extension
+    held the GIL. Measured: 1 iteration per call with an extension that holds
+    the GIL (0.2.8), several hundred with the GIL released.
     """
     scene = Scene((640, 640), n_blobs=200, seed=9)
     ref = scene.render()
     mov = scene.render(known_transformations(scene.shape)["affine"])
+    ref_cropped = np.ascontiguousarray(ref[:-1, :-1])
+    mov_cropped = np.ascontiguousarray(mov[:-1, :-1])
 
     ticks = []
     inside = threading.Event()
@@ -139,7 +150,7 @@ def test_native_code_releases_the_gil():
         while not stop.is_set():
             if inside.is_set():
                 ticks.append(time.perf_counter())
-            time.sleep(0.0005)
+            time.sleep(0)
 
     def ticks_during(call):
         del ticks[:]
@@ -157,9 +168,7 @@ def test_native_code_releases_the_gil():
         matrix = np.array([[0.5, 1.0, 0.01], [-0.5, -0.01, 1.0]])
         results = {
             "_register": ticks_during(
-                lambda: turboreg._register(
-                    ref[:-1, :-1], mov[:-1, :-1], StackReg.AFFINE
-                )
+                lambda: turboreg._register(ref_cropped, mov_cropped, StackReg.AFFINE)
             ),
             "_transform": ticks_during(lambda: turboreg._transform(mov, matrix)),
         }
@@ -168,7 +177,7 @@ def test_native_code_releases_the_gil():
         thread.join()
     for name, (count, elapsed) in results.items():
         assert elapsed > 0.005, f"{name}: workload too small to be meaningful"
-        assert count >= 5, f"{name}: only {count} ticks in {elapsed * 1e3:.0f} ms"
+        assert count >= 20, f"{name}: only {count} ticks in {elapsed * 1e3:.0f} ms"
 
 
 # -- errors and cancellation ---------------------------------------------------
