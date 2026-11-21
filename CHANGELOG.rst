@@ -97,7 +97,7 @@ Fixed
 
 Removed
 .......
-- Support for Python < 3.10.
+- Support for Python < 3.10 and the Python 2 code paths of the extension.
 - ``pystackreg/conftest.py`` is no longer installed with the package.
 
 0.2.8

@@ -81,13 +81,6 @@
 
 #include "TurboReg.h"
 
-#ifdef _MSC_VER
-template <typename T, size_t N> T *begin(T (&arr)[N]) { return &arr[0]; }
-template <typename T, size_t N> T *end(T (&arr)[N]) { return &arr[0] + N; }
-#endif
-
-//#define COUNTOF(x) (sizeof(x) / sizeof(*x))
-
 /*====================================================================
 |	turboRegImage
 \===================================================================*/
@@ -388,12 +381,7 @@ void TurboRegImage::cardinalToDual2D(std::vector<double> &cardinal,
 
 /*------------------------------------------------------------------*/
 void TurboRegImage::coefficientToGradient1D(std::vector<double> &c) {
-#ifdef _MSC_VER
-  double hh[] = {0.0, 1.0 / 2.0};
-  std::vector<double> h(begin(hh), end(hh));
-#else
   std::vector<double> h = {0.0, 1.0 / 2.0};
-#endif
 
   std::vector<double> s(c.size()); // OK
   antiSymmetricFirMirrorOffBounds1D(h, c, s);
@@ -403,12 +391,7 @@ void TurboRegImage::coefficientToGradient1D(std::vector<double> &c) {
 
 /*------------------------------------------------------------------*/
 void TurboRegImage::coefficientToSamples1D(std::vector<double> &c) {
-#ifdef _MSC_VER
-  double hh[] = {2.0 / 3.0, 1.0 / 6.0};
-  std::vector<double> h(begin(hh), end(hh));
-#else
   std::vector<double> h = {2.0 / 3.0, 1.0 / 6.0};
-#endif
 
   std::vector<double> s(c.size()); // OK
   symmetricFirMirrorOffBounds1D(h, c, s);

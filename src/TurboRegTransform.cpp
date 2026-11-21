@@ -81,12 +81,6 @@
 
 #include "matrix.h"
 
-#ifdef _MSC_VER
-
-template <typename T, size_t N> T *begin(T (&arr)[N]) { return &arr[0]; }
-template <typename T, size_t N> T *end(T (&arr)[N]) { return &arr[0] + N; }
-#endif
-
 const int TurboRegTransform::FEW_ITERATIONS = 5;
 const double TurboRegTransform::FIRST_LAMBDA = 1.0;
 const double TurboRegTransform::LAMBDA_MAGSTEP = 4.0;
@@ -3002,11 +2996,7 @@ void TurboRegTransform::invertGauss(matrix<double> &m) {
 
       // System.arraycopy(partialLine, 0, m[k], j, n - j);
       // copy partialLine[0->n] to m[k][j->n]
-#ifdef _MSC_VER
-      std::copy(partialLine.begin(), partialLine.end(), m.getPtr(k, j));
-#else
       std::copy(std::begin(partialLine), std::end(partialLine), m.getPtr(k, j));
-#endif
 
       // System.arraycopy(inverse[j], 0, fullLine, 0, n);
       // copy inverse[j][0->n] to fullLine
@@ -3020,11 +3010,7 @@ void TurboRegTransform::invertGauss(matrix<double> &m) {
 
       // System.arraycopy(fullLine, 0, inverse[k], 0, n);
       // copy fullLine to inverse[k][0->n]
-#ifdef _MSC_VER
-      std::copy(fullLine.begin(), fullLine.end(), inverse.getRowPtr(k));
-#else
       std::copy(std::begin(fullLine), std::end(fullLine), inverse.getRowPtr(k));
-#endif
     }
     for (k = 0; (k <= j); k++) {
       inverse(j, k) /= max;

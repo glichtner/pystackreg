@@ -41,10 +41,6 @@
 #include "TurboRegPointHandler.h"
 #include "TurboRegTransform.h"
 
-#if PY_MAJOR_VERSION >= 3
-#define ISPY3
-#endif
-
 typedef struct regMat {
   matrix<double> mat;
   matrix<double> refPts;
@@ -103,7 +99,6 @@ static PyMethodDef module_methods[] = {
      pystackreg_docs},
     {NULL}};
 
-#ifdef ISPY3
 static struct PyModuleDef pystackreg = {
     PyModuleDef_HEAD_INIT, "turboreg", /* name of module */
     "turboreg\n",                      /* module documentation, may be NULL */
@@ -125,15 +120,6 @@ PyMODINIT_FUNC PyInit_turboreg(void) {
 #endif
   return module;
 }
-#else
-
-PyMODINIT_FUNC initturboreg(void) {
-  /* Load `numpy` functionality. */
-  import_array();
-  Py_InitModule("turboreg", module_methods);
-}
-
-#endif
 
 bool registerImg(double *pDataRef, double *pDataMov,
                  Transformation transformation, int width, int height,
