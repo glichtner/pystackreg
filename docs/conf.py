@@ -1,10 +1,12 @@
 import os
 import time
+from pathlib import Path
 
-# cannot directly import because __init__.py imports pystackreg which imports the
-# compiled plugin, which is not available before setup.py is run
-__version__ = ""  # placeholder for linters
-exec(open("../pystackreg/version.py").read())
+# The version is read from the source file so that the configuration does not
+# depend on which pystackreg is importable; autodoc itself needs an installed
+# (compiled) pystackreg.
+__version__ = ""
+exec((Path(__file__).parent.parent / "pystackreg" / "version.py").read_text())
 
 extensions = [
     "sphinx.ext.autodoc",
@@ -14,10 +16,13 @@ extensions = [
     "sphinx.ext.extlinks",
     "sphinx.ext.ifconfig",
     "sphinx.ext.napoleon",
-    "sphinx_autodoc_typehints",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
+    "sphinx.ext.mathjax",
 ]
+
+exclude_patterns = ["_build"]
+autodoc_typehints = "none"
 
 
 if os.getenv("SPELLCHECK"):
@@ -25,10 +30,10 @@ if os.getenv("SPELLCHECK"):
     spelling_show_suggestions = True
     spelling_lang = "en_US"
 
-source_suffix = ".rst"
+source_suffix = {".rst": "restructuredtext"}
 master_doc = "index"
 project = "pystackreg"
-author = "Gregor Lichtner, Philippe Thevenaz"
+author = "Gregor Lichtner"
 year = f'2018-{time.strftime("%Y")}'
 copyright = "{0}, {1}".format(year, author)
 version = release = __version__
@@ -36,16 +41,10 @@ version = release = __version__
 pygments_style = "trac"
 templates_path = ["."]
 extlinks = {
-    "issue": ("https://github.com/glichtner/pystackreg/%s", "#"),
-    "pr": ("https://github.com/glichtner/pystackreg/pull/%s", "PR #"),
+    "issue": ("https://github.com/glichtner/pystackreg/issues/%s", "#%s"),
+    "pr": ("https://github.com/glichtner/pystackreg/pull/%s", "PR #%s"),
 }
-# on_rtd is whether we are on readthedocs.org
-on_rtd = os.environ.get("READTHEDOCS", None) == "True"
-
-if not on_rtd:  # only set the theme if we're building docs locally
-    html_theme = "sphinx_rtd_theme"
-
-html_use_smartypants = True
+html_theme = "sphinx_rtd_theme"
 html_last_updated_fmt = "%b %d, %Y"
 html_split_index = False
 html_sidebars = {

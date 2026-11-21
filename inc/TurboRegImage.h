@@ -1,7 +1,29 @@
-/**
- * C++ Port of the TurboReg ImageJ Plugin
- * Original code by Philippe Thevenaz (see below)
- * Porting by Gregor Lichtner
+/*
+ * This file is part of PyStackReg.
+ *
+ * It is a C++ translation of parts of the TurboReg ImageJ plugin by
+ * Philippe Thevenaz (Java source file TurboReg_.java, version "July 7,
+ * 2011"), with modifications. See NOTICE.
+ *
+ * Copyright (C) 2011 Philippe Thevenaz
+ *     Original implementation (TurboReg).
+ * Copyright (C) 2018-2026 Gregor Lichtner and PyStackReg contributors
+ *     C++ translation and subsequent modifications.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
 /*====================================================================
@@ -34,15 +56,22 @@
 \===================================================================*/
 
 /*====================================================================
-| Additional help available at http://bigwww.epfl.ch/thevenaz/turboreg/
+| Historical notice. The translated source file (TurboReg, version
+| July 7, 2011) carried the notice quoted below. It is kept for the
+| record and does NOT state the terms under which this file is
+| distributed: its author has since released TurboReg under the GNU
+| General Public License, version 3 or (at your option) any later
+| version (https://bigwww.epfl.ch/thevenaz/turboreg/, "Conditions of
+| Use"), and current versions of TurboReg_.java no longer carry it.
 |
-| You'll be free to use this software for research purposes, but you
-| should not redistribute it without our consent. In addition, we expect
-| you to include a citation or acknowledgment whenever you present or
-| publish results that are based on it.
+|   Additional help available at http://bigwww.epfl.ch/thevenaz/turboreg/
+|
+|   You'll be free to use this software for research purposes, but you
+|   should not redistribute it without our consent. In addition, we expect
+|   you to include a citation or acknowledgment whenever you present or
+|   publish results that are based on it.
 \===================================================================*/
 
-#include <stack>
 #include <vector>
 
 #include "TurboReg.h"
@@ -92,7 +121,10 @@ public:
 
   std::vector<double> &getImage() { return (this->image); };
 
-  std::stack<ImageStackItem> &getPyramid() { return (this->pyramid); };
+  /* Pyramid levels in the order in which they were built (finest first);
+     the registration walks them from the back (coarsest first), which is
+     the pop order of the stack used by the Java original. */
+  std::vector<ImageStackItem> &getPyramid() { return (this->pyramid); };
 
   int getPyramidDepth() { return (this->pyramidDepth); };
 
@@ -110,8 +142,14 @@ public:
 
   void init();
 
+  /* Compute only the B-spline coefficients of the full-size image. This is
+     all that is needed to resample an image with a known transformation;
+     the gradients and pyramids built by init() are only used during
+     registration. */
+  void initCoefficients();
+
 private:
-  std::stack<ImageStackItem> pyramid;
+  std::vector<ImageStackItem> pyramid;
 
   std::vector<double> image;
   std::vector<double> coefficient;

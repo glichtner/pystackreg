@@ -1,10 +1,122 @@
 [build-system]
-requires = ["setuptools", "wheel", "numpy"]
+# The extension is built against NumPy 2; such builds also run on NumPy 1.x.
+requires = ["setuptools>=77", "numpy>=2.0"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "pystackreg"
+dynamic = ["version"]
+description = "Image registration (Python/C++ port of the ImageJ/Fiji plugins TurboReg and StackReg)"
+readme = "README.rst"
+requires-python = ">=3.10"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE", "NOTICE"]
+authors = [{ name = "Gregor Lichtner" }]
+maintainers = [{ name = "Gregor Lichtner" }]
+keywords = [
+    "image registration",
+    "image alignment",
+    "motion correction",
+    "microscopy",
+    "TurboReg",
+    "StackReg",
+    "ImageJ",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+    "Topic :: Scientific/Engineering :: Image Processing",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Typing :: Typed",
+]
+dependencies = ["numpy>=1.22", "tqdm"]
+
+[project.optional-dependencies]
+test = ["pytest>=7", "tifffile", "scipy"]
+docs = ["sphinx>=7", "sphinx-rtd-theme"]
+dev = ["pystackreg[test]", "ruff", "mypy", "codespell", "build", "twine", "pre-commit"]
+
+[project.urls]
+Homepage = "https://github.com/glichtner/pystackreg"
+Documentation = "https://pystackreg.readthedocs.io/"
+Repository = "https://github.com/glichtner/pystackreg"
+Issues = "https://github.com/glichtner/pystackreg/issues"
+Changelog = "https://github.com/glichtner/pystackreg/blob/master/CHANGELOG.rst"
+
+[tool.setuptools]
+packages = ["pystackreg", "pystackreg.util"]
+include-package-data = false
+
+[tool.setuptools.package-data]
+pystackreg = ["py.typed"]
+
+[tool.setuptools.dynamic]
+version = { attr = "pystackreg.version.__version__" }
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+addopts = ["-ra", "--strict-markers", "--strict-config"]
+xfail_strict = true
+filterwarnings = ["error"]
+markers = [
+    "slow: tests that take more than a few seconds",
+    "reference: comparison with outputs of the original Java TurboReg/StackReg",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+extend-exclude = ["docs/conf.py", "docs/_build", "build", "examples/notebooks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "NPY", "RUF", "SIM", "C4", "PT"]
+ignore = [
+    "PT011", # pytest.raises(ValueError) without match is fine for simple checks
+    "SIM108",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["pystackreg"]
+known-local-folder = ["conftest", "generate_baseline", "helpers"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["pystackreg"]
+warn_unused_ignores = true
+warn_redundant_casts = true
+check_untyped_defs = true
+disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = ["tqdm.*"]
+ignore_missing_imports = true
+
+[tool.codespell]
+skip = "*.ipynb,*.bib,*.tif,*.npz,docs/_build,build,dist"
+ignore-words = ".codespellignore"
 
 [tool.cibuildwheel]
-test-requires = ["pytest", "tqdm", "tifffile"]
-test-command = "pytest {project}/tests"
-#skip="pp37-macos*"
-skip="pp*"
+# CPython versions follow requires-python. Only the native 64-bit architecture
+# of each CI runner is built; 32-bit wheels are not provided.
+archs = ["auto64"]
+test-requires = ["pytest>=7", "tifffile"]
+# The tests run from a temporary directory against the installed wheel;
+# PYSTACKREG_TEST_INSTALLED makes the suite fail if it imports the source tree.
+test-command = "pytest {project}/tests -p no:cacheprovider"
+test-environment = { PYSTACKREG_TEST_INSTALLED = "1" }

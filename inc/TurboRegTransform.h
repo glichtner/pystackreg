@@ -1,7 +1,29 @@
-/**
- * C++ Port of the TurboReg ImageJ Plugin
- * Original code by Philippe Thevenaz (see below)
- * Porting by Gregor Lichtner
+/*
+ * This file is part of PyStackReg.
+ *
+ * It is a C++ translation of parts of the TurboReg ImageJ plugin by
+ * Philippe Thevenaz (Java source file TurboReg_.java, version "July 7,
+ * 2011"), with modifications. See NOTICE.
+ *
+ * Copyright (C) 2011 Philippe Thevenaz
+ *     Original implementation (TurboReg).
+ * Copyright (C) 2018-2026 Gregor Lichtner and PyStackReg contributors
+ *     C++ translation and subsequent modifications.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
 /*====================================================================
@@ -34,14 +56,23 @@
 \===================================================================*/
 
 /*====================================================================
-| Additional help available at http://bigwww.epfl.ch/thevenaz/turboreg/
+| Historical notice. The translated source file (TurboReg, version
+| July 7, 2011) carried the notice quoted below. It is kept for the
+| record and does NOT state the terms under which this file is
+| distributed: its author has since released TurboReg under the GNU
+| General Public License, version 3 or (at your option) any later
+| version (https://bigwww.epfl.ch/thevenaz/turboreg/, "Conditions of
+| Use"), and current versions of TurboReg_.java no longer carry it.
 |
-| You'll be free to use this software for research purposes, but you
-| should not redistribute it without our consent. In addition, we expect
-| you to include a citation or acknowledgment whenever you present or
-| publish results that are based on it.
+|   Additional help available at http://bigwww.epfl.ch/thevenaz/turboreg/
+|
+|   You'll be free to use this software for research purposes, but you
+|   should not redistribute it without our consent. In addition, we expect
+|   you to include a citation or acknowledgment whenever you present or
+|   publish results that are based on it.
 \===================================================================*/
 
+#include <climits>
 #include <string>
 
 #include "TurboReg.h"
@@ -49,6 +80,31 @@
 #include "TurboRegMask.h"
 #include "TurboRegPointHandler.h"
 #include "matrix.h"
+
+/*********************************************************************
+ Convert a floating-point coordinate to int with the semantics of the
+ Java (int) cast used by the original implementation: truncation toward
+ zero, saturation at the limits of int, and NaN mapped to 0.
+
+ A plain C++ cast has undefined behavior for NaN and for values outside
+ the range of int. Such coordinates do occur: the optimizer produces
+ non-finite landmark updates when the Hessian is singular (e.g. for
+ constant images). With this conversion those cases follow the same
+ well-defined path as in the Java code on every platform. For values
+ inside the range of int the result is identical to a plain cast.
+ ********************************************************************/
+static inline int toInt(double v) {
+  if (v >= 2147483647.0) {
+    return INT_MAX;
+  }
+  if (v <= -2147483648.0) {
+    return INT_MIN;
+  }
+  if (v != v) {
+    return 0;
+  }
+  return (int)v;
+}
 
 class TurboRegTransform {
 public:
@@ -180,12 +236,20 @@ private:
   std::vector<double> yWeight;
   std::vector<int> xIndex;
   std::vector<int> yIndex;
-  std::vector<double> inImg;
-  std::vector<double> inMsk;
-  std::vector<double> outImg;
-  std::vector<double> outMsk;
-  std::vector<double> xGradient;
-  std::vector<double> yGradient;
+  /* The image, mask and gradient members below are non-owning views into
+     buffers held by the TurboRegImage/TurboRegMask objects (or by outBuf).
+     The Java original stores array references here; copying the buffers
+     instead costs several full-frame allocations per registration. A null
+     mask pointer means "no mask" (an empty array in the original). */
+  const double *inImg;
+  const double *inMsk;
+  double *outImg;
+  const double *outMsk;
+  const double *xGradient;
+  const double *yGradient;
+  /* Storage for the result of the final transformation. */
+  std::vector<double> outBuf;
+  std::vector<double> outMskBuf;
   int inNx;
   int inNy;
   int iterationCost;

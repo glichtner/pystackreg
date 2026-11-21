@@ -1,0 +1,58 @@
+cff-version: 1.2.0
+title: "pystackreg"
+message: >-
+  If you use pystackreg, please cite the methods paper by Thévenaz, Ruttimann
+  and Unser (1998) listed under "preferred-citation", as requested by the
+  authors of the original TurboReg software, and the pystackreg software
+  itself (this record).
+type: software
+authors:
+  - family-names: Lichtner
+    given-names: Gregor
+abstract: >-
+  pystackreg is a Python/C++ port of the ImageJ plugins TurboReg and StackReg
+  by Philippe Thévenaz (EPFL) for intensity-based subpixel registration of
+  images and image stacks.
+repository-code: "https://github.com/glichtner/pystackreg"
+url: "https://pystackreg.readthedocs.io/"
+license: GPL-3.0-or-later
+keywords:
+  - image registration
+  - image alignment
+  - motion correction
+  - microscopy
+  - TurboReg
+  - StackReg
+preferred-citation:
+  type: article
+  title: "A Pyramid Approach to Subpixel Registration Based on Intensity"
+  authors:
+    - family-names: Thévenaz
+      given-names: Philippe
+    - family-names: Ruttimann
+      given-names: Urs E.
+    - family-names: Unser
+      given-names: Michael
+  journal: "IEEE Transactions on Image Processing"
+  volume: 7
+  issue: 1
+  start: 27
+  end: 41
+  year: 1998
+  month: 1
+  doi: "10.1109/83.650848"
+references:
+  - type: software
+    title: "TurboReg"
+    authors:
+      - family-names: Thévenaz
+        given-names: Philippe
+    url: "https://bigwww.epfl.ch/thevenaz/turboreg/"
+    notes: "ImageJ plugin; the software pystackreg is ported from."
+  - type: software
+    title: "StackReg"
+    authors:
+      - family-names: Thévenaz
+        given-names: Philippe
+    url: "https://bigwww.epfl.ch/thevenaz/stackreg/"
+    notes: "ImageJ plugin whose stack-registration behaviour pystackreg reproduces."

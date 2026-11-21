@@ -1,7 +1,29 @@
-/**
- * C++ Port of the TurboReg ImageJ Plugin
- * Original code by Philippe Thevenaz (see below)
- * Porting by Gregor Lichtner
+/*
+ * This file is part of PyStackReg.
+ *
+ * It is a C++ translation of parts of the TurboReg ImageJ plugin by
+ * Philippe Thevenaz (Java source file TurboReg_.java, version "July 7,
+ * 2011"), with modifications. See NOTICE.
+ *
+ * Copyright (C) 2011 Philippe Thevenaz
+ *     Original implementation (TurboReg).
+ * Copyright (C) 2018-2026 Gregor Lichtner and PyStackReg contributors
+ *     C++ translation and subsequent modifications.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
 /*====================================================================
@@ -34,28 +56,30 @@
 \===================================================================*/
 
 /*====================================================================
-| Additional help available at http://bigwww.epfl.ch/thevenaz/turboreg/
+| Historical notice. The translated source file (TurboReg, version
+| July 7, 2011) carried the notice quoted below. It is kept for the
+| record and does NOT state the terms under which this file is
+| distributed: its author has since released TurboReg under the GNU
+| General Public License, version 3 or (at your option) any later
+| version (https://bigwww.epfl.ch/thevenaz/turboreg/, "Conditions of
+| Use"), and current versions of TurboReg_.java no longer carry it.
 |
-| You'll be free to use this software for research purposes, but you
-| should not redistribute it without our consent. In addition, we expect
-| you to include a citation or acknowledgment whenever you present or
-| publish results that are based on it.
+|   Additional help available at http://bigwww.epfl.ch/thevenaz/turboreg/
+|
+|   You'll be free to use this software for research purposes, but you
+|   should not redistribute it without our consent. In addition, we expect
+|   you to include a citation or acknowledgment whenever you present or
+|   publish results that are based on it.
 \===================================================================*/
 
 #include "TurboRegImage.h"
 
 #include <cmath>
 #include <cstring>
+#include <utility>
 #include <vector>
 
 #include "TurboReg.h"
-
-#ifdef _MSC_VER
-template <typename T, size_t N> T *begin(T (&arr)[N]) { return &arr[0]; }
-template <typename T, size_t N> T *end(T (&arr)[N]) { return &arr[0] + N; }
-#endif
-
-//#define COUNTOF(x) (sizeof(x) / sizeof(*x))
 
 /*====================================================================
 |	turboRegImage
@@ -99,6 +123,10 @@ void TurboRegImage::init() {
   }
   }
 } /* end run */
+
+void TurboRegImage::initCoefficients() {
+  coefficient = getBasicFromCardinal2D();
+} /* end initCoefficients */
 
 /*....................................................................
 constructors
@@ -259,12 +287,12 @@ void TurboRegImage::buildCoefficientPyramid() {
     // std::vector<double> halfCoefficient =
     getBasicFromCardinal2D(halfDual, halfWidth, halfHeight, 7,
                            stackItem.halfImg);
-    pyramid.push(stackItem);
+    pyramid.push_back(std::move(stackItem));
     /*pyramid.push(halfCoefficient);
     pyramid.push(new Integer(halfHeight));
     pyramid.push(new Integer(halfWidth));*/
 
-    fullDual = halfDual;
+    fullDual = std::move(halfDual);
   }
 } /* end buildCoefficientPyramid */
 
@@ -298,14 +326,14 @@ void TurboRegImage::buildImageAndGradientPyramid() {
     basicToCardinal2D(stackItem.halfImg, stackItem.halfImg, halfWidth,
                       halfHeight, 3);
 
-    pyramid.push(stackItem);
+    pyramid.push_back(std::move(stackItem));
 
     /*pyramid.push(halfYGradient);
     pyramid.push(halfXGradient);
     pyramid.push(halfImage);
     pyramid.push(new Integer(halfHeight));
     pyramid.push(new Integer(halfWidth));*/
-    fullDual = halfDual;
+    fullDual = std::move(halfDual);
   }
 } /* end buildImageAndGradientPyramid */
 
@@ -335,9 +363,9 @@ void TurboRegImage::buildImagePyramid() {
     pyramid.push(new Integer(halfHeight));
     pyramid.push(new Integer(halfWidth));*/
 
-    pyramid.push(stackItem);
+    pyramid.push_back(std::move(stackItem));
 
-    fullDual = halfDual;
+    fullDual = std::move(halfDual);
   }
 } /* end buildImagePyramid */
 
@@ -353,12 +381,7 @@ void TurboRegImage::cardinalToDual2D(std::vector<double> &cardinal,
 
 /*------------------------------------------------------------------*/
 void TurboRegImage::coefficientToGradient1D(std::vector<double> &c) {
-#ifdef _MSC_VER
-  double hh[] = {0.0, 1.0 / 2.0};
-  std::vector<double> h(begin(hh), end(hh));
-#else
   std::vector<double> h = {0.0, 1.0 / 2.0};
-#endif
 
   std::vector<double> s(c.size()); // OK
   antiSymmetricFirMirrorOffBounds1D(h, c, s);
@@ -368,12 +391,7 @@ void TurboRegImage::coefficientToGradient1D(std::vector<double> &c) {
 
 /*------------------------------------------------------------------*/
 void TurboRegImage::coefficientToSamples1D(std::vector<double> &c) {
-#ifdef _MSC_VER
-  double hh[] = {2.0 / 3.0, 1.0 / 6.0};
-  std::vector<double> h(begin(hh), end(hh));
-#else
   std::vector<double> h = {2.0 / 3.0, 1.0 / 6.0};
-#endif
 
   std::vector<double> s(c.size()); // OK
   symmetricFirMirrorOffBounds1D(h, c, s);

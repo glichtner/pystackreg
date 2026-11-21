@@ -7,7 +7,7 @@ of a live neuronal structure.
 Import pystackreg
 -----------------
 
-.. code:: ipython3
+.. code:: python
 
     import os
     import sys
@@ -18,20 +18,20 @@ Import pystackreg
     from pystackreg import StackReg
     import pystackreg
 
-.. code:: ipython3
+.. code:: python
 
     print(pystackreg.__version__)
 
 
 .. parsed-literal::
 
-    0.2.3rc1
+    0.3.0.dev0
 
 
 Define helper functions
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: ipython3
+.. code:: python
 
     def overlay_images(imgs, equalize=False, aggregator=np.mean):
         
@@ -42,7 +42,7 @@ Define helper functions
         
         return aggregator(imgs, axis=0)
 
-.. code:: ipython3
+.. code:: python
 
     def composite_images(imgs, equalize=False, aggregator=np.mean):
         
@@ -61,18 +61,18 @@ Define helper functions
 Load sample data
 ~~~~~~~~~~~~~~~~
 
-.. code:: ipython3
+.. code:: python
 
     data_path = os.path.join(os.getcwd(), '..', 'data')
     unreg = io.imread(os.path.join(data_path, 'pc12-unreg.tif'))
     
     # convert to float to prevent overflows when calculating differences images
-    unreg = unreg.astype(np.float)
+    unreg = unreg.astype(float)
 
 Perform single image registration
 ---------------------------------
 
-.. code:: ipython3
+.. code:: python
 
     transformations = {
         'TRANSLATION': StackReg.TRANSLATION,
@@ -82,7 +82,7 @@ Perform single image registration
         'BILINEAR': StackReg.BILINEAR
     }
 
-.. code:: ipython3
+.. code:: python
 
     #load reference and "moved" image
     ref = unreg[0, :, :]
@@ -91,7 +91,7 @@ Perform single image registration
 Show original images
 ~~~~~~~~~~~~~~~~~~~~
 
-.. code:: ipython3
+.. code:: python
 
     f, ax = plt.subplots(1, 3, figsize=(20, 9))
     
@@ -123,7 +123,7 @@ Transform shifted image
 We will next use all available transformation modes from pystackreg to
 register the shifted image to the reference image.
 
-.. code:: ipython3
+.. code:: python
 
     def show_transformation(tmat, ax=None):
         if ax is None:
@@ -136,7 +136,7 @@ register the shifted image to the reference image.
         ax.invert_yaxis()
         ax.legend(['Original image', 'transformed image'])
 
-.. code:: ipython3
+.. code:: python
 
     f, ax = plt.subplots(5, 2, figsize=(16, 18))
     
@@ -170,7 +170,7 @@ rectangle is shown.
 Perform stack transformations
 -----------------------------
 
-.. code:: ipython3
+.. code:: python
 
     print(f"Number of images in the stack: {len(unreg)}")
 
@@ -187,7 +187,7 @@ use pystackreg to register the whole stack of 5 images.
 Show original images (overlay)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: ipython3
+.. code:: python
 
     f, ax = plt.subplots(1, 1, figsize=(10, 9))
     
@@ -213,7 +213,10 @@ images is shown for each of the different types of transformations.
 **Note** that we will save the transformation matrices of each
 transformation in a list ``tmats`` for later use.
 
-.. code:: ipython3
+For long stacks, pass ``verbose=True`` to show a progress bar (in a
+terminal or as a notebook widget).
+
+.. code:: python
 
     f, ax = plt.subplots(2, int(np.ceil((len(transformations)+1)/2)), figsize=(20, 12))
     ax = ax.ravel()
@@ -230,7 +233,7 @@ transformation in a list ``tmats`` for later use.
         
         reference = 'first' if name == 'BILINEAR' else 'previous'
         
-        tmat = sr.register_stack(unreg, axis=0, reference=reference, verbose=True)
+        tmat = sr.register_stack(unreg, axis=0, reference=reference)
         reg = sr.transform_stack(unreg)
         
         tmats.append(tmat)
@@ -240,17 +243,8 @@ transformation in a list ``tmats`` for later use.
         ax[i+1].axis('off')
 
 
-.. parsed-literal::
 
-    100%|██████████| 4/4 [00:00<00:00, 59.11it/s]
-    100%|██████████| 4/4 [00:00<00:00, 32.64it/s]
-    100%|██████████| 4/4 [00:00<00:00, 30.12it/s]
-    100%|██████████| 4/4 [00:00<00:00, 26.77it/s]
-    100%|██████████| 4/4 [00:00<00:00, 18.93it/s]
-
-
-
-.. image:: tutorial_files/tutorial_28_1.png
+.. image:: tutorial_files/tutorial_28_0.png
 
 
 As can bee seen, all types of transformation lead to a much clearer
@@ -267,7 +261,7 @@ package. This will demonstrate that the transformation matrices supplied
 by pystackreg can be stored and used in any desired context even without
 having to use pystackreg.
 
-.. code:: ipython3
+.. code:: python
 
     f, ax = plt.subplots(2, int(np.ceil((len(transformations)+1)/2)), figsize=(20, 12))
     ax = ax.ravel()
@@ -309,14 +303,15 @@ having to use pystackreg.
 Custom callback for registration progress
 -----------------------------------------
 
-The ``register()`` and ``register_stack()`` function can be called with
-a custom callback function that can be used to display progress
-information to the user.
+The ``register_stack()``, ``transform_stack()`` and
+``register_transform_stack()`` functions can be called with a custom
+callback function that can be used to display progress information to
+the user. (Alternatively, ``verbose=True`` shows a progress bar.)
 
 The custom callback needs to accept the two parameters
 ``current_iteration`` and ``end_iteration``:
 
-.. code:: ipython3
+.. code:: python
 
     def show_progress(current_iteration, end_iteration):
         print(f"Registering {current_iteration} of {end_iteration} images")
@@ -337,17 +332,21 @@ The custom callback needs to accept the two parameters
 Clipping of negative values
 ---------------------------
 
-The transformation output of pystackreg is exactly equivalent to that of
-the ImageJ plugins TurboReg/StackReg on which it is based. The output of
-the transform function therefore has a ``float`` datatype and may
-contain negative values. To again create an image with integer values,
-the utility function ``pystackreg.util.to_uint16()`` can be used.
+The transformation output of pystackreg reproduces that of the ImageJ
+plugins TurboReg/StackReg on which it is based (see the validation notes
+in the documentation). Images are resampled with cubic spline
+interpolation, which can slightly over- and undershoot at sharp edges.
+The output of the transform function therefore has a ``float`` datatype
+and may contain negative values even if the input has none. To again
+create an image with integer values, the utility function
+``pystackreg.util.to_uint16()`` can be used; alternatively, pass an
+integer array as ``out`` to ``transform_stack()`` (see below).
 
-.. code:: ipython3
+.. code:: python
 
     from pystackreg.util import to_uint16
 
-.. code:: ipython3
+.. code:: python
 
     sr = StackReg(StackReg.RIGID_BODY)
     reg = sr.register_transform_stack(unreg - unreg.min())
@@ -360,7 +359,7 @@ the utility function ``pystackreg.util.to_uint16()`` can be used.
     The output of the transform function has the datatype float64 with a minimal value of -29.488252639770508
 
 
-.. code:: ipython3
+.. code:: python
 
     reg_int = to_uint16(reg)
     
@@ -377,7 +376,7 @@ Registration of stacks having the frames/(“time”) not as the first axis
 
 pystackreg expects the frames (“time”) axis in a stacked image as the
 first axis, i.e. for a 3D numpy array, pystackreg expects the dimensions
-to be ``frames x width x height``. pystackreg automatically tries to
+to be ``frames x height x width``. pystackreg automatically tries to
 find out which axis is the frames axis and raises a warning if that axis
 is not the axis that the user supplied.
 
@@ -387,7 +386,7 @@ Create test data
 We will first create a stack that has the frames axis at axis 2 (instead
 of the default axis 0) by moving the axis from our sample data:
 
-.. code:: ipython3
+.. code:: python
 
     unreg.shape
 
@@ -400,7 +399,7 @@ of the default axis 0) by moving the axis from our sample data:
 
 
 
-.. code:: ipython3
+.. code:: python
 
     unreg_axis = np.moveaxis(unreg, 0, 2)
     unreg_axis.shape
@@ -419,28 +418,167 @@ Register & transform
 
 Next we register the stack using pystackreg’s default parameters
 
-.. code:: ipython3
+.. code:: python
 
+    import warnings
+    
     sr = StackReg(StackReg.RIGID_BODY)
-    sr.register_stack(unreg_axis);
+    
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        sr.register_stack(unreg_axis)
+    
+    print(f"{caught[0].category.__name__}: {caught[0].message}")
 
 
 .. parsed-literal::
 
-    /home/lichtneg/anaconda3/envs/py36/lib/python3.6/site-packages/pystackreg-0.2.3rc1-py3.6-linux-x86_64.egg/pystackreg/pystackreg.py:383: UserWarning: Detected axis 2 as the possible time axis for the stack due to its low variability, but axis 0 was supplied for registration. Are you sure you supplied the correct axis?
-      lowest_var_axis, axis
+    UserWarning: Detected axis 2 as the possible time axis for the stack due to its low variability, but axis 0 was supplied for registration. Are you sure you supplied the correct axis?
 
 
 Notice that this raises a warning as pystackreg correctly identified
 axis 2 as the frames axis. So let’s use that axis for registration:
 
-.. code:: ipython3
+.. code:: python
 
     sr.register_stack(unreg_axis, axis=2);
 
 Next transform the stack. Note that we need to supply the axis parameter
 again here - otherwise an error will be raised.
 
-.. code:: ipython3
+.. code:: python
 
     reg_axis = sr.transform_stack(unreg_axis, axis=2)
+
+Parallel processing
+-------------------
+
+The frames of a stack can be registered and transformed by several
+threads at once with the ``n_jobs`` argument (``n_jobs=-1`` uses all CPU
+cores). The results are identical to those of the sequential
+computation, for all reference modes: with ``reference='previous'``, the
+pairwise registrations are computed in parallel and chained afterwards
+in frame order.
+
+.. code:: python
+
+    sr = StackReg(StackReg.RIGID_BODY)
+    tmats_sequential = sr.register_stack(unreg, reference='previous')
+    tmats_parallel = sr.register_stack(unreg, reference='previous', n_jobs=-1)
+    
+    print(f"Parallel and sequential results are identical: {np.array_equal(tmats_sequential, tmats_parallel)}")
+
+
+.. parsed-literal::
+
+    Parallel and sequential results are identical: True
+
+
+Memory-efficient processing of large stacks
+-------------------------------------------
+
+By default, ``transform_stack()`` returns a new ``float64`` array, which
+for a 16-bit stack needs four times the memory of the input. The ``out``
+argument writes the result into an existing array instead: an array of a
+smaller floating-point type, an integer array (values are rounded and
+clipped to the range of the data type), a memory-mapped file
+(``numpy.memmap``), or the input array itself to transform the stack in
+place.
+
+.. code:: python
+
+    stack16 = (unreg - unreg.min()).astype(np.uint16)
+    
+    sr = StackReg(StackReg.RIGID_BODY)
+    sr.register_stack(stack16, reference='previous')
+    
+    # 16-bit output: same size as the input
+    reg16 = np.empty_like(stack16)
+    sr.transform_stack(stack16, out=reg16)
+    
+    # default output for comparison
+    reg64 = sr.transform_stack(stack16)
+    
+    print(f"input: {stack16.nbytes / 1e6:.1f} MB ({stack16.dtype}), default output: {reg64.nbytes / 1e6:.1f} MB ({reg64.dtype}), "
+          f"output with out=: {reg16.nbytes / 1e6:.1f} MB ({reg16.dtype})")
+    print(f"Integer output equals the rounded and clipped default output: {np.array_equal(reg16, to_uint16(reg64))}")
+
+
+.. parsed-literal::
+
+    input: 0.4 MB (uint16), default output: 1.6 MB (float64), output with out=: 0.4 MB (uint16)
+    Integer output equals the rounded and clipped default output: True
+
+
+For stacks that do not fit into memory, the input and output can be
+memory-mapped files, e.g. ``np.load('stack.npy', mmap_mode='r+')``;
+frames are then read and written one at a time (per thread).
+
+Transforming point coordinates
+------------------------------
+
+The transformation matrices map coordinates ``(x, y)`` =
+``(column, row)`` of the reference image onto coordinates of the
+unregistered image. ``transform_points()`` moves point coordinates in
+the same way as ``transform()`` moves the image content, i.e. it tells
+where a feature of the unregistered image is found after registration.
+
+.. code:: python
+
+    sr = StackReg(StackReg.RIGID_BODY)
+    tmat = sr.register(ref, mov)
+    reg = sr.transform(mov)
+    
+    # position (x, y) of the brightest pixel in the unregistered image ...
+    y0, x0 = np.unravel_index(np.argmax(mov), mov.shape)
+    point = np.array([[x0, y0]], dtype=float)
+    
+    # ... and where it is after registration
+    point_registered = sr.transform_points(point)
+    
+    f, ax = plt.subplots(1, 2, figsize=(14, 7))
+    ax[0].imshow(mov, cmap='gray')
+    ax[0].plot(*point[0], 'r+', markersize=20, markeredgewidth=2)
+    ax[0].set_title('unregistered image with marked position')
+    ax[0].axis('off')
+    ax[1].imshow(reg.clip(min=0), cmap='gray')
+    ax[1].plot(*point_registered[0], 'r+', markersize=20, markeredgewidth=2)
+    ax[1].set_title('registered image with transformed position')
+    ax[1].axis('off');
+    
+    print(f"position before registration: {point[0]}, after registration: {point_registered[0].round(2)}")
+
+
+.. parsed-literal::
+
+    position before registration: [81. 83.], after registration: [80.61 95.45]
+
+
+
+.. image:: tutorial_files/tutorial_57_1.png
+
+
+Checking the plausibility of a registration
+-------------------------------------------
+
+The optimizer always returns a transformation, also if two images do not
+match. ``pystackreg.util.max_displacement()`` condenses a transformation
+matrix into a single number - the largest distance (in pixels) by which
+it moves any point of the image - which makes it easy to find frames
+whose registration looks implausible.
+
+.. code:: python
+
+    from pystackreg.util import max_displacement
+    
+    sr = StackReg(StackReg.AFFINE)
+    tmats_affine = sr.register_stack(unreg, reference='first')
+    
+    displacement = max_displacement(tmats_affine, unreg.shape[1:])
+    print("Largest displacement per frame (pixels):", displacement.round(1))
+
+
+.. parsed-literal::
+
+    Largest displacement per frame (pixels): [ 0.   9.3 14.6 15.7 13.1]
+
