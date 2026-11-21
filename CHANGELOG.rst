@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.3.0 (unreleased)
+0.3.0 (2026-11-21)
 ------------------
 
 This release modernizes the package. Apart from the corrections listed below,
