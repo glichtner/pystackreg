@@ -293,7 +293,8 @@ pyStackReg is a port of existing software, not a new registration algorithm:
 
 If you present or publish results obtained with pyStackReg, please cite the
 paper by Thévenaz et al. (1998) - the authors of TurboReg ask for this - and
-pyStackReg itself (see ``CITATION.cff``).
+pyStackReg itself (`doi:10.5281/zenodo.24425557
+<https://doi.org/10.5281/zenodo.24425557>`_, see ``CITATION.cff``).
 
 License
 -------

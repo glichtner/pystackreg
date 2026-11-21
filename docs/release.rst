@@ -30,7 +30,8 @@ Steps
 
    * Make sure the ``ci.yml`` workflow is green on ``master``.
    * Update ``CHANGELOG.rst``: replace "(unreleased)" by the release date and
-     commit this change. bump2version refuses to run with uncommitted changes.
+     commit this change. bump2version (``pip install bump2version``) refuses
+     to run with uncommitted changes.
    * Set the version in ``pystackreg/version.py`` (the single source of the
      version number) with ``bump2version release``, e.g. ``0.3.0.dev0`` ->
      ``0.3.0`` (see ``.bumpversion.cfg``). This creates a commit but no tag.
@@ -69,11 +70,16 @@ Steps
 
 4. **After the upload**
 
-   * Create a GitHub release for the tag with the changelog section as
-     description. If the repository is connected to Zenodo, this archives the
-     release and assigns a DOI; add the DOI to ``CITATION.cff``. Zenodo only
-     archives releases that are created after the repository was enabled
-     there.
+   * Create a GitHub release for the tag with the changelog section, in
+     Markdown, as description.
+   * Archive the release on Zenodo. The repository is not connected to
+     Zenodo, so this is done by hand: open the most recent version through
+     the concept DOI https://doi.org/10.5281/zenodo.24425557, choose *New
+     version*, replace the file by the source archive of the new tag
+     (``pystackreg-X.Y.Z.zip`` from the GitHub release), update the version
+     and the publication date, and publish. The publisher stays "Zenodo".
+     All versions share the concept DOI, which ``CITATION.cff`` and the
+     README cite, so nothing has to be changed in the repository.
    * conda-forge: the feedstock bot opens a pull request for the new version.
      For 0.3.0 the recipe must be edited by hand: ``license: GPL-3.0-or-later``,
      ``license_file`` (``LICENSE`` and ``NOTICE``), ``python >=3.10`` and the

@@ -6,6 +6,8 @@ message: >-
   authors of the original TurboReg software, and the pystackreg software
   itself (this record).
 type: software
+# concept DOI on Zenodo: always resolves to the most recent version
+doi: 10.5281/zenodo.24425557
 authors:
   - family-names: Lichtner
     given-names: Gregor
