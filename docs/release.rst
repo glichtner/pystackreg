@@ -5,13 +5,35 @@ Releases are made by the maintainer. Nothing is published automatically from
 ordinary commits: wheels are uploaded to PyPI only by the
 ``wheels-deploy.yml`` workflow when a tag ``v*`` is pushed.
 
+One-time setup
+--------------
+
+The upload uses PyPI's `trusted publishing
+<https://docs.pypi.org/trusted-publishers/>`_: the workflow identifies itself
+to PyPI with a short-lived token, and no API token is stored in the
+repository. PyPI has to know the workflow once. On https://pypi.org, open
+*Manage project* -> *Publishing* for pystackreg and add a GitHub publisher
+with
+
+* owner ``glichtner``, repository ``pystackreg``,
+* workflow ``wheels-deploy.yml``,
+* environment ``pypi``.
+
+GitHub creates the environment ``pypi`` when the upload job runs for the first
+time. A required reviewer can be added to it in the repository settings
+(*Settings* -> *Environments*); the upload then waits for a confirmation.
+
+Steps
+-----
+
 1. **Prepare**
 
    * Make sure the ``ci.yml`` workflow is green on ``master``.
-   * Update ``CHANGELOG.rst``: replace "(unreleased)" by the release date.
+   * Update ``CHANGELOG.rst``: replace "(unreleased)" by the release date and
+     commit this change. bump2version refuses to run with uncommitted changes.
    * Set the version in ``pystackreg/version.py`` (the single source of the
-     version number), e.g. ``0.3.0.dev0`` -> ``0.3.0``. With bump2version:
-     ``bump2version release`` (see ``.bumpversion.cfg``).
+     version number) with ``bump2version release``, e.g. ``0.3.0.dev0`` ->
+     ``0.3.0`` (see ``.bumpversion.cfg``). This creates a commit but no tag.
    * If the numerical code changed, run the exact comparison on Linux
      x86-64::
 
@@ -34,7 +56,6 @@ ordinary commits: wheels are uploaded to PyPI only by the
 
 3. **Tag**::
 
-       git commit -am "Release 0.3.0"
        git tag -a v0.3.0 -m "pystackreg 0.3.0"
        git push origin master v0.3.0
 
@@ -46,13 +67,17 @@ ordinary commits: wheels are uploaded to PyPI only by the
 
    * Create a GitHub release for the tag with the changelog section as
      description. If the repository is connected to Zenodo, this archives the
-     release and assigns a DOI; add the DOI to ``CITATION.cff``.
+     release and assigns a DOI; add the DOI to ``CITATION.cff``. Zenodo only
+     archives releases that are created after the repository was enabled
+     there.
    * conda-forge: the feedstock bot opens a pull request for the new version.
      For 0.3.0 the recipe must be edited by hand: ``license: GPL-3.0-or-later``,
-     ``license_file`` (``LICENSE`` and ``NOTICE``), ``python >=3.10``.
+     ``license_file`` (``LICENSE`` and ``NOTICE``), ``python >=3.10`` and the
+     build requirements ``numpy >=2.0`` and ``setuptools >=77``.
    * Check that https://pystackreg.readthedocs.io built the new version.
-   * Start the next development cycle: set the version to the next
-     ``.dev0`` and add an "(unreleased)" section to the changelog.
+   * Start the next development cycle: ``bump2version patch`` sets the
+     version to the next ``.dev0`` (``0.3.0`` -> ``0.3.1.dev0``); add an
+     "(unreleased)" section to the changelog.
 
 Manual builds
 -------------

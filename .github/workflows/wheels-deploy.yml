@@ -2,7 +2,8 @@ name: Build and deploy wheels
 
 # Builds wheels for all supported platforms with cibuildwheel and tests each
 # of them. Nothing is uploaded unless a version tag (v*) is pushed: a manual
-# run only produces workflow artifacts.
+# run only produces workflow artifacts. The upload uses PyPI trusted
+# publishing; see docs/release.rst for the one-time setup on PyPI.
 
 on:
   push:
@@ -78,15 +79,17 @@ jobs:
     runs-on: ubuntu-latest
     # only for pushed version tags, never for manual runs
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    environment:
+      name: pypi
+      url: https://pypi.org/project/pystackreg/
+    permissions:
+      # short-lived OpenID Connect token for PyPI trusted publishing; no API
+      # token is stored in the repository
+      id-token: write
     steps:
       - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
       - name: Upload to PyPI
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        run: |
-          python -m pip install twine
-          python -m twine upload dist/*
+        uses: pypa/gh-action-pypi-publish@release/v1
