@@ -106,6 +106,14 @@ models:
 Both effects are far below any practical relevance, and they are left as they
 are so that pystackreg keeps reproducing the results of its earlier releases.
 
+There is one deliberate deviation. Images with a side shorter than 24 pixels
+have no pyramid level. For these, TurboReg does not refine the landmarks of
+the scaled-rotation and affine models, because a normalization factor that is
+set once per pyramid level keeps its initial value of zero; it returns the
+identity. pystackreg computes the factor in this case and registers such
+images (``tests/test_accuracy.py``). All image pairs of the comparison above
+are larger and are not affected.
+
 This comparison needs a Java runtime and the TurboReg sources and is not part
 of the test suite. The regression tests described below tie later versions to
 the results for which it was made.

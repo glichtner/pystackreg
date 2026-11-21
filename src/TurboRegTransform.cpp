@@ -531,6 +531,37 @@ void TurboRegTransform::doRegistration() {
   twiceInNx = 2 * inNx;
   twiceInNy = 2 * inNy;
 
+  /* targetJacobian is set in the loop above, once per pyramid level. Images
+     with a side shorter than 2 * PYRAMID_MIN_SIZE have no pyramid level. The
+     original then uses the Java default of 0.0, for which the mean squares
+     of the scaled-rotation and affine models evaluate to zero, so that the
+     landmarks are never refined. The Jacobian is computed here for that
+     case; this deviates from TurboReg. */
+  if (targetImgPyramid.empty()) {
+    switch (transformation) {
+    case TRANSLATION: {
+      targetJacobian = 1.0;
+      break;
+    }
+    case SCALED_ROTATION: {
+      targetJacobian = (targetPoint(0, 0) - targetPoint(1, 0)) *
+                           (targetPoint(0, 0) - targetPoint(1, 0)) +
+                       (targetPoint(0, 1) - targetPoint(1, 1)) *
+                           (targetPoint(0, 1) - targetPoint(1, 1));
+      break;
+    }
+    case AFFINE: {
+      targetJacobian =
+          (targetPoint(1, 0) - targetPoint(2, 0)) * targetPoint(0, 1) +
+          (targetPoint(2, 0) - targetPoint(0, 0)) * targetPoint(1, 1) +
+          (targetPoint(0, 0) - targetPoint(1, 0)) * targetPoint(2, 1);
+      break;
+    }
+    default:
+      break;
+    }
+  }
+
   switch (transformation) {
   case RIGID_BODY: {
     inverseMarquardtLevenbergRigidBodyOptimization();

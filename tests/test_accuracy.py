@@ -40,6 +40,40 @@ def test_recovers_known_transformation(name, shape):
     assert corner_error(tmat, truth, shape) < 0.01
 
 
+def _smooth_scene(shape, dx=0.0, dy=0.0):
+    """Smooth structure that is well sampled on a grid of a few pixels, with
+    the structure displaced by ``(dx, dy)``."""
+    height, width = shape
+    y, x = np.mgrid[0:height, 0:width].astype(float)
+    x, y = x - dx, y - dy
+    size = min(height, width)
+    blob = np.exp(
+        -((x - width / 2) ** 2 + (y - height / 2) ** 2) / (2 * (size / 5) ** 2)
+    )
+    return 100 + 60 * blob + 20 * np.sin(0.5 * x) * np.cos(0.4 * y)
+
+
+@pytest.mark.parametrize(
+    "shape",
+    [(16, 16), (12, 20), (20, 12), (23, 23), (23, 40)],
+    ids=lambda s: f"{s[0]}x{s[1]}",
+)
+@pytest.mark.parametrize("name", AFFINE_KINDS)
+def test_images_without_pyramid_level_are_registered(name, shape):
+    """Images with a side shorter than 24 px have no pyramid level and are
+    registered at full resolution only. Up to 0.2.8 the scaled-rotation and
+    affine models read a value that was never set in this case; the result
+    depended on the contents of memory and was usually the identity, which is
+    also what TurboReg returns. The tolerance reflects how little information
+    such images hold (measured: < 0.2 px; the identity is 0.94 px off)."""
+    truth = np.identity(3)
+    truth[0, 2], truth[1, 2] = 0.8, -0.5
+    tmat = StackReg(TRANSFORMATIONS[name]).register(
+        _smooth_scene(shape), _smooth_scene(shape, 0.8, -0.5)
+    )
+    assert corner_error(tmat, truth, shape) < 0.3
+
+
 @pytest.mark.parametrize("name", list(TRANSFORMATIONS))
 def test_identical_images_give_identity(name):
     ref = Scene((96, 128)).render()

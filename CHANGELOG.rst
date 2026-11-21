@@ -94,6 +94,12 @@ Fixed
   the registration of constant images and in ``transform()`` with extreme
   matrices; conversions now follow the semantics of the Java original.
 - ``get_matrix()`` before a registration raised an unrelated ``TypeError``.
+- Images with a side shorter than 24 pixels were not registered reliably with
+  the scaled-rotation and affine transformations: the registration used a
+  value that was never set, so the result depended on the contents of memory
+  and was usually the identity. Such images are now registered. This differs
+  from TurboReg, which returns the identity in this case; results for larger
+  images are unchanged.
 
 Removed
 .......
